@@ -4,7 +4,7 @@ This package is to report errors
 
 Update your `Package.swift` file.
 ```swift
-.Package(url: "https://github.com/nodes-vapor/bugnsag", majorVersion: 0)
+.Package(url: "https://github.com/nodes-vapor/bugsnag", majorVersion: 0)
 ```
 
 #### Config
