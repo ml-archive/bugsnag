@@ -9,6 +9,11 @@ This package is to report errors
 
 #Installation
 
+Update your `Package.swift` file.
+```swift
+.Package(url: "https://github.com/nodes-vapor/bugsnag", majorVersion: 0)
+```
+
 #### Config
 Create config meta.json
 
