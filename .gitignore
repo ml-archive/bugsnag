@@ -1,6 +1,10 @@
-.DS_Store
-.idea/
-CMakeLists.txt
-.build
 Packages
+.build
+.idea
+xcuserdata
 *.xcodeproj
+Config/secrets/
+.DS_Store
+node_modules/
+bower_components/
+.swift-version
