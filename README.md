@@ -15,7 +15,7 @@ Update your `Package.swift` file.
 ```
 
 #### Config
-Create config meta.json
+Create config bugsnag.json
 
 ```
 {
