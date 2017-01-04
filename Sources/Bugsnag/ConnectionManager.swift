@@ -25,11 +25,14 @@ public final class ConnectionMananger {
         var code: [String: Node] = [:]
         
         var index = 0
-        for entry in Thread.callStackSymbols {
-            code[String(index)] = Node(entry)
+        //FIXME: Temporary workaround for Linux breaking when calling Thread.
+        #if os(OSX)
+            for entry in Thread.callStackSymbols {
+                code[String(index)] = Node(entry)
             
-            index = index + 1
-        }
+                index = index + 1
+            }
+        #endif
         
         let stacktrace = Node([
             Node([
