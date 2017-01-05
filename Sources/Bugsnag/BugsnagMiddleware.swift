@@ -21,11 +21,11 @@ public final class BugsnagMiddleware: Middleware {
             return try next.respond(to: request)
         } catch let error as AbortError {
             if error.metadata?["report"]?.bool ?? true {
-                try report(status: error.status, message: error.message, metaData: error.metadata, request: request)
+                try report(status: error.status, message: error.message, metadata: error.metadata, request: request)
             }
             throw error
         } catch {
-            try report(status: .internalServerError, message: error.localizedDescription, metaData: nil, request: request)
+            try report(status: .internalServerError, message: error.localizedDescription, metadata: nil, request: request)
             throw error
         }
     }
@@ -33,7 +33,7 @@ public final class BugsnagMiddleware: Middleware {
 
     // MARK: - Private
 
-    private func report(status: Status, message: String, metaData: Node?, request: Request) throws {
-        _ = try connectionManager.post(status: status, message: message, metaData: metaData, request: request)
+    private func report(status: Status, message: String, metadata: Node?, request: Request) throws {
+        _ = try connectionManager.post(status: status, message: message, metadata: metadata, request: request)
     }
 }

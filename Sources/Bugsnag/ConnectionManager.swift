@@ -20,7 +20,7 @@ public final class ConnectionMananger {
         return headers
     }
     
-    func body(message: String, metaData: Node?, request: Request) throws -> JSON {
+    func body(message: String, metadata: Node?, request: Request) throws -> JSON {
         var code: [String: Node] = [:]
         
         var index = 0
@@ -53,7 +53,7 @@ public final class ConnectionMananger {
             headers[key.key] = Node(value)
         }
 
-        let customMetaData = metaData ?? Node([])
+        let customMetaData = metadata ?? Node([])
         let metaData = Node([
             "request": Node([
                 "method": Node(request.method.description),
@@ -97,8 +97,8 @@ public final class ConnectionMananger {
         return response.status
     }
     
-    func post(status: Status, message: String, metaData: Node? = nil, request: Request) throws -> Status {
-        return try post(json: body(message: message, metaData: metaData, request: request))
+    func post(status: Status, message: String, metadata: Node? = nil, request: Request) throws -> Status {
+        return try post(json: body(message: message, metadata: metadata, request: request))
     }
     
 }
