@@ -13,7 +13,6 @@ public final class ConnectionMananger {
     }
     
     func headers() -> [HeaderKey: String] {
-        
         let headers = [
             HeaderKey("Content-Type"): "application/json",
         ]
@@ -21,15 +20,18 @@ public final class ConnectionMananger {
         return headers
     }
     
-    func body(message: String, request: Request) throws -> JSON {
+    func body(message: String, metaData: Node?, request: Request) throws -> JSON {
         var code: [String: Node] = [:]
         
         var index = 0
-        for entry in Thread.callStackSymbols {
-            code[String(index)] = Node(entry)
-            
-            index = index + 1
-        }
+        //FIXME: Temporary workaround for Linux breaking when calling Thread.
+        #if os(OSX)
+            for entry in Thread.callStackSymbols {
+                code[String(index)] = Node(entry)
+                
+                index = index + 1
+            }
+        #endif
         
         let stacktrace = Node([
             Node([
@@ -50,17 +52,18 @@ public final class ConnectionMananger {
         for (key, value) in request.headers {
             headers[key.key] = Node(value)
         }
-        
+
+        let customMetaData = metaData ?? Node([])
         let metaData = Node([
             "request": Node([
                 "method": Node(request.method.description),
                 "headers": Node(headers),
                 "params": request.parameters,
                 "url": Node(request.uri.path)
-            ])
+            ]),
+            "metaData": customMetaData
         ])
-        
-        
+
         let event: Node = Node([
             Node([
                 "payloadVersion": 2,
@@ -80,9 +83,9 @@ public final class ConnectionMananger {
         return try JSON(node: [
             "apiKey": self.config.apiKey,
             "notifier": Node([
-                    "name": "Bugsnag Vapor",
-                    "version": "1.0.11",
-                    "url": "https://github.com/nodes-vapor/bugsnag"
+                "name": "Bugsnag Vapor",
+                "version": "1.0.11",
+                "url": "https://github.com/nodes-vapor/bugsnag"
             ]),
             "events": event,
         ])
@@ -94,8 +97,8 @@ public final class ConnectionMananger {
         return response.status
     }
     
-    func post(status: Status, message: String, request: Request) throws -> Status {
-        return try post(json: body(message: message, request: request))
+    func post(status: Status, message: String, metaData: Node? = nil, request: Request) throws -> Status {
+        return try post(json: body(message: message, metaData: metaData, request: request))
     }
     
 }
