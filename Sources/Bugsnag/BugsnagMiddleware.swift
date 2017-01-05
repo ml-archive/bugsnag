@@ -31,7 +31,7 @@ public final class BugsnagMiddleware: Middleware {
             }
             throw error
         } catch {
-            try report(status: .internalServerError, message: error.localizedDescription, metadata: nil, request: request)
+            try report(status: .internalServerError, message: Status.internalServerError.reasonPhrase, metadata: nil, request: request)
             throw error
         }
     }

@@ -35,8 +35,7 @@ class BugsnagMiddlewareTests: XCTestCase {
     // MARK: Rethrowing.
 
     func testThatErrorsNotConformingToAbortErrorAreRethrown() {
-        let localizedErrorDescription = "Random test error"
-        let next = ErrorResponderMock(error: NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: localizedErrorDescription]))
+        let next = ErrorResponderMock(error: MyCustomError())
         let req = try? Request(method: .get, uri: "some-random-uri")
 
         do {
@@ -59,13 +58,13 @@ class BugsnagMiddlewareTests: XCTestCase {
     // MARK: Automatic reporting.
 
     func testErrorNotConformingToAbortErrorWillBeReported() {
-        let localizedErrorDescription = "Random test error"
-        let next = ErrorResponderMock(error: NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: localizedErrorDescription]))
+        let error = MyCustomError()
+        let next = ErrorResponderMock(error: error)
         let req = try? Request(method: .get, uri: "some-random-uri")
         _ = try? middleware.respond(to: req!, chainingTo: next)
 
         XCTAssertEqual(connectionManager.lastPost!.status, .internalServerError)
-        XCTAssertEqual(connectionManager.lastPost!.message, localizedErrorDescription)
+        XCTAssertEqual(connectionManager.lastPost!.message, Status.internalServerError.reasonPhrase)
         XCTAssertEqual(connectionManager.lastPost!.metadata, nil)
         XCTAssertEqual(connectionManager.lastPost!.request.uri.description, req!.uri.description)
     }
@@ -89,7 +88,7 @@ class BugsnagMiddlewareTests: XCTestCase {
             "key1": "value1",
             "key2": "value2"
         ])
-        let error = MyCustomError(message: message, code: code, status: status, metadata: metadata)
+        let error = MyCustomAbortError(message: message, code: code, status: status, metadata: metadata)
 
         let next = ErrorResponderMock(error: error)
         let req = try? Request(method: .get, uri: "some-random-uri")
@@ -105,7 +104,7 @@ class BugsnagMiddlewareTests: XCTestCase {
     // MARK: Manual reporting.
 
     func testErrorNotReportedWhenExplicitlyToldNotTo() {
-        let error = MyCustomError(
+        let error = MyCustomAbortError(
             message: "",
             code: 0,
             status: .accepted,
@@ -120,7 +119,7 @@ class BugsnagMiddlewareTests: XCTestCase {
     }
 
     func testErrorReportedWhenExplicitlyToldSo() {
-        let error = MyCustomError(
+        let error = MyCustomAbortError(
             message: "",
             code: 0,
             status: .accepted,
@@ -138,7 +137,9 @@ class BugsnagMiddlewareTests: XCTestCase {
 
 // MARK: - Misc.
 
-private struct MyCustomError: AbortError {
+private struct MyCustomError: Error {}
+
+private struct MyCustomAbortError: AbortError {
     let message: String
     let code: Int
     let status: Status
