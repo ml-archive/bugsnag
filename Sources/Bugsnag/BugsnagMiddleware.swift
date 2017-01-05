@@ -4,13 +4,19 @@ import HTTP
 public final class BugsnagMiddleware: Middleware {
 
     let drop: Droplet
-    let configuration: Configuration
-    let connectionManager: ConnectionMananger
+    let configuration: ConfigurationType
+    let connectionManager: ConnectionManagerType
 
     public init(drop: Droplet) throws {
         self.drop = drop
         self.configuration = try Configuration(drop: drop)
         self.connectionManager = ConnectionMananger(drop: drop, config: configuration)
+    }
+
+    internal init(connectionManager: ConnectionManagerType) {
+        self.drop = connectionManager.drop
+        self.configuration = connectionManager.config
+        self.connectionManager = connectionManager
     }
 
 

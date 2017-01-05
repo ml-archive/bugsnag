@@ -2,5 +2,5 @@ import XCTest
 @testable import BugsnagTests
 
 XCTMain([
-     testCase(BugsnagTests.allTests),
+     testCase(BugsnagMiddlewareTests.allTests),
 ])
