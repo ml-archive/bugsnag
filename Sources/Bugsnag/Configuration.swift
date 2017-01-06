@@ -2,7 +2,16 @@ import Foundation
 import Vapor
 import HTTP
 
-public struct Configuration {
+public protocol ConfigurationType {
+    var apiKey: String { get }
+    var notifyReleaseStages: [String] { get }
+    var endpoint: String { get }
+    var filters: [String] { get }
+
+    init(drop: Droplet) throws
+}
+
+public struct Configuration: ConfigurationType {
     
     public enum Field: String {
         case apiKey                 = "bugsnag.apiKey"

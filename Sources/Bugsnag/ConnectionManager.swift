@@ -2,18 +2,25 @@ import Vapor
 import HTTP
 import Foundation
 
-public final class ConnectionMananger {
+
+public protocol ConnectionManagerType {
+    var drop: Droplet { get }
+    var config: ConfigurationType { get }
+    init(drop: Droplet, config: ConfigurationType)
+    func post(status: Status, message: String, metadata: Node?, request: Request) throws -> Status
+}
+
+public final class ConnectionMananger: ConnectionManagerType {
     
-    let drop: Droplet
-    let config: Configuration
+    public let drop: Droplet
+    public let config: ConfigurationType
     
-    public init(drop: Droplet, config: Configuration) {
+    public init(drop: Droplet, config: ConfigurationType) {
         self.drop = drop
         self.config = config
     }
     
-    func headers() -> [HeaderKey: String] {
-        
+    private func headers() -> [HeaderKey: String] {
         let headers = [
             HeaderKey("Content-Type"): "application/json",
         ]
@@ -21,7 +28,7 @@ public final class ConnectionMananger {
         return headers
     }
     
-    func body(message: String, request: Request) throws -> JSON {
+    private func body(message: String, metadata: Node?, request: Request) throws -> JSON {
         var code: [String: Node] = [:]
         
         var index = 0
@@ -29,7 +36,7 @@ public final class ConnectionMananger {
         #if os(OSX)
             for entry in Thread.callStackSymbols {
                 code[String(index)] = Node(entry)
-            
+                
                 index = index + 1
             }
         #endif
@@ -53,17 +60,18 @@ public final class ConnectionMananger {
         for (key, value) in request.headers {
             headers[key.key] = Node(value)
         }
-        
+
+        let customMetaData = metadata ?? Node([])
         let metaData = Node([
             "request": Node([
                 "method": Node(request.method.description),
                 "headers": Node(headers),
                 "params": request.parameters,
                 "url": Node(request.uri.path)
-            ])
+            ]),
+            "metaData": customMetaData
         ])
-        
-        
+
         let event: Node = Node([
             Node([
                 "payloadVersion": 2,
@@ -83,22 +91,22 @@ public final class ConnectionMananger {
         return try JSON(node: [
             "apiKey": self.config.apiKey,
             "notifier": Node([
-                    "name": "Bugsnag Vapor",
-                    "version": "1.0.11",
-                    "url": "https://github.com/nodes-vapor/bugsnag"
+                "name": "Bugsnag Vapor",
+                "version": "1.0.11",
+                "url": "https://github.com/nodes-vapor/bugsnag"
             ]),
             "events": event,
         ])
     }
     
-    func post(json: JSON) throws -> Status {
+    private func post(json: JSON) throws -> Status {
         let response = try drop.client.post(self.config.endpoint, headers: headers(), body: json.makeBody())
         
         return response.status
     }
     
-    func post(status: Status, message: String, request: Request) throws -> Status {
-        return try post(json: body(message: message, request: request))
+    public func post(status: Status, message: String, metadata: Node? = nil, request: Request) throws -> Status {
+        return try post(json: body(message: message, metadata: metadata, request: request))
     }
     
 }
