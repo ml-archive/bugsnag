@@ -19,7 +19,7 @@ Create config bugsnag.json
 
 ```
 {
-    "apiKey": "#BUGSNAGKEY#",
+    "apiKey": "#BUGSNAG_KEY#",
     "notifyReleaseStages": [
         "staging",
         "production"
