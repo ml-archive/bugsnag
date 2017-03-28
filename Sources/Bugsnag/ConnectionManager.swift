@@ -1,6 +1,7 @@
 import Vapor
 import HTTP
 import Foundation
+import Stacked
 
 
 public protocol ConnectionManagerType {
@@ -32,14 +33,11 @@ public final class ConnectionMananger: ConnectionManagerType {
         var code: [String: Node] = [:]
         
         var index = 0
-        //FIXME: Temporary workaround for Linux breaking when calling Thread.
-        #if os(OSX)
-            for entry in Thread.callStackSymbols {
-                code[String(index)] = Node(entry)
-                
-                index = index + 1
-            }
-        #endif
+        for entry in FrameAddress.getStackTrace() {
+            code[String(index)] = Node(entry)
+            
+            index = index + 1
+        }
         
         let stacktrace = Node([
             Node([
