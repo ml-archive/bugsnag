@@ -57,7 +57,6 @@ class ReporterTests: XCTestCase {
         let payloadExpectation = expectation(description: "Submit payload")
 
         let req = try! Request(method: .get, uri: "some-random-uri")
-        // TODO: Runs on background thread - fix
         try! reporter.report(
             message: "",
             metadata: nil,
