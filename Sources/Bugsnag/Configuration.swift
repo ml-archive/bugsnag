@@ -24,8 +24,10 @@ public struct Configuration: ConfigurationType {
         }
         
         var error: Abort {
-            return .custom(status: .internalServerError,
-                           message: "Bugsnag error - \(rawValue) config is missing.")
+            return .custom(
+                status: .internalServerError,
+                message: "Bugsnag error - \(rawValue) config is missing."
+            )
         }
     }
     
@@ -33,16 +35,44 @@ public struct Configuration: ConfigurationType {
     public let notifyReleaseStages: [String]
     public let endpoint: String
     public let filters: [String]
+
     public init(drop: Droplet) throws {
-        self.apiKey                 = try Configuration.extract(field: .apiKey, drop: drop)
-        self.notifyReleaseStages    = try Configuration.extract(field: .notifyReleaseStages, drop: drop)
-        self.endpoint               = try Configuration.extract(field: .endpoint, drop: drop)
-        self.filters                = try Configuration.extract(field: .filters, drop: drop)
+        // Set config
+        guard let config: Config = drop.config["bugsnag"] else {
+            throw Abort.custom(
+                status: .internalServerError,
+                message: "Bugsnag error - bugsnag.json config is missing."
+            )
+        }
+        
+        try self.init(config: config)
+    }
+
+    public init(config: Config) throws {
+        self.apiKey = try Configuration.extract(
+            field: .apiKey,
+            config: config
+        )
+        self.notifyReleaseStages = try Configuration.extract(
+            field: .notifyReleaseStages,
+            config: config
+        )
+        self.endpoint = try Configuration.extract(
+            field: .endpoint,
+            config: config
+        )
+        self.filters = try Configuration.extract(
+            field: .filters,
+            config: config
+        )
     }
     
-    private static func extract(field: Field , drop: Droplet) throws -> [String] {
+    private static func extract(
+        field: Field,
+        config: Config
+    ) throws -> [String] {
         // Get array
-        guard let platforms = drop.config[field.path]?.array else {
+        guard let platforms = config[field.path]?.array else {
             throw field.error
         }
         
@@ -56,8 +86,11 @@ public struct Configuration: ConfigurationType {
         })
     }
     
-    private static func extract(field: Field , drop: Droplet) throws -> String {
-        guard let string = drop.config[field.path]?.string else {
+    private static func extract(
+        field: Field,
+        config: Config
+    ) throws -> String {
+        guard let string = config[field.path]?.string else {
             throw field.error
         }
         

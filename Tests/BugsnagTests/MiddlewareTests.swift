@@ -3,27 +3,26 @@ import XCTest
 @testable import Bugsnag
 import HTTP
 
-class BugsnagMiddlewareTests: XCTestCase {
+class MiddlewareTests: XCTestCase {
     private var connectionManager: ConnectionManagerMock!
-    private var middleware: BugsnagMiddleware!
+    private var middleware: Bugsnag.Middleware!
+    private var reporter: ReporterMock!
 
-    static var allTests : [(String, (BugsnagMiddlewareTests) -> () throws -> Void)] {
-        return [
-            ("testThatErrorsNotConformingToAbortErrorAreRethrown", testThatErrorsNotConformingToAbortErrorAreRethrown),
-            ("testThatAbortErrorsAreRethrown", testThatAbortErrorsAreRethrown),
-            ("testErrorNotConformingToAbortErrorWillBeReported", testErrorNotConformingToAbortErrorWillBeReported),
-            ("testBadRequestAbortErrorWillBeReported", testBadRequestAbortErrorWillBeReported),
-            ("testCustomErrorWillBeReported", testCustomErrorWillBeReported),
-            ("testErrorNotReportedWhenExplicitlyToldNotTo", testErrorNotReportedWhenExplicitlyToldNotTo),
-            ("testErrorReportedWhenExplicitlyToldSo", testErrorReportedWhenExplicitlyToldSo)
-        ]
-    }
+    static let allTests = [
+        ("testThatErrorsNotConformingToAbortErrorAreRethrown", testThatErrorsNotConformingToAbortErrorAreRethrown),
+        ("testThatAbortErrorsAreRethrown", testThatAbortErrorsAreRethrown),
+        ("testErrorNotConformingToAbortErrorWillBeReported", testErrorNotConformingToAbortErrorWillBeReported),
+        ("testBadRequestAbortErrorWillBeReported", testBadRequestAbortErrorWillBeReported),
+        ("testCustomErrorWillBeReported", testCustomErrorWillBeReported),
+        ("testErrorNotReportedWhenExplicitlyToldNotTo", testErrorNotReportedWhenExplicitlyToldNotTo),
+        ("testErrorReportedWhenExplicitlyToldSo", testErrorReportedWhenExplicitlyToldSo)
+    ]
 
     override func setUp() {
         let drop = Droplet()
         let config = ConfigurationMock()
-        self.connectionManager = ConnectionManagerMock(drop: drop, config: config)
-        self.middleware = BugsnagMiddleware(connectionManager: connectionManager)
+        self.reporter = ReporterMock(drop: drop, config: config)
+        self.middleware = try! Bugsnag.Middleware(reporter: reporter)
     }
 
     override func tearDown() {
@@ -63,10 +62,9 @@ class BugsnagMiddlewareTests: XCTestCase {
         let req = try? Request(method: .get, uri: "some-random-uri")
         _ = try? middleware.respond(to: req!, chainingTo: next)
 
-        XCTAssertEqual(connectionManager.lastPost!.status, .internalServerError)
-        XCTAssertEqual(connectionManager.lastPost!.message, Status.internalServerError.reasonPhrase)
-        XCTAssertEqual(connectionManager.lastPost!.metadata, nil)
-        XCTAssertEqual(connectionManager.lastPost!.request.uri.description, req!.uri.description)
+        XCTAssertEqual(reporter.lastReport!.message, Status.internalServerError.reasonPhrase)
+        XCTAssertEqual(reporter.lastReport!.metadata, nil)
+        XCTAssertEqual(reporter.lastReport!.request.uri.description, req!.uri.description)
     }
 
     func testBadRequestAbortErrorWillBeReported() {
@@ -74,10 +72,9 @@ class BugsnagMiddlewareTests: XCTestCase {
         let req = try? Request(method: .get, uri: "some-random-uri")
         _ = try? middleware.respond(to: req!, chainingTo: next)
 
-        XCTAssertEqual(connectionManager.lastPost!.status, .badRequest)
-        XCTAssertEqual(connectionManager.lastPost!.message, Abort.badRequest.message)
-        XCTAssertEqual(connectionManager.lastPost!.metadata, nil)
-        XCTAssertEqual(connectionManager.lastPost!.request.uri.description, req!.uri.description)
+        XCTAssertEqual(reporter.lastReport!.message, Abort.badRequest.message)
+        XCTAssertEqual(reporter.lastReport!.metadata, nil)
+        XCTAssertEqual(reporter.lastReport!.request.uri.description, req!.uri.description)
     }
 
     func testCustomErrorWillBeReported() {
@@ -94,10 +91,9 @@ class BugsnagMiddlewareTests: XCTestCase {
         let req = try? Request(method: .get, uri: "some-random-uri")
         _ = try? middleware.respond(to: req!, chainingTo: next)
 
-        XCTAssertEqual(connectionManager.lastPost!.status, error.status)
-        XCTAssertEqual(connectionManager.lastPost!.message, error.message)
-        XCTAssertEqual(connectionManager.lastPost!.metadata, error.metadata)
-        XCTAssertEqual(connectionManager.lastPost!.request.uri.description, req!.uri.description)
+        XCTAssertEqual(reporter.lastReport!.message, error.message)
+        XCTAssertEqual(reporter.lastReport!.metadata, error.metadata)
+        XCTAssertEqual(reporter.lastReport!.request.uri.description, req!.uri.description)
     }
 
 
@@ -115,7 +111,7 @@ class BugsnagMiddlewareTests: XCTestCase {
         let req = try? Request(method: .get, uri: "some-random-uri")
         _ = try? middleware.respond(to: req!, chainingTo: next)
 
-        XCTAssertNil(connectionManager.lastPost)
+        XCTAssertNil(reporter.lastReport)
     }
 
     func testErrorReportedWhenExplicitlyToldSo() {
@@ -130,7 +126,7 @@ class BugsnagMiddlewareTests: XCTestCase {
         let req = try? Request(method: .get, uri: "some-random-uri")
         _ = try? middleware.respond(to: req!, chainingTo: next)
 
-        XCTAssertNotNil(connectionManager.lastPost)
+        XCTAssertNotNil(reporter.lastReport)
     }
 }
 
