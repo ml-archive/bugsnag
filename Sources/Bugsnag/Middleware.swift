@@ -28,13 +28,8 @@ public final class Middleware: HTTP.Middleware {
     public func respond(to request: Request, chainingTo next: Responder) throws -> Response {
         do {
             return try next.respond(to: request)
-        } catch let error as AbortError {
-            if error.metadata?["report"]?.bool ?? true {
-                try reporter.report(message: error.message, metadata: error.metadata, request: request)
-            }
-            throw error
-        } catch {
-            try reporter.report(message: Status.internalServerError.reasonPhrase, metadata: nil, request: request)
+        } catch let error {
+            try self.reporter.report(error: error, request: request)
             throw error
         }
     }

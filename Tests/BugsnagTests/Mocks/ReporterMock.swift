@@ -5,33 +5,23 @@ import HTTP
 internal class ReporterMock: ReporterType {
     let drop: Droplet
     let config: ConfigurationType
-    var lastReport: (message: String, metadata: Node?, request: Request)? = nil
+    var lastReport: (error: Error, request: Request)? = nil
 
     required init(drop: Droplet, config: ConfigurationType) {
         self.drop = drop
         self.config = config
     }
 
-    internal func report(
-        message: String,
-        metadata: Node?,
-        request: Request
-    ) throws {
-        try report(
-            message: message,
-            metadata: metadata,
-            request: request,
-            completion: nil
-        )
+    public func report(error: Error, request: Request) throws {
+        try report(error: error, request: request, completion: nil)
     }
 
     internal func report(
-        message: String,
-        metadata: Node?,
+        error: Error,
         request: Request,
         completion complete: (() -> ())?
     ) throws {
-        self.lastReport = (message: message, metadata: metadata, request: request)
+        self.lastReport = (error: error, request: request)
         if let complete = complete { complete() }
     }
 }

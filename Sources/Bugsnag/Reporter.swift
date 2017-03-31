@@ -5,13 +5,8 @@ import Core
 public protocol ReporterType {
     var drop: Droplet { get }
     var config: ConfigurationType { get }
-    func report(message: String, metadata: Node?, request: Request) throws
-    func report(
-        message: String,
-        metadata: Node?,
-        request: Request,
-        completion: (() -> ())?
-    ) throws
+    func report(error: Error, request: Request) throws
+    func report(error: Error, request: Request, completion: (() -> ())?) throws
 }
 
 public final class Reporter: ReporterType {
@@ -38,20 +33,39 @@ public final class Reporter: ReporterType {
         )
     }
 
-    public func report(
-        message: String,
-        metadata: Node?,
-        request: Request
-    ) throws {
-        try report(
-            message: message,
-            metadata: metadata,
-            request: request,
-            completion: nil
-        )
+    public func report(error: Error, request: Request) throws {
+        try report(error: error, request: request, completion: nil)
     }
 
     public func report(
+        error: Error,
+        request: Request,
+        completion complete: (() -> ())?
+    ) throws {
+        if let error = error as? AbortError {
+            guard error.metadata?["report"]?.bool ?? true else {
+                return
+            }
+            try self.report(
+                message: error.message,
+                metadata: error.metadata,
+                request: request,
+                completion: complete
+            )
+        } else {
+            try self.report(
+                message: Status.internalServerError.reasonPhrase,
+                metadata: nil,
+                request: request,
+                completion: complete
+            )
+        }
+    }
+
+
+    // MARK: - Private helpers
+
+    private func report(
         message: String,
         metadata: Node?,
         request: Request,
