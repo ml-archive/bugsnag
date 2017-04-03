@@ -14,15 +14,11 @@ public protocol ConfigurationType {
 public struct Configuration: ConfigurationType {
     
     public enum Field: String {
-        case apiKey                 = "bugsnag.apiKey"
-        case notifyReleaseStages    = "bugsnag.notifyReleaseStages"
-        case endpoint               = "bugsnag.endpoint"
-        case filters                = "bugsnag.filters"
-        
-        var path: [String] {
-            return rawValue.components(separatedBy: ".")
-        }
-        
+        case apiKey                 = "apiKey"
+        case notifyReleaseStages    = "notifyReleaseStages"
+        case endpoint               = "endpoint"
+        case filters                = "filters"
+
         var error: Abort {
             return .custom(
                 status: .internalServerError,
@@ -72,7 +68,7 @@ public struct Configuration: ConfigurationType {
         config: Config
     ) throws -> [String] {
         // Get array
-        guard let platforms = config[field.path]?.array else {
+        guard let platforms = config[field.rawValue]?.array else {
             throw field.error
         }
         
@@ -90,7 +86,7 @@ public struct Configuration: ConfigurationType {
         field: Field,
         config: Config
     ) throws -> String {
-        guard let string = config[field.path]?.string else {
+        guard let string = config[field.rawValue]?.string else {
             throw field.error
         }
         
