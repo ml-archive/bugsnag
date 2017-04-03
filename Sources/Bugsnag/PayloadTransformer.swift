@@ -45,7 +45,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
                 headers[key.key] = Node(value)
             }
         }
-        // TODO Fix this 
+
         let customMetadata = metadata ?? Node([])
         let metadata = Node([
             "request": Node([
