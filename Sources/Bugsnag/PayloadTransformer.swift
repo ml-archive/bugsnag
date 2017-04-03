@@ -3,7 +3,7 @@ import Stacked
 import HTTP
 
 public protocol PayloadTransformerType {
-    func payloadFor(message: String, metadata: Node?, request: Request) throws -> JSON
+    func payloadFor(message: String, metadata: Node?, request: Request?) throws -> JSON
 }
 
 internal struct PayloadTransformer: PayloadTransformerType {
@@ -13,7 +13,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
     internal func payloadFor(
         message: String,
         metadata: Node?,
-        request: Request
+        request: Request?
     ) throws -> JSON {
         var code: [String: Node] = [:]
         
@@ -40,17 +40,19 @@ internal struct PayloadTransformer: PayloadTransformerType {
         ])
         
         var headers: [String: Node] = [:]
-        for (key, value) in request.headers {
-            headers[key.key] = Node(value)
+        if let requestHeaders = request?.headers {
+            for (key, value) in requestHeaders {
+                headers[key.key] = Node(value)
+            }
         }
 
         let customMetadata = metadata ?? Node([])
         let metadata = Node([
             "request": Node([
-                "method": Node(request.method.description),
+                "method": request != nil ? Node(request!.method.description) : Node.null,
                 "headers": Node(headers),
-                "params": request.parameters,
-                "url": Node(request.uri.path)
+                "params": request?.parameters ?? Node.null,
+                "url": request != nil ? Node(request!.uri.path) : Node.null
             ]),
             "metaData": customMetadata
         ])

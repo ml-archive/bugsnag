@@ -5,8 +5,8 @@ import Core
 public protocol ReporterType {
     var drop: Droplet { get }
     var config: ConfigurationType { get }
-    func report(error: Error, request: Request) throws
-    func report(error: Error, request: Request, completion: (() -> ())?) throws
+    func report(error: Error, request: Request?) throws
+    func report(error: Error, request: Request?, completion: (() -> ())?) throws
 }
 
 public final class Reporter: ReporterType {
@@ -33,13 +33,13 @@ public final class Reporter: ReporterType {
         )
     }
 
-    public func report(error: Error, request: Request) throws {
+    public func report(error: Error, request: Request?) throws {
         try report(error: error, request: request, completion: nil)
     }
 
     public func report(
         error: Error,
-        request: Request,
+        request: Request?,
         completion complete: (() -> ())?
     ) throws {
         if let error = error as? AbortError {
@@ -68,7 +68,7 @@ public final class Reporter: ReporterType {
     private func report(
         message: String,
         metadata: Node?,
-        request: Request,
+        request: Request?,
         completion complete: (() -> ())? = nil
     ) throws {
         let payload = try payloadTransformer.payloadFor(
