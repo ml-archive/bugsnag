@@ -41,30 +41,48 @@ class ReporterTests: XCTestCase {
     // MARK: Automatic reporting.
 
     func testErrorNotConformingToAbortErrorWillBeReported() {
+        let exp = expectation(description: "Custom abort error will be reported")
+
         let req = try! Request(method: .get, uri: "some-random-uri")
+        try! reporter.report(
+            error: MyCustomError(),
+            request: req,
+            completion: {
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.0, Status.internalServerError.reasonPhrase)
+                XCTAssertNil(self.payloadTransformer.lastPayloadData!.1)
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.2?.method, req.method)
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.2?.uri.description, req.uri.description)
+                XCTAssertNotNil(self.connectionManager.lastPayload)
+                exp.fulfill()
+            }
+        )
 
-        try! reporter.report(error: MyCustomError(), request: req)
-
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.0, Status.internalServerError.reasonPhrase)
-        XCTAssertNil(payloadTransformer.lastPayloadData!.1)
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.2.method, req.method)
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.2.uri.description, req.uri.description)
-        XCTAssertNotNil(self.connectionManager.lastPayload)
+        waitForExpectations(timeout: 1)
     }
 
     func testBadRequestAbortErrorWillBeReported() {
+        let exp = expectation(description: "Bad request error will be reported")
+
         let req = try! Request(method: .get, uri: "some-random-uri")
+        try! reporter.report(
+            error: Abort.badRequest,
+            request: req,
+            completion: {
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.0, Abort.badRequest.message)
+                XCTAssertNil(self.payloadTransformer.lastPayloadData!.1)
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.2?.method, req.method)
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.2?.uri.description, req.uri.description)
+                XCTAssertNotNil(self.connectionManager.lastPayload)
+                exp.fulfill()
+            }
+        )
 
-        try! reporter.report(error: Abort.badRequest, request: req)
-
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.0, Abort.badRequest.message)
-        XCTAssertNil(payloadTransformer.lastPayloadData!.1)
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.2.method, req.method)
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.2.uri.description, req.uri.description)
-        XCTAssertNotNil(self.connectionManager.lastPayload)
+        waitForExpectations(timeout: 1)
     }
 
     func testCustomErrorWillBeReported() {
+        let exp = expectation(description: "Custom error will be reported")
+
         let req = try! Request(method: .get, uri: "some-random-uri")
         let metadata: Node? = Node([
             "key1": "value1",
@@ -77,13 +95,20 @@ class ReporterTests: XCTestCase {
             metadata: metadata
         )
 
-        try! reporter.report(error: error, request: req)
+        try! reporter.report(
+            error: error,
+            request: req,
+            completion: {
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.0, error.message)
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.1, error.metadata)
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.2?.method, req.method)
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.2?.uri.description, req.uri.description)
+                XCTAssertNotNil(self.connectionManager.lastPayload)
+                exp.fulfill()
+            }
+        )
 
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.0, error.message)
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.1, error.metadata)
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.2.method, req.method)
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.2.uri.description, req.uri.description)
-        XCTAssertNotNil(self.connectionManager.lastPayload)
+        waitForExpectations(timeout: 1)
     }
 
 
@@ -98,13 +123,21 @@ class ReporterTests: XCTestCase {
             metadata: Node(["report": false])
         )
 
-        try! reporter.report(error: error, request: req)
+        try! reporter.report(
+            error: error,
+            request: req,
+            completion: {
+                XCTFail("Error reported when not supposed to.")
+            }
+        )
 
-        XCTAssertNil(payloadTransformer.lastPayloadData)
+        XCTAssertNil(self.payloadTransformer.lastPayloadData)
         XCTAssertNil(self.connectionManager.lastPayload)
     }
 
     func testErrorReportedWhenExplicitlyToldTo() {
+        let exp = expectation(description: "Error will be reported")
+
         let req = try! Request(method: .get, uri: "some-random-uri")
         let error = MyCustomAbortError(
             message: "",
@@ -113,17 +146,24 @@ class ReporterTests: XCTestCase {
             metadata: Node(["report": true])
         )
 
-        try! reporter.report(error: error, request: req)
+        try! reporter.report(
+            error: error,
+            request: req,
+            completion: {
+                XCTAssertNotNil(self.payloadTransformer.lastPayloadData)
+                XCTAssertNotNil(self.connectionManager.lastPayload)
+                exp.fulfill()
+            }
+        )
 
-        XCTAssertNotNil(payloadTransformer.lastPayloadData)
-        XCTAssertNotNil(self.connectionManager.lastPayload)
+        waitForExpectations(timeout: 1)
     }
 
 
     // MARK: - Submission
 
     func testThatThePayloadGetsSubmitted() {
-        let payloadExpectation = expectation(description: "Submit payload")
+        let exp = expectation(description: "Submit payload")
 
         let req = try! Request(method: .get, uri: "some-random-uri")
         try! reporter.report(
@@ -131,7 +171,7 @@ class ReporterTests: XCTestCase {
             request: req,
             completion: {
                 XCTAssertEqual(self.connectionManager.lastPayload, try! JSON(node: ["transformer": "mock"]))
-                payloadExpectation.fulfill()
+                exp.fulfill()
             }
         )
 

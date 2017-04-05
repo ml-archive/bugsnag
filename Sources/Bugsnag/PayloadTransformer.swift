@@ -51,7 +51,10 @@ internal struct PayloadTransformer: PayloadTransformerType {
             "request": Node([
                 "method": request != nil ? Node(request!.method.description) : Node.null,
                 "headers": Node(headers),
-                "params": request?.parameters ?? Node.null,
+                "urlParameters": optionalNode(request?.parameters),
+                "queryParameters": optionalNode(request?.query),
+                "formParameters": optionalNode(request?.formURLEncoded),
+                "jsonParameters": optionalNode(request?.json?.makeNode()),
                 "url": request != nil ? Node(request!.uri.path) : Node.null
             ]),
             "metaData": customMetadata
@@ -82,5 +85,12 @@ internal struct PayloadTransformer: PayloadTransformerType {
             ]),
             "events": event,
         ])
+    }
+
+
+    // MARK: - Private helpers.
+
+    private func optionalNode(_ node: Node?) -> Node {
+        return node ?? Node.null
     }
 }
