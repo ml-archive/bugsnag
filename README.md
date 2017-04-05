@@ -45,7 +45,7 @@ import Bugsnag
 
 Next, add the middleware:
 ```swift
-try drop.middleware.append(BugsnagMiddleware(drop: drop))
+try drop.middleware.append(Bugsnag.Middleware(drop: drop))
 ```
 
 ### Manual reporting
