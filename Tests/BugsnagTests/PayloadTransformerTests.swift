@@ -29,9 +29,11 @@ class PayloadTransformerTests: XCTestCase {
         let config = ConfigurationMock()
         self.payloadTransformer = PayloadTransformer(drop: drop, config: config)
         let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
-        req.parameters = ["key": "value"]
+        req.parameters = ["url": "value"]
+        req.query = ["query": "value"]
+        req.formURLEncoded = ["form": "value"]
+        req.json = try! JSON(node: Node(["json": "value"]))
         req.headers = ["Content-Type": "application/json"]
-        //self.testData = ("Test message", Node(["key": "value"]), req)
         self.payload = try! self.payloadTransformer.payloadFor(
             message: "Test message",
             metadata: Node(["key": "value"]),
@@ -52,11 +54,17 @@ class PayloadTransformerTests: XCTestCase {
     func testThatItHandlesRequestPayloadCorrectly() {
         let request = payload["events"]?[0]?["metaData"]?["request"]
         let expectedHeaders = Node(["Content-Type": "application/json"])
-        let expectedParams = Node(["key": "value"])
+        let expectedUrlParams = Node(["url": "value"])
+        let expectedQueryParams = Node(["query": "value"])
+        let expectedFormParams = Node(["form": "value"])
+        let expectedJsonParams = Node(["json": "value"])
 
         XCTAssertEqual(request?["method"]?.string, "GET")
         XCTAssertEqual(request?["headers"]?.node, expectedHeaders)
-        XCTAssertEqual(request?["params"]?.node, expectedParams)
+        XCTAssertEqual(request?["urlParameters"]?.node, expectedUrlParams)
+        XCTAssertEqual(request?["queryParameters"]?.node, expectedQueryParams)
+        XCTAssertEqual(request?["formParameters"]?.node, expectedFormParams)
+        XCTAssertEqual(request?["jsonParameters"]?.node, expectedJsonParams)
         XCTAssertEqual(request?["url"]?.string, "/payload-test")
     }
 

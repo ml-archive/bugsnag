@@ -68,7 +68,7 @@ class MiddlewareTests: XCTestCase {
         XCTAssertEqual(reportedError?.code, Abort.badRequest.code)
         XCTAssertEqual(reportedError?.status, Abort.badRequest.status)
         XCTAssertEqual(reportedError?.metadata, Abort.badRequest.metadata)
-        XCTAssertEqual(reporter.lastReport!.request.uri.description, req!.uri.description)
+        XCTAssertEqual(reporter.lastReport!.request?.uri.description, req!.uri.description)
     }
 
     func testThatErrorsNotConformingToAbortErrorAreReported() {
@@ -82,6 +82,6 @@ class MiddlewareTests: XCTestCase {
         let reportedError = self.reporter.lastReport?.0 as? MyCustomError
 
         XCTAssertEqual(reportedError?.value, 1337)
-        XCTAssertEqual(reporter.lastReport!.request.uri.description, req!.uri.description)
+        XCTAssertEqual(reporter.lastReport!.request?.uri.description, req!.uri.description)
     }
 }

@@ -5,7 +5,7 @@ import HTTP
 internal class PayloadTransformerMock: PayloadTransformerType {
     let drop: Droplet
     let config: ConfigurationType
-    var lastPayloadData: (message: String, metadata: Node?, request: Request)? = nil
+    var lastPayloadData: (message: String, metadata: Node?, request: Request?)? = nil
 
     required init(drop: Droplet, config: ConfigurationType) {
         self.drop = drop
@@ -15,7 +15,7 @@ internal class PayloadTransformerMock: PayloadTransformerType {
     internal func payloadFor(
         message: String,
         metadata: Node?,
-        request: Request
+        request: Request?
     ) throws -> JSON {
         self.lastPayloadData = (message: message, metadata: metadata, request: request)
         return try JSON(node: ["transformer": "mock"])

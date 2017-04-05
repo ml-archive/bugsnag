@@ -47,8 +47,8 @@ class ReporterTests: XCTestCase {
 
         XCTAssertEqual(payloadTransformer.lastPayloadData!.0, Status.internalServerError.reasonPhrase)
         XCTAssertNil(payloadTransformer.lastPayloadData!.1)
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.2.method, req.method)
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.2.uri.description, req.uri.description)
+        XCTAssertEqual(payloadTransformer.lastPayloadData!.2?.method, req.method)
+        XCTAssertEqual(payloadTransformer.lastPayloadData!.2?.uri.description, req.uri.description)
         XCTAssertNotNil(self.connectionManager.lastPayload)
     }
 
@@ -59,8 +59,8 @@ class ReporterTests: XCTestCase {
 
         XCTAssertEqual(payloadTransformer.lastPayloadData!.0, Abort.badRequest.message)
         XCTAssertNil(payloadTransformer.lastPayloadData!.1)
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.2.method, req.method)
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.2.uri.description, req.uri.description)
+        XCTAssertEqual(payloadTransformer.lastPayloadData!.2?.method, req.method)
+        XCTAssertEqual(payloadTransformer.lastPayloadData!.2?.uri.description, req.uri.description)
         XCTAssertNotNil(self.connectionManager.lastPayload)
     }
 
@@ -81,8 +81,8 @@ class ReporterTests: XCTestCase {
 
         XCTAssertEqual(payloadTransformer.lastPayloadData!.0, error.message)
         XCTAssertEqual(payloadTransformer.lastPayloadData!.1, error.metadata)
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.2.method, req.method)
-        XCTAssertEqual(payloadTransformer.lastPayloadData!.2.uri.description, req.uri.description)
+        XCTAssertEqual(payloadTransformer.lastPayloadData!.2?.method, req.method)
+        XCTAssertEqual(payloadTransformer.lastPayloadData!.2?.uri.description, req.uri.description)
         XCTAssertNotNil(self.connectionManager.lastPayload)
     }
 
