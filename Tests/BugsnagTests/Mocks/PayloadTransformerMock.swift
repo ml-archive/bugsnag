@@ -15,8 +15,9 @@ internal class PayloadTransformerMock: PayloadTransformerType {
     internal func payloadFor(
         message: String,
         metadata: Node?,
-        request: Request?
-    ) throws -> JSON {
+        request: Request?,
+        severity: Severity
+        ) throws -> JSON {
         self.lastPayloadData = (message: message, metadata: metadata, request: request)
         return try JSON(node: ["transformer": "mock"])
     }

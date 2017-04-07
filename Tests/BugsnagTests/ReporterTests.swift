@@ -47,6 +47,7 @@ class ReporterTests: XCTestCase {
         try! reporter.report(
             error: MyCustomError(),
             request: req,
+            severity: .error,
             completion: {
                 XCTAssertEqual(self.payloadTransformer.lastPayloadData!.0, Status.internalServerError.reasonPhrase)
                 XCTAssertNil(self.payloadTransformer.lastPayloadData!.1)
@@ -67,6 +68,7 @@ class ReporterTests: XCTestCase {
         try! reporter.report(
             error: Abort.badRequest,
             request: req,
+            severity: .error,
             completion: {
                 XCTAssertEqual(self.payloadTransformer.lastPayloadData!.0, Abort.badRequest.message)
                 XCTAssertNil(self.payloadTransformer.lastPayloadData!.1)
@@ -98,6 +100,7 @@ class ReporterTests: XCTestCase {
         try! reporter.report(
             error: error,
             request: req,
+            severity: .error,
             completion: {
                 XCTAssertEqual(self.payloadTransformer.lastPayloadData!.0, error.message)
                 XCTAssertEqual(self.payloadTransformer.lastPayloadData!.1, error.metadata)
@@ -126,6 +129,7 @@ class ReporterTests: XCTestCase {
         try! reporter.report(
             error: error,
             request: req,
+            severity: .error,
             completion: {
                 XCTFail("Error reported when not supposed to.")
             }
@@ -149,6 +153,7 @@ class ReporterTests: XCTestCase {
         try! reporter.report(
             error: error,
             request: req,
+            severity: .error,
             completion: {
                 XCTAssertNotNil(self.payloadTransformer.lastPayloadData)
                 XCTAssertNotNil(self.connectionManager.lastPayload)
@@ -169,6 +174,7 @@ class ReporterTests: XCTestCase {
         try! reporter.report(
             error: Abort.badRequest,
             request: req,
+            severity: .error,
             completion: {
                 XCTAssertEqual(self.connectionManager.lastPayload, try! JSON(node: ["transformer": "mock"]))
                 exp.fulfill()

@@ -7,6 +7,8 @@ class PayloadTransformerTests: XCTestCase {
     private var config: ConfigurationMock!
     private var payloadTransformer: PayloadTransformer!
     private var payload: JSON!
+    private var payloadDefault: JSON!
+    private var severity: Severity = .warning
 
     static let allTests = [
         ("testThatItUsesApiKeyFromConfig", testThatItUsesApiKeyFromConfig),
@@ -15,6 +17,7 @@ class PayloadTransformerTests: XCTestCase {
         ("testThatSeverityIsCorrect", testThatSeverityIsCorrect),
         ("testThatItHandlesCustomMetadata", testThatItHandlesCustomMetadata),
         ("testThatItBuildsNotifierPayloadCorrectly", testThatItBuildsNotifierPayloadCorrectly),
+        ("testThatSeverityGetsDefaultValue", testThatSeverityGetsDefaultValue)
     ]
 
     override func setUp() {
@@ -35,6 +38,12 @@ class PayloadTransformerTests: XCTestCase {
         req.json = try! JSON(node: Node(["json": "value"]))
         req.headers = ["Content-Type": "application/json"]
         self.payload = try! self.payloadTransformer.payloadFor(
+            message: "Test message",
+            metadata: Node(["key": "value"]),
+            request: req,
+            severity: self.severity
+        )
+        self.payloadDefault = try! self.payloadTransformer.payloadFor(
             message: "Test message",
             metadata: Node(["key": "value"]),
             request: req
@@ -84,7 +93,11 @@ class PayloadTransformerTests: XCTestCase {
     }
 
     func testThatSeverityIsCorrect() {
-        XCTAssertEqual(payload["events"]?[0]?["severity"]?.string, "error")
+        XCTAssertEqual(payload["events"]?[0]?["severity"]?.string, self.severity.rawValue)
+    }
+
+    func testThatSeverityGetsDefaultValue() {
+        XCTAssertEqual(payloadDefault["events"]?[0]?["severity"]?.string, "error")
     }
 
     func testThatItHandlesCustomMetadata() {
