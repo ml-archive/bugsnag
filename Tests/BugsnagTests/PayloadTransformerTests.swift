@@ -61,10 +61,10 @@ class PayloadTransformerTests: XCTestCase {
 
         XCTAssertEqual(request?["method"]?.string, "GET")
         XCTAssertEqual(request?["headers"]?.makeNode(in: nil), expectedHeaders)
-        XCTAssertEqual(request?["urlParameters"]?.makeNode(in: nil), expectedUrlParams)
-        XCTAssertEqual(request?["queryParameters"]?.makeNode(in: nil), expectedQueryParams)
-        XCTAssertEqual(request?["formParameters"]?.makeNode(in: nil), expectedFormParams)
-        XCTAssertEqual(request?["jsonParameters"]?.makeNode(in: nil), expectedJsonParams)
+        XCTAssertEqual(request?["urlParameters"]?.wrapped, expectedUrlParams.wrapped)
+        XCTAssertEqual(request?["queryParameters"]?.wrapped, expectedQueryParams.wrapped)
+        XCTAssertEqual(request?["formParameters"]?.wrapped, expectedFormParams.wrapped)
+        XCTAssertEqual(request?["jsonParameters"]?.wrapped, expectedJsonParams.wrapped)
         XCTAssertEqual(request?["url"]?.string, "/payload-test")
     }
 
