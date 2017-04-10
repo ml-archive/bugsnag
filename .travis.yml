@@ -1,86 +1,10 @@
-#!/usr/bin/env bash
-
-VERSION="3.1"
-echo "Swift $VERSION Continuous Integration";
-
-# Determine OS
-UNAME=`uname`;
-if [[ $UNAME == "Darwin" ]];
-then
-    OS="macos";
-    OS_FILE="osx";
-else
-    if [[ $UNAME == "Linux" ]];
-    then
-        UBUNTU_RELEASE=`lsb_release -a 2>/dev/null`;
-        if [[ $UBUNTU_RELEASE == *"16.10"* ]];
-        then
-            OS="ubuntu1610";
-            OS_FILE="ubuntu16.10";
-        elif [[ $UBUNTU_RELEASE == *"16.04"* ]];
-        then
-            OS="ubuntu1604";
-            OS_FILE="ubuntu16.04";
-        elif [[ $UBUNTU_RELEASE == *"14.04"* ]];
-        then
-            OS="ubuntu1404";
-            OS_FILE="ubuntu14.04";
-        else
-            echo "Unsupported Operating System: $UBUNTU_RELEASE";
-            exit 1; 
-        fi
-    else
-        echo "Unsupported Operating System: $UNAME";
-        exit 1; 
-    fi
-fi
-echo "🖥 Operating System: $OS";
-
-if [[ $OS != "macos" ]];
-then
-    echo "📚 Installing Swift Dependencies"
-    sudo apt-get install -y clang libicu-dev uuid-dev
-
-    echo "🐦 Installing Swift";
-    SWIFTFILE=swift-3.1-RELEASE-$OS_FILE
-    wget https://swift.org/builds/swift-3.1-release/$OS/swift-3.1-RELEASE/$SWIFTFILE.tar.gz
-    tar -zxf $SWIFTFILE.tar.gz
-    export PATH=$PWD/$SWIFTFILE/usr/bin:"${PATH}"
-
-    echo "📦  Installing Vapor Dependencies"
-    sudo apt-get install -y openssl libmysqlclient-dev
-
-else
-    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-    brew install ctls
-fi
-
-echo "📅 Version: `swift --version`";
-
-echo "🚀 Building";
-swift build
-if [[ $? != 0 ]]; 
-then 
-    echo "❌  Build failed";
-    exit 1; 
-fi
-
-echo "💼 Building Release";
-swift build -c release
-if [[ $? != 0 ]]; 
-then 
-    echo "❌  Build for release failed";
-    exit 1; 
-fi
-
-echo "🔎 Testing";
-
-swift test
-if [[ $? != 0 ]]; 
-then 
-    echo "❌ Tests failed";
-    exit 1; 
-fi
-
-echo "✅ Done"
-
+os:
+  - linux
+  - osx
+language: generic
+sudo: required
+dist: trusty
+osx_image: xcode8
+script:
+  - eval "$(curl -sL https://gist.githubusercontent.com/BrettRToomey/1256d98cce5546c696cc68d9f61ad46f/raw/4af6d4a2bb0df02ffba16f9ed05a37eb93b6c6c1/TravisSwift31)"
+  - eval "$(curl -sL https://swift.vapor.sh/codecov)"
