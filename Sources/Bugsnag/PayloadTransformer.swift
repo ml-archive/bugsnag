@@ -20,7 +20,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
         message: String,
         metadata: Node?,
         request: Request?,
-        severity: Severity = Severity.error
+        severity: Severity
     ) throws -> JSON {
         var code: [String: Node] = [:]
         

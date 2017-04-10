@@ -11,19 +11,12 @@ public protocol ReporterType {
         error: Error,
         request: Request?,
         severity: Severity,
-        completion: (() -> ())?) throws
+        completion: (() -> ())?
+    ) throws
 }
 
 public enum Severity: String {
     case error, warning, info
-    
-    init(value: String){
-        guard let severity = Severity(rawValue: value) else {
-            self = .error
-            return
-        }
-        self = severity
-    }
 }
 
 public final class Reporter: ReporterType {

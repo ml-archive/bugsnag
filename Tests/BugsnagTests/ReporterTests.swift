@@ -6,7 +6,7 @@ import HTTP
 class ReporterTests: XCTestCase {
     private var connectionManager: ConnectionManagerMock!
     private var payloadTransformer: PayloadTransformerMock!
-    private var reporter: ReporterType!
+    private var reporter: Reporter!
 
     static let allTests = [
         ("testErrorNotConformingToAbortErrorWillBeReported", testErrorNotConformingToAbortErrorWillBeReported),
@@ -14,7 +14,9 @@ class ReporterTests: XCTestCase {
         ("testCustomErrorWillBeReported", testCustomErrorWillBeReported),
         ("testErrorNotReportedWhenExplicitlyToldNotTo", testErrorNotReportedWhenExplicitlyToldNotTo),
         ("testErrorReportedWhenExplicitlyToldTo", testErrorReportedWhenExplicitlyToldTo),
-        ("testThatThePayloadGetsSubmitted", testThatThePayloadGetsSubmitted)
+        ("testThatThePayloadGetsSubmitted", testThatThePayloadGetsSubmitted),
+        ("testSeverityGetsDefaultValue",testSeverityGetsDefaultValue),
+        ("testSeverityGetsGivenValue",testSeverityGetsGivenValue)
     ]
 
 
@@ -164,6 +166,17 @@ class ReporterTests: XCTestCase {
         waitForExpectations(timeout: 1)
     }
 
+    func testSeverityGetsDefaultValue() {
+        let req = try! Request(method: .get, uri: "some-random-uri")
+        try! reporter.report(error: Abort.badRequest, request: req, completion: nil)
+        XCTAssertEqual(self.payloadTransformer.lastPayloadData?.3, Severity.error)
+    }
+
+    func testSeverityGetsGivenValue() {
+        let req = try! Request(method: .get, uri: "some-random-uri")
+        try! reporter.report(error: Abort.badRequest, request: req, severity: Severity.info, completion: nil)
+        XCTAssertEqual(self.payloadTransformer.lastPayloadData?.3, Severity.info)
+    }
 
     // MARK: - Submission
 
@@ -184,7 +197,6 @@ class ReporterTests: XCTestCase {
         waitForExpectations(timeout: 1)
     }
 }
-
 
 // MARK: - Misc.
 
