@@ -74,7 +74,8 @@ public final class Reporter: ReporterType {
         let payload = try payloadTransformer.payloadFor(
             message: message,
             metadata: metadata,
-            request: request
+            request: request,
+            filters: config.filters
         )
 
         // Fire and forget.
