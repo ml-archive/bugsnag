@@ -21,7 +21,7 @@ public final class ConnectionManager: ConnectionManagerType {
     }
     
     public func submitPayload(_ json: JSON) throws -> Status {
-        let response = try drop.client.post(self.config.endpoint, headers: headers(), body: json.makeBody())
+        let response = try drop.client.post(self.config.endpoint, query: [:], headers(), json.makeBody())
         return response.status
     }
 

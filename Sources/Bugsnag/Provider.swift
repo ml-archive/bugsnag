@@ -14,9 +14,9 @@ public final class Provider: Vapor.Provider {
 
     public init(config: Config) throws {
         guard let config: Config = config["bugsnag"] else {
-            throw Abort.custom(
-                status: .internalServerError,
-                message: "Bugsnag error - bugsnag.json config is missing."
+            throw Abort(
+                .internalServerError,
+                reason: "Bugsnag error - bugsnag.json config is missing."
             )
         }
         

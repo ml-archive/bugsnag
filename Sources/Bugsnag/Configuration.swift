@@ -20,9 +20,9 @@ public struct Configuration: ConfigurationType {
         case filters                = "filters"
 
         var error: Abort {
-            return .custom(
-                status: .internalServerError,
-                message: "Bugsnag error - \(rawValue) config is missing."
+            return Abort(
+                .internalServerError,
+                reason: "Bugsnag error - \(rawValue) config is missing."
             )
         }
     }
@@ -35,9 +35,9 @@ public struct Configuration: ConfigurationType {
     public init(drop: Droplet) throws {
         // Set config
         guard let config: Config = drop.config["bugsnag"] else {
-            throw Abort.custom(
-                status: .internalServerError,
-                message: "Bugsnag error - bugsnag.json config is missing."
+            throw Abort(
+                .internalServerError,
+                reason: "Bugsnag error - bugsnag.json config is missing."
             )
         }
         

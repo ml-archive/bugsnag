@@ -18,7 +18,7 @@ class PayloadTransformerTests: XCTestCase {
     ]
 
     override func setUp() {
-        let drop = Droplet(
+        let drop = try! Droplet(
             arguments: nil,
             workDir: nil,
             environment: Environment.custom("mock-environment"),
@@ -32,7 +32,7 @@ class PayloadTransformerTests: XCTestCase {
         req.parameters = ["url": "value"]
         req.query = ["query": "value"]
         req.formURLEncoded = ["form": "value"]
-        req.json = try! JSON(node: Node(["json": "value"]))
+        req.json = JSON(node: Node(["json": "value"]))
         req.headers = ["Content-Type": "application/json"]
         self.payload = try! self.payloadTransformer.payloadFor(
             message: "Test message",
@@ -60,11 +60,11 @@ class PayloadTransformerTests: XCTestCase {
         let expectedJsonParams = Node(["json": "value"])
 
         XCTAssertEqual(request?["method"]?.string, "GET")
-        XCTAssertEqual(request?["headers"]?.node, expectedHeaders)
-        XCTAssertEqual(request?["urlParameters"]?.node, expectedUrlParams)
-        XCTAssertEqual(request?["queryParameters"]?.node, expectedQueryParams)
-        XCTAssertEqual(request?["formParameters"]?.node, expectedFormParams)
-        XCTAssertEqual(request?["jsonParameters"]?.node, expectedJsonParams)
+        XCTAssertEqual(request?["headers"]?.makeNode(in: nil), expectedHeaders)
+        XCTAssertEqual(request?["urlParameters"]?.wrapped, expectedUrlParams.wrapped)
+        XCTAssertEqual(request?["queryParameters"]?.wrapped, expectedQueryParams.wrapped)
+        XCTAssertEqual(request?["formParameters"]?.wrapped, expectedFormParams.wrapped)
+        XCTAssertEqual(request?["jsonParameters"]?.wrapped, expectedJsonParams.wrapped)
         XCTAssertEqual(request?["url"]?.string, "/payload-test")
     }
 

@@ -47,7 +47,7 @@ public final class Reporter: ReporterType {
                 return
             }
             try self.report(
-                message: error.message,
+                message: error.reason,
                 metadata: error.metadata,
                 request: request,
                 completion: complete
@@ -79,7 +79,7 @@ public final class Reporter: ReporterType {
 
         // Fire and forget.
         // TODO: Consider queue and retry mechanism.
-        try background {
+        background {
             _ = try? self.connectionManager.submitPayload(payload)
             if let complete = complete { complete() }
         }
