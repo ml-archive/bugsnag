@@ -17,7 +17,7 @@ class MiddlewareTests: XCTestCase {
 
 
     override func setUp() {
-        let drop = Droplet()
+        let drop = try! Droplet()
         let config = ConfigurationMock()
         self.reporter = ReporterMock(drop: drop, config: config)
         self.middleware = try! Bugsnag.Middleware(reporter: reporter)
@@ -64,8 +64,7 @@ class MiddlewareTests: XCTestCase {
 
         let reportedError = self.reporter.lastReport?.0 as? AbortError
 
-        XCTAssertEqual(reportedError?.message, Abort.badRequest.message)
-        XCTAssertEqual(reportedError?.code, Abort.badRequest.code)
+        XCTAssertEqual(reportedError?.reason, Abort.badRequest.reason)
         XCTAssertEqual(reportedError?.status, Abort.badRequest.status)
         XCTAssertEqual(reportedError?.metadata, Abort.badRequest.metadata)
         XCTAssertEqual(reporter.lastReport!.request?.uri.description, req!.uri.description)

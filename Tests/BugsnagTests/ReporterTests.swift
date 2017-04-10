@@ -19,7 +19,7 @@ class ReporterTests: XCTestCase {
 
 
     override func setUp() {
-        let drop = Droplet()
+        let drop = try! Droplet()
         let config = ConfigurationMock()
         self.connectionManager = ConnectionManagerMock(drop: drop, config: config)
         self.payloadTransformer = PayloadTransformerMock(drop: drop, config: config)
@@ -68,7 +68,7 @@ class ReporterTests: XCTestCase {
             error: Abort.badRequest,
             request: req,
             completion: {
-                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.0, Abort.badRequest.message)
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.0, Abort.badRequest.reason)
                 XCTAssertNil(self.payloadTransformer.lastPayloadData!.1)
                 XCTAssertEqual(self.payloadTransformer.lastPayloadData!.2?.method, req.method)
                 XCTAssertEqual(self.payloadTransformer.lastPayloadData!.2?.uri.description, req.uri.description)
@@ -89,7 +89,7 @@ class ReporterTests: XCTestCase {
             "key2": "value2"
         ])
         let error = MyCustomAbortError(
-            message: "Test message",
+            reason: "Test message",
             code: 1337,
             status: .badRequest,
             metadata: metadata
@@ -99,7 +99,7 @@ class ReporterTests: XCTestCase {
             error: error,
             request: req,
             completion: {
-                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.0, error.message)
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.0, error.reason)
                 XCTAssertEqual(self.payloadTransformer.lastPayloadData!.1, error.metadata)
                 XCTAssertEqual(self.payloadTransformer.lastPayloadData!.2?.method, req.method)
                 XCTAssertEqual(self.payloadTransformer.lastPayloadData!.2?.uri.description, req.uri.description)
@@ -117,7 +117,7 @@ class ReporterTests: XCTestCase {
     func testErrorNotReportedWhenExplicitlyToldNotTo() {
         let req = try! Request(method: .get, uri: "some-random-uri")
         let error = MyCustomAbortError(
-            message: "",
+            reason: "",
             code: 0,
             status: .accepted,
             metadata: Node(["report": false])
@@ -140,7 +140,7 @@ class ReporterTests: XCTestCase {
 
         let req = try! Request(method: .get, uri: "some-random-uri")
         let error = MyCustomAbortError(
-            message: "",
+            reason: "",
             code: 0,
             status: .accepted,
             metadata: Node(["report": true])
@@ -187,7 +187,7 @@ internal struct MyCustomError: Error {
 }
 
 internal struct MyCustomAbortError: AbortError {
-    let message: String
+    let reason: String
     let code: Int
     let status: Status
     let metadata: Node?

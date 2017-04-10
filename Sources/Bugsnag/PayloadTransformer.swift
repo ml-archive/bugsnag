@@ -18,7 +18,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
         var code: [String: Node] = [:]
         
         var index = 0
-        for entry in FrameAddress.getStackTrace() {
+        for entry in FrameAddress.getStackTrace(maxStackSize: 100) {
             code[String(index)] = Node(entry)
             
             index = index + 1
@@ -47,16 +47,19 @@ internal struct PayloadTransformer: PayloadTransformerType {
         }
 
         let customMetadata = metadata ?? Node([])
+        
+        var requestObj = Node.object([:])
+        
+        try requestObj.set("method", request?.method.description)
+        try requestObj.set("headers", headers)
+        try requestObj.set("urlParameters", request?.parameters)
+        try requestObj.set("queryParameters", request?.query)
+        try requestObj.set("formParameters", request?.formURLEncoded)
+        try requestObj.set("jsonParameters", request?.json?.makeNode(in: nil))
+        try requestObj.set("url", request?.uri.path)
+        
         let metadata = Node([
-            "request": Node([
-                "method": request != nil ? Node(request!.method.description) : Node.null,
-                "headers": Node(headers),
-                "urlParameters": optionalNode(request?.parameters),
-                "queryParameters": optionalNode(request?.query),
-                "formParameters": optionalNode(request?.formURLEncoded),
-                "jsonParameters": optionalNode(request?.json?.makeNode()),
-                "url": request != nil ? Node(request!.uri.path) : Node.null
-            ]),
+            "request": requestObj,
             "metaData": customMetadata
         ])
 
