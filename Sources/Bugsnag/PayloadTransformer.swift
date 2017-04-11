@@ -3,7 +3,13 @@ import Stacked
 import HTTP
 
 public protocol PayloadTransformerType {
-    func payloadFor(message: String, metadata: Node?, request: Request?, filters: [String]) throws -> JSON
+    func payloadFor(
+        message: String,
+        metadata: Node?,
+        request: Request?,
+        severity: Severity,
+        filters: [String]
+    ) throws -> JSON
 }
 
 internal struct PayloadTransformer: PayloadTransformerType {
@@ -14,11 +20,12 @@ internal struct PayloadTransformer: PayloadTransformerType {
         self.drop = drop
         self.config = config
     }
-
+    
     internal func payloadFor(
         message: String,
         metadata: Node?,
         request: Request?,
+        severity: Severity,
         filters: [String]
     ) throws -> JSON {
         var code: [String: Node] = [:]
@@ -78,7 +85,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
                     ])
                 ]),
                 "app": app,
-                "severity": "error",
+                "severity": Node(severity.rawValue),
                 "metaData": metadata
             ])
         ])

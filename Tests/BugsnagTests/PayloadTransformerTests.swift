@@ -42,6 +42,7 @@ class PayloadTransformerTests: XCTestCase {
             message: "Test message",
             metadata: Node(["key": "value"]),
             request: req,
+            severity: .warning,
             filters: []
         )
     }
@@ -89,7 +90,7 @@ class PayloadTransformerTests: XCTestCase {
     }
 
     func testThatSeverityIsCorrect() {
-        XCTAssertEqual(payload["events"]?[0]?["severity"]?.string, "error")
+        XCTAssertEqual(payload["events"]?[0]?["severity"]?.string, Severity.warning.rawValue)
     }
 
     func testThatItHandlesCustomMetadata() {
@@ -108,7 +109,7 @@ class PayloadTransformerTests: XCTestCase {
         let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.parameters = ["url": "value", "password": "1337", "mySecret": "lol"]
         let filters = ["password", "mySecret"]
-        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, filters: filters)
+        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, severity: .error, filters: filters)
 
         let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["urlParameters"]
 
@@ -121,7 +122,7 @@ class PayloadTransformerTests: XCTestCase {
         let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.query = ["url": "value", "password": "1337", "mySecret": "lol"]
         let filters = ["password", "mySecret"]
-        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, filters: filters)
+        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, severity: .error, filters: filters)
 
         let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["queryParameters"]
 
@@ -134,7 +135,7 @@ class PayloadTransformerTests: XCTestCase {
         let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.formURLEncoded = ["url": "value", "password": "1337", "mySecret": "lol"]
         let filters = ["password", "mySecret"]
-        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, filters: filters)
+        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, severity: .error, filters: filters)
 
         let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["formParameters"]
 
@@ -147,7 +148,7 @@ class PayloadTransformerTests: XCTestCase {
         let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.json = try! JSON(node:["url": "value", "password": "1337", "mySecret": "lol"])
         let filters = ["password", "mySecret"]
-        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, filters: filters)
+        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, severity: .error, filters: filters)
 
         let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["jsonParameters"]
 

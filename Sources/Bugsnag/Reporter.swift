@@ -3,10 +3,20 @@ import HTTP
 import Core
 
 public protocol ReporterType {
+    
     var drop: Droplet { get }
     var config: ConfigurationType { get }
     func report(error: Error, request: Request?) throws
-    func report(error: Error, request: Request?, completion: (() -> ())?) throws
+    func report(
+        error: Error,
+        request: Request?,
+        severity: Severity,
+        completion: (() -> ())?
+    ) throws
+}
+
+public enum Severity: String {
+    case error, warning, info
 }
 
 public final class Reporter: ReporterType {
@@ -14,7 +24,7 @@ public final class Reporter: ReporterType {
     public let config: ConfigurationType
     let connectionManager: ConnectionManagerType
     let payloadTransformer: PayloadTransformerType
-
+    
     init(
         drop: Droplet,
         config: ConfigurationType,
@@ -40,6 +50,7 @@ public final class Reporter: ReporterType {
     public func report(
         error: Error,
         request: Request?,
+        severity: Severity = .error,
         completion complete: (() -> ())?
     ) throws {
         if let error = error as? AbortError {
@@ -50,6 +61,7 @@ public final class Reporter: ReporterType {
                 message: error.message,
                 metadata: error.metadata,
                 request: request,
+                severity: severity,
                 completion: complete
             )
         } else {
@@ -57,6 +69,7 @@ public final class Reporter: ReporterType {
                 message: Status.internalServerError.reasonPhrase,
                 metadata: nil,
                 request: request,
+                severity: severity,
                 completion: complete
             )
         }
@@ -69,12 +82,14 @@ public final class Reporter: ReporterType {
         message: String,
         metadata: Node?,
         request: Request?,
+        severity: Severity,
         completion complete: (() -> ())? = nil
     ) throws {
         let payload = try payloadTransformer.payloadFor(
             message: message,
             metadata: metadata,
             request: request,
+            severity: severity,
             filters: config.filters
         )
 
