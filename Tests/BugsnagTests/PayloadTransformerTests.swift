@@ -15,10 +15,10 @@ class PayloadTransformerTests: XCTestCase {
         ("testThatSeverityIsCorrect", testThatSeverityIsCorrect),
         ("testThatItHandlesCustomMetadata", testThatItHandlesCustomMetadata),
         ("testThatItBuildsNotifierPayloadCorrectly", testThatItBuildsNotifierPayloadCorrectly),
-        ("testThatUrlParametersGetsFiltered",testThatUrlParametersGetsFiltered),
-        ("testThatQueryParametersGetsFiltered",testThatQueryParametersGetsFiltered),
-        ("testThatFormParametersGetsFiltered",testThatFormParametersGetsFiltered),
-        ("testThatJsonParametersGetsFiltered",testThatJsonParametersGetsFiltered),
+        ("testThatUrlParametersGetsFiltered", testThatUrlParametersGetsFiltered),
+        ("testThatQueryParametersGetsFiltered", testThatQueryParametersGetsFiltered),
+        ("testThatFormParametersGetsFiltered", testThatFormParametersGetsFiltered),
+        ("testThatJsonParametersGetsFiltered", testThatJsonParametersGetsFiltered)
     ]
 
     override func setUp() {
@@ -41,7 +41,8 @@ class PayloadTransformerTests: XCTestCase {
         self.payload = try! self.payloadTransformer.payloadFor(
             message: "Test message",
             metadata: Node(["key": "value"]),
-            request: req
+            request: req,
+            filters: []
         )
     }
 
@@ -114,7 +115,6 @@ class PayloadTransformerTests: XCTestCase {
         XCTAssertNil(urlParameters?["password"])
         XCTAssertNil(urlParameters?["mySecret"])
         XCTAssertEqual(urlParameters?["url"]?.string, "value")
-
     }
 
     func testThatQueryParametersGetsFiltered() {
@@ -128,7 +128,6 @@ class PayloadTransformerTests: XCTestCase {
         XCTAssertNil(urlParameters?["password"])
         XCTAssertNil(urlParameters?["mySecret"])
         XCTAssertEqual(urlParameters?["url"]?.string, "value")
-        
     }
 
     func testThatFormParametersGetsFiltered() {
@@ -142,7 +141,6 @@ class PayloadTransformerTests: XCTestCase {
         XCTAssertNil(urlParameters?["password"])
         XCTAssertNil(urlParameters?["mySecret"])
         XCTAssertEqual(urlParameters?["url"]?.string, "value")
-        
     }
 
     func testThatJsonParametersGetsFiltered() {
@@ -156,6 +154,5 @@ class PayloadTransformerTests: XCTestCase {
         XCTAssertNil(urlParameters?["password"])
         XCTAssertNil(urlParameters?["mySecret"])
         XCTAssertEqual(urlParameters?["url"]?.string, "value")
-        
     }
 }

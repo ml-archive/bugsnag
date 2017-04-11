@@ -9,19 +9,17 @@ public protocol PayloadTransformerType {
 internal struct PayloadTransformer: PayloadTransformerType {
     let drop: Droplet
     let config: ConfigurationType
-    let filters: [String]
 
     init(drop: Droplet, config: ConfigurationType) {
         self.drop = drop
         self.config = config
-        self.filters = config.filters
     }
 
     internal func payloadFor(
         message: String,
         metadata: Node?,
         request: Request?,
-        filters: [String] = []
+        filters: [String]
     ) throws -> JSON {
         var code: [String: Node] = [:]
         

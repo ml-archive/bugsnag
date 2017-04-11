@@ -14,7 +14,8 @@ class ReporterTests: XCTestCase {
         ("testCustomErrorWillBeReported", testCustomErrorWillBeReported),
         ("testErrorNotReportedWhenExplicitlyToldNotTo", testErrorNotReportedWhenExplicitlyToldNotTo),
         ("testErrorReportedWhenExplicitlyToldTo", testErrorReportedWhenExplicitlyToldTo),
-        ("testThatThePayloadGetsSubmitted", testThatThePayloadGetsSubmitted)
+        ("testThatThePayloadGetsSubmitted", testThatThePayloadGetsSubmitted),
+        ("testThatFiltersComeFromConfig", testThatFiltersComeFromConfig)
     ]
 
 
@@ -159,6 +160,17 @@ class ReporterTests: XCTestCase {
         waitForExpectations(timeout: 1)
     }
 
+    func testThatFiltersComeFromConfig() {
+        let req = try! Request(method: .get, uri: "some-random-uri")
+
+        try! reporter.report(
+            error: Abort.badRequest,
+            request: req,
+            completion: nil
+        )
+        
+        XCTAssertEqual(self.payloadTransformer.lastPayloadData!.3, ["someFilter"])
+    }
 
     // MARK: - Submission
 

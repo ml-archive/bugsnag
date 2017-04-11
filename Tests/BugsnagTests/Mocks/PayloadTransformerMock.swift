@@ -18,7 +18,7 @@ internal class PayloadTransformerMock: PayloadTransformerType {
         request: Request?,
         filters: [String] = []
     ) throws -> JSON {
-        self.lastPayloadData = (message: message, metadata: metadata, request: request, filters: config.filters)
+        self.lastPayloadData = (message: message, metadata: metadata, request: request, filters: filters)
         return try JSON(node: ["transformer": "mock"])
     }
 }
