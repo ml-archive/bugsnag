@@ -89,7 +89,8 @@ public final class Reporter: ReporterType {
             message: message,
             metadata: metadata,
             request: request,
-            severity: severity
+            severity: severity,
+            filters: config.filters
         )
 
         // Fire and forget.
