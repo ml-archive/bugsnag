@@ -3,14 +3,14 @@ import Bugsnag
 import HTTP
 
 internal class PayloadTransformerMock: PayloadTransformerType {
-    let drop: Droplet
-    let config: ConfigurationType
+    let environment: Environment
+    let apiKey: String
+
     var lastPayloadData: (message: String, metadata: Node?, request: Request?, severity: Severity, filters: [String])? = nil
 
-
-    required init(drop: Droplet, config: ConfigurationType) {
-        self.drop = drop
-        self.config = config
+    init(environment: Environment, apiKey: String) {
+        self.environment = environment
+        self.apiKey = apiKey
     }
 
     internal func payloadFor(

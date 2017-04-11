@@ -4,7 +4,7 @@ import HTTP
 
 public protocol ConfigurationType {
     var apiKey: String { get }
-    var notifyReleaseStages: [String] { get }
+    var notifyReleaseStages: [String]? { get }
     var endpoint: String { get }
     var filters: [String] { get }
 
@@ -28,7 +28,7 @@ public struct Configuration: ConfigurationType {
     }
     
     public let apiKey: String
-    public let notifyReleaseStages: [String]
+    public let notifyReleaseStages: [String]?
     public let endpoint: String
     public let filters: [String]
 
