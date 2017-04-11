@@ -27,8 +27,10 @@ Create a `bugsnag.json` configuration file with your Bugsnag credentials and con
         "production"
     ],
     "endpoint": "https://notify.bugsnag.com",
-    "filters" : [
-        "password"
+    "filters": [
+        "password",
+        "newPassword",
+        "repeat_password"
     ]
 }
 ```
