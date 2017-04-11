@@ -13,12 +13,13 @@ internal class ReporterMock: ReporterType {
     }
 
     public func report(error: Error, request: Request?) throws {
-        try report(error: error, request: request, completion: nil)
+        try report(error: error, request: request, severity: .error ,completion: nil)
     }
 
     internal func report(
         error: Error,
         request: Request?,
+        severity: Severity,
         completion complete: (() -> ())?
     ) throws {
         self.lastReport = (error: error, request: request)

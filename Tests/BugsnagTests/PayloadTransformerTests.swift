@@ -14,7 +14,7 @@ class PayloadTransformerTests: XCTestCase {
         ("testThatItBuildsAppPayloadCorrectly", testThatItBuildsAppPayloadCorrectly),
         ("testThatSeverityIsCorrect", testThatSeverityIsCorrect),
         ("testThatItHandlesCustomMetadata", testThatItHandlesCustomMetadata),
-        ("testThatItBuildsNotifierPayloadCorrectly", testThatItBuildsNotifierPayloadCorrectly),
+        ("testThatItBuildsNotifierPayloadCorrectly", testThatItBuildsNotifierPayloadCorrectly)
     ]
 
     override func setUp() {
@@ -37,7 +37,8 @@ class PayloadTransformerTests: XCTestCase {
         self.payload = try! self.payloadTransformer.payloadFor(
             message: "Test message",
             metadata: Node(["key": "value"]),
-            request: req
+            request: req,
+            severity: .warning
         )
     }
 
@@ -84,7 +85,7 @@ class PayloadTransformerTests: XCTestCase {
     }
 
     func testThatSeverityIsCorrect() {
-        XCTAssertEqual(payload["events"]?[0]?["severity"]?.string, "error")
+        XCTAssertEqual(payload["events"]?[0]?["severity"]?.string, Severity.warning.rawValue)
     }
 
     func testThatItHandlesCustomMetadata() {

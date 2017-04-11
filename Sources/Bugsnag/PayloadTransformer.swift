@@ -3,17 +3,24 @@ import Stacked
 import HTTP
 
 public protocol PayloadTransformerType {
-    func payloadFor(message: String, metadata: Node?, request: Request?) throws -> JSON
+    func payloadFor(
+        message: String,
+        metadata: Node?,
+        request: Request?,
+        severity: Severity
+    ) throws -> JSON
 }
 
 internal struct PayloadTransformer: PayloadTransformerType {
     let drop: Droplet
     let config: ConfigurationType
-
+    
+    
     internal func payloadFor(
         message: String,
         metadata: Node?,
-        request: Request?
+        request: Request?,
+        severity: Severity
     ) throws -> JSON {
         var code: [String: Node] = [:]
         
@@ -71,7 +78,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
                     ])
                 ]),
                 "app": app,
-                "severity": "error",
+                "severity": Node(severity.rawValue),
                 "metaData": metadata
             ])
         ])
