@@ -15,8 +15,8 @@ class ReporterTests: XCTestCase {
         ("testErrorNotReportedWhenExplicitlyToldNotTo", testErrorNotReportedWhenExplicitlyToldNotTo),
         ("testErrorReportedWhenExplicitlyToldTo", testErrorReportedWhenExplicitlyToldTo),
         ("testThatThePayloadGetsSubmitted", testThatThePayloadGetsSubmitted),
-        ("testSeverityGetsDefaultValue",testSeverityGetsDefaultValue),
-        ("testSeverityGetsGivenValue",testSeverityGetsGivenValue)
+        ("testSeverityGetsDefaultValue", testSeverityGetsDefaultValue),
+        ("testSeverityGetsGivenValue", testSeverityGetsGivenValue)
     ]
 
 
