@@ -15,6 +15,10 @@ class PayloadTransformerTests: XCTestCase {
         ("testThatSeverityIsCorrect", testThatSeverityIsCorrect),
         ("testThatItHandlesCustomMetadata", testThatItHandlesCustomMetadata),
         ("testThatItBuildsNotifierPayloadCorrectly", testThatItBuildsNotifierPayloadCorrectly),
+        ("testThatUrlParametersGetsFiltered", testThatUrlParametersGetsFiltered),
+        ("testThatQueryParametersGetsFiltered", testThatQueryParametersGetsFiltered),
+        ("testThatFormParametersGetsFiltered", testThatFormParametersGetsFiltered),
+        ("testThatJsonParametersGetsFiltered", testThatJsonParametersGetsFiltered)
     ]
 
     override func setUp() {
@@ -37,7 +41,9 @@ class PayloadTransformerTests: XCTestCase {
         self.payload = try! self.payloadTransformer.payloadFor(
             message: "Test message",
             metadata: Node(["key": "value"]),
-            request: req
+            request: req,
+            severity: .warning,
+            filters: []
         )
     }
 
@@ -84,7 +90,7 @@ class PayloadTransformerTests: XCTestCase {
     }
 
     func testThatSeverityIsCorrect() {
-        XCTAssertEqual(payload["events"]?[0]?["severity"]?.string, "error")
+        XCTAssertEqual(payload["events"]?[0]?["severity"]?.string, Severity.warning.rawValue)
     }
 
     func testThatItHandlesCustomMetadata() {
@@ -97,5 +103,57 @@ class PayloadTransformerTests: XCTestCase {
         XCTAssertEqual(notifier?["name"]?.string, "Bugsnag Vapor")
         XCTAssertEqual(notifier?["version"]?.string, "1.0.11")
         XCTAssertEqual(notifier?["url"]?.string, "https://github.com/nodes-vapor/bugsnag")
+    }
+
+    func testThatUrlParametersGetsFiltered() {
+        let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
+        req.parameters = ["url": "value", "password": "1337", "mySecret": "lol"]
+        let filters = ["password", "mySecret"]
+        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, severity: .error, filters: filters)
+
+        let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["urlParameters"]
+
+        XCTAssertNil(urlParameters?["password"])
+        XCTAssertNil(urlParameters?["mySecret"])
+        XCTAssertEqual(urlParameters?["url"]?.string, "value")
+    }
+
+    func testThatQueryParametersGetsFiltered() {
+        let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
+        req.query = ["url": "value", "password": "1337", "mySecret": "lol"]
+        let filters = ["password", "mySecret"]
+        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, severity: .error, filters: filters)
+
+        let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["queryParameters"]
+
+        XCTAssertNil(urlParameters?["password"])
+        XCTAssertNil(urlParameters?["mySecret"])
+        XCTAssertEqual(urlParameters?["url"]?.string, "value")
+    }
+
+    func testThatFormParametersGetsFiltered() {
+        let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
+        req.formURLEncoded = ["url": "value", "password": "1337", "mySecret": "lol"]
+        let filters = ["password", "mySecret"]
+        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, severity: .error, filters: filters)
+
+        let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["formParameters"]
+
+        XCTAssertNil(urlParameters?["password"])
+        XCTAssertNil(urlParameters?["mySecret"])
+        XCTAssertEqual(urlParameters?["url"]?.string, "value")
+    }
+
+    func testThatJsonParametersGetsFiltered() {
+        let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
+        req.json = try! JSON(node:["url": "value", "password": "1337", "mySecret": "lol"])
+        let filters = ["password", "mySecret"]
+        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, severity: .error, filters: filters)
+
+        let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["jsonParameters"]
+
+        XCTAssertNil(urlParameters?["password"])
+        XCTAssertNil(urlParameters?["mySecret"])
+        XCTAssertEqual(urlParameters?["url"]?.string, "value")
     }
 }

@@ -3,17 +3,30 @@ import Stacked
 import HTTP
 
 public protocol PayloadTransformerType {
-    func payloadFor(message: String, metadata: Node?, request: Request?) throws -> JSON
+    func payloadFor(
+        message: String,
+        metadata: Node?,
+        request: Request?,
+        severity: Severity,
+        filters: [String]
+    ) throws -> JSON
 }
 
 internal struct PayloadTransformer: PayloadTransformerType {
     let drop: Droplet
     let config: ConfigurationType
 
+    init(drop: Droplet, config: ConfigurationType) {
+        self.drop = drop
+        self.config = config
+    }
+    
     internal func payloadFor(
         message: String,
         metadata: Node?,
-        request: Request?
+        request: Request?,
+        severity: Severity,
+        filters: [String]
     ) throws -> JSON {
         var code: [String: Node] = [:]
         
@@ -46,18 +59,19 @@ internal struct PayloadTransformer: PayloadTransformerType {
             }
         }
 
+
         let customMetadata = metadata ?? Node([])
         
         var requestObj = Node.object([:])
         
         try requestObj.set("method", request?.method.description)
         try requestObj.set("headers", headers)
-        try requestObj.set("urlParameters", request?.parameters)
-        try requestObj.set("queryParameters", request?.query)
-        try requestObj.set("formParameters", request?.formURLEncoded)
-        try requestObj.set("jsonParameters", request?.json?.makeNode(in: nil))
+        try requestObj.set("urlParameters", filterOutKeys(filters, inNode: optionalNode(request?.parameters)))
+        try requestObj.set("queryParameters", filterOutKeys(filters, inNode: optionalNode(request?.query)))
+        try requestObj.set("formParameters", filterOutKeys(filters, inNode: optionalNode(request?.formURLEncoded)))
+        try requestObj.set("jsonParameters", filterOutKeys(filters, inNode: optionalNode(request?.json?.makeNode(in: nil))))
         try requestObj.set("url", request?.uri.path)
-        
+
         let metadata = Node([
             "request": requestObj,
             "metaData": customMetadata
@@ -74,7 +88,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
                     ])
                 ]),
                 "app": app,
-                "severity": "error",
+                "severity": Node(severity.rawValue),
                 "metaData": metadata
             ])
         ])
@@ -95,5 +109,21 @@ internal struct PayloadTransformer: PayloadTransformerType {
 
     private func optionalNode(_ node: Node?) -> Node {
         return node ?? Node.null
+    }
+
+    private func filterOutKeys(_ keys: [String], inNode node: Node) -> Node {
+        var outcome: [String: Node] = [:]
+
+        guard let nodeObjects = node.object else {
+            return node
+        }
+
+        for obj in nodeObjects {
+            if !(keys.contains(obj.key)) {
+                outcome[obj.key] = obj.value
+            }
+        }
+
+        return Node.object(outcome)
     }
 }
