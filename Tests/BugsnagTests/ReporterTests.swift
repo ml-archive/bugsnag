@@ -24,15 +24,14 @@ class ReporterTests: XCTestCase {
         ("testErrorBeingReportedWhenNilReleaseStages", testErrorBeingReportedWhenNilReleaseStages)
     ]
 
-
     override func setUp() {
         let drop = Droplet(
-                arguments: nil,
-                workDir: nil,
-                environment: .custom("mock-environment"),
-                config: nil,
-                localization: nil,
-                log: nil
+            arguments: nil,
+            workDir: nil,
+            environment: .custom("mock-environment"),
+            config: nil,
+            localization: nil,
+            log: nil
         )
         let config = ConfigurationMock()
         self.connectionManager = ConnectionManagerMock(drop: drop, config: config)
@@ -181,7 +180,6 @@ class ReporterTests: XCTestCase {
         waitForExpectations(timeout: 1)
     }
 
-
     func testThatFiltersComeFromConfig() {
         let req = try! Request(method: .get, uri: "some-random-uri")
 
@@ -208,12 +206,12 @@ class ReporterTests: XCTestCase {
 
     func testErrorNotReportedWhenEnvironmentNotInNotifyReleaseStages() {
         let drop = Droplet(
-                arguments: nil,
-                workDir: nil,
-                environment: .development, //currentEnvironment = "development"
-                config: nil,
-                localization: nil,
-                log: nil
+            arguments: nil,
+            workDir: nil,
+            environment: .development, //currentEnvironment = "development"
+            config: nil,
+            localization: nil,
+            log: nil
         )
         let conf = ConfigurationMock() //notifyReleaseStages = ["mock-environment"]
         let repo = Reporter(

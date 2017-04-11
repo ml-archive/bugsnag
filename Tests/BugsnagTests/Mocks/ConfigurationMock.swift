@@ -7,13 +7,11 @@ internal class ConfigurationMock: ConfigurationType {
     let endpoint = "some-endpoint"
     let filters: [String] = ["someFilter"]
 
-    required init(drop: Droplet) throws {
-        notifyReleaseStages = []
+    required convenience init(drop: Droplet) throws {
+        self.init()
     }
-    init() {
-        notifyReleaseStages = ["mock-environment"]
-    }
-    init(releaseStages: [String]?) {
+
+    init(releaseStages: [String]? = ["mock-environment"]) {
         notifyReleaseStages = releaseStages
     }
 }
