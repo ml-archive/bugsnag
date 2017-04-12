@@ -17,15 +17,28 @@ class ReporterTests: XCTestCase {
         ("testThatThePayloadGetsSubmitted", testThatThePayloadGetsSubmitted),
         ("testThatFiltersComeFromConfig", testThatFiltersComeFromConfig),
         ("testSeverityGetsDefaultValue", testSeverityGetsDefaultValue),
-        ("testSeverityGetsGivenValue", testSeverityGetsGivenValue)
+        ("testSeverityGetsGivenValue", testSeverityGetsGivenValue),
+        ("testErrorNotReportedWhenEnvironmentNotInNotifyReleaseStages", testErrorNotReportedWhenEnvironmentNotInNotifyReleaseStages),
+        ("testErrorReportedWhenEnvironmentInNotifyReleaseStages", testErrorReportedWhenEnvironmentInNotifyReleaseStages),
+        ("testErrorNotBeingReportedWhenEmptyReleaseStages", testErrorNotBeingReportedWhenEmptyReleaseStages),
+        ("testErrorBeingReportedWhenNilReleaseStages", testErrorBeingReportedWhenNilReleaseStages)
     ]
 
-
     override func setUp() {
-        let drop = try! Droplet()
+        let drop = Droplet(
+            arguments: nil,
+            workDir: nil,
+            environment: .custom("mock-environment"),
+            config: nil,
+            localization: nil,
+            log: nil
+        )
         let config = ConfigurationMock()
         self.connectionManager = ConnectionManagerMock(drop: drop, config: config)
-        self.payloadTransformer = PayloadTransformerMock(drop: drop, config: config)
+        self.payloadTransformer = PayloadTransformerMock(
+            environment: drop.environment,
+            apiKey: "1337"
+        )
         self.reporter = Reporter(
             drop: drop,
             config: config,
@@ -167,7 +180,6 @@ class ReporterTests: XCTestCase {
         waitForExpectations(timeout: 1)
     }
 
-
     func testThatFiltersComeFromConfig() {
         let req = try! Request(method: .get, uri: "some-random-uri")
 
@@ -190,6 +202,90 @@ class ReporterTests: XCTestCase {
         let req = try! Request(method: .get, uri: "some-random-uri")
         try! reporter.report(error: Abort.badRequest, request: req, severity: Severity.info, completion: nil)
         XCTAssertEqual(self.payloadTransformer.lastPayloadData?.3, Severity.info)
+    }
+
+    func testErrorNotReportedWhenEnvironmentNotInNotifyReleaseStages() {
+        let drop = Droplet(
+            arguments: nil,
+            workDir: nil,
+            environment: .development, //currentEnvironment = "development"
+            config: nil,
+            localization: nil,
+            log: nil
+        )
+        let conf = ConfigurationMock() //notifyReleaseStages = ["mock-environment"]
+        let repo = Reporter(
+            drop: drop,
+            config: conf,
+            connectionManager: self.connectionManager,
+            transformer: self.payloadTransformer
+        )
+        try! repo.report(error: Abort.badRequest, request: nil)
+        XCTAssertNil(self.payloadTransformer.lastPayloadData)
+        
+    }
+
+    func testErrorReportedWhenEnvironmentInNotifyReleaseStages() {
+        let drop = Droplet(
+            arguments: nil,
+            workDir: nil,
+            environment: .custom("mock-environment"), //currentEnvironment = "mock-environment"
+            config: nil,
+            localization: nil,
+            log: nil
+        )
+        let conf = ConfigurationMock() //notifyReleaseStages = ["mock-environment"]
+        let repo = Reporter(
+            drop: drop,
+            config: conf,
+            connectionManager: self.connectionManager,
+            transformer: self.payloadTransformer
+        )
+        try! repo.report(error: Abort.badRequest, request: nil)
+        XCTAssertNotNil(self.payloadTransformer.lastPayloadData)
+
+    }
+
+    func testErrorNotBeingReportedWhenEmptyReleaseStages() {
+        let drop = Droplet(
+            arguments: nil,
+            workDir: nil,
+            environment: .custom("mock-environment"), //currentEnvironment = "mock-environment"
+            config: nil,
+            localization: nil,
+            log: nil
+        )
+        let conf = ConfigurationMock(releaseStages: []) //notifyReleaseStages = []
+        let repo = Reporter(
+            drop: drop,
+            config: conf,
+            connectionManager: self.connectionManager,
+            transformer: self.payloadTransformer
+        )
+        try! repo.report(error: Abort.badRequest, request: nil)
+        XCTAssertNil(self.payloadTransformer.lastPayloadData)
+
+    }
+
+    func testErrorBeingReportedWhenNilReleaseStages() {
+        let drop = Droplet(
+            arguments: nil,
+            workDir: nil,
+            environment: .custom("mock-environment"), //currentEnvironment = "mock-environment"
+            config: nil,
+            localization: nil,
+            log: nil
+        )
+        let conf = ConfigurationMock(releaseStages: nil) //notifyReleaseStages = nil
+        let repo = Reporter(
+            drop: drop,
+            config: conf,
+            connectionManager: self.connectionManager,
+            transformer: self.payloadTransformer
+        )
+        try! repo.report(error: Abort.badRequest, request: nil)
+        XCTAssertNotNil(self.payloadTransformer.lastPayloadData)
+
     }
 
     // MARK: - Submission

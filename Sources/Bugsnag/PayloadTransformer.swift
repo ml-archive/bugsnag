@@ -3,6 +3,9 @@ import Stacked
 import HTTP
 
 public protocol PayloadTransformerType {
+    var environment: Environment { get }
+    var apiKey: String { get }
+
     func payloadFor(
         message: String,
         metadata: Node?,
@@ -13,14 +16,9 @@ public protocol PayloadTransformerType {
 }
 
 internal struct PayloadTransformer: PayloadTransformerType {
-    let drop: Droplet
-    let config: ConfigurationType
+    let environment: Environment
+    let apiKey: String
 
-    init(drop: Droplet, config: ConfigurationType) {
-        self.drop = drop
-        self.config = config
-    }
-    
     internal func payloadFor(
         message: String,
         metadata: Node?,
@@ -48,7 +46,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
         ])
    
         let app: Node = Node([
-            "releaseStage": Node(drop.environment.description),
+            "releaseStage": Node(environment.description),
             "type": "Vapor"
         ])
         
@@ -94,7 +92,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
         ])
     
         return try JSON(node: [
-            "apiKey": self.config.apiKey,
+            "apiKey": apiKey,
             "notifier": Node([
                 "name": "Bugsnag Vapor",
                 "version": "1.0.11",

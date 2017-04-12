@@ -22,16 +22,7 @@ class PayloadTransformerTests: XCTestCase {
     ]
 
     override func setUp() {
-        let drop = try! Droplet(
-            arguments: nil,
-            workDir: nil,
-            environment: Environment.custom("mock-environment"),
-            config: nil,
-            localization: nil,
-            log: nil
-        )
-        let config = ConfigurationMock()
-        self.payloadTransformer = PayloadTransformer(drop: drop, config: config)
+        self.payloadTransformer = PayloadTransformer(environment: .custom("mock-environment"), apiKey: "1337")
         let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.parameters = ["url": "value"]
         req.query = ["query": "value"]
