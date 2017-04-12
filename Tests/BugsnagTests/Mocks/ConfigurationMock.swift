@@ -3,10 +3,15 @@ import Bugsnag
 
 internal class ConfigurationMock: ConfigurationType {
     let apiKey = "1337"
-    let notifyReleaseStages: [String] = []
+    let notifyReleaseStages: [String]?
     let endpoint = "some-endpoint"
     let filters: [String] = ["someFilter"]
 
-    required init(drop: Droplet) throws {}
-    init() {}
+    required convenience init(drop: Droplet) throws {
+        self.init()
+    }
+
+    init(releaseStages: [String]? = ["mock-environment"]) {
+        notifyReleaseStages = releaseStages
+    }
 }
