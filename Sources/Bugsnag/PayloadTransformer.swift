@@ -3,6 +3,7 @@ import Stacked
 import HTTP
 
 public protocol PayloadTransformerType {
+    var frameAddress: FrameAddressType.Type { get }
     var environment: Environment { get }
     var apiKey: String { get }
 
@@ -17,6 +18,7 @@ public protocol PayloadTransformerType {
 }
 
 internal struct PayloadTransformer: PayloadTransformerType {
+    let frameAddress: FrameAddressType.Type
     let environment: Environment
     let apiKey: String
 
@@ -31,7 +33,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
         var code: [String: Node] = [:]
         
         var index = 0
-        for entry in FrameAddress.getStackTrace(maxStackSize: stackTraceSize) {
+        for entry in frameAddress.getStackTrace(maxStackSize: stackTraceSize) {
             code[String(index)] = Node(entry)
             
             index = index + 1

@@ -1,10 +1,12 @@
 import Vapor
 import Bugsnag
 import HTTP
+import Stacked
 
 internal class PayloadTransformerMock: PayloadTransformerType {
     let environment: Environment
     let apiKey: String
+    let frameAddress: FrameAddressType.Type = FrameAddressMock.self
 
     var lastPayloadData: (message: String, metadata: Node?, request: Request?, severity: Severity, stackTraceSize: Int, filters: [String])? = nil
 

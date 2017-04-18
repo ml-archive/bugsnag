@@ -7,7 +7,6 @@ class PayloadTransformerTests: XCTestCase {
     private var config: ConfigurationMock!
     private var payloadTransformer: PayloadTransformer!
     private var payload: JSON!
-    private let stackTraceSize: Int = 100
 
     static let allTests = [
         ("testThatItUsesApiKeyFromConfig", testThatItUsesApiKeyFromConfig),
@@ -24,7 +23,7 @@ class PayloadTransformerTests: XCTestCase {
     ]
 
     override func setUp() {
-        self.payloadTransformer = PayloadTransformer(environment: .custom("mock-environment"), apiKey: "1337")
+        self.payloadTransformer = PayloadTransformer(frameAddress: FrameAddressMock.self, environment: .custom("mock-environment"), apiKey: "1337")
         let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.parameters = ["url": "value"]
         req.query = ["query": "value"]
@@ -36,7 +35,7 @@ class PayloadTransformerTests: XCTestCase {
             metadata: Node(["key": "value"]),
             request: req,
             severity: .warning,
-            stackTraceSize: self.stackTraceSize,
+            stackTraceSize: 100,
             filters: []
         )
     }
@@ -108,7 +107,7 @@ class PayloadTransformerTests: XCTestCase {
             metadata: nil,
             request: req,
             severity: .error,
-            stackTraceSize: self.stackTraceSize,
+            stackTraceSize: 0,
             filters: filters
         )
 
@@ -127,7 +126,7 @@ class PayloadTransformerTests: XCTestCase {
             message: "",
             metadata: nil,
             request: req, severity: .error,
-            stackTraceSize: self.stackTraceSize,
+            stackTraceSize: 0,
             filters: filters
         )
 
@@ -147,7 +146,7 @@ class PayloadTransformerTests: XCTestCase {
             metadata: nil,
             request: req,
             severity: .error,
-            stackTraceSize: self.stackTraceSize,
+            stackTraceSize: 0,
             filters: filters
         )
 
@@ -167,7 +166,7 @@ class PayloadTransformerTests: XCTestCase {
             metadata: nil,
             request: req,
             severity: .error,
-            stackTraceSize: self.stackTraceSize,
+            stackTraceSize: 0,
             filters: filters
         )
 
@@ -178,20 +177,16 @@ class PayloadTransformerTests: XCTestCase {
         XCTAssertEqual(urlParameters?["url"]?.string, "value")
     }
 
-    func testThatStackTraceSizeIsWorking(){
-        let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
-        let size = 0
-        let emptyStackTracePayload = try! self.payloadTransformer.payloadFor(
+    func testThatStackTraceSizeIsWorking() {
+        _ = try! payloadTransformer.payloadFor(
             message: "",
             metadata: nil,
-            request: req,
+            request: nil,
             severity: .error,
-            stackTraceSize: size,
+            stackTraceSize: 99,
             filters: []
         )
-        let stackTraceLine = emptyStackTracePayload["events"]?[0]?["exceptions"]?[0]?["stacktrace"]?["code"]?[0]
-        let normalStackTraceLine = self.payload["events"]?[0]?["exceptions"]?[0]?["stacktrace"]?["code"]?[0]
-        XCTAssertEqual(stackTraceLine,JSON([:]))
-        XCTAssertNotEqual(normalStackTraceLine, JSON([:]))
+        XCTAssertEqual(FrameAddressMock.lastStackSize, 99)
+
     }
 }

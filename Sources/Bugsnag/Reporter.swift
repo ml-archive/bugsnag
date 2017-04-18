@@ -1,6 +1,7 @@
 import Vapor
 import HTTP
 import Core
+import Stacked
 
 public protocol ReporterType {
     
@@ -39,6 +40,7 @@ public final class Reporter: ReporterType {
             config: config
         )
         self.payloadTransformer = transformer ?? PayloadTransformer(
+            frameAddress: FrameAddress.self,
             environment: drop.environment,
             apiKey: config.apiKey
         )
