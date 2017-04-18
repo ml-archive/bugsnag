@@ -31,7 +31,8 @@ Create a `bugsnag.json` configuration file with your Bugsnag credentials and con
         "password",
         "newPassword",
         "repeat_password"
-    ]
+    ],
+    "stackTraceSize": 100
 }
 ```
 
@@ -69,7 +70,7 @@ myDroplet.bugsnag?.report(error: Abort.badRequest, request: myRequest)
 There's also an option to pass in a completion block if you wan't to get notified when the submission has completed.
 
 ## 🏆 Credits
-This package is developed and maintained by the Vapor team at [Nodes](https://www.nodes.dk).
+This package is developed and maintained by the Vapor team at [Nodes](https://www.nodesagency.com).
 
 ## 📄 License
 This package is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT)
