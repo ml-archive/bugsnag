@@ -21,7 +21,11 @@ class ReporterTests: XCTestCase {
         ("testErrorNotReportedWhenEnvironmentNotInNotifyReleaseStages", testErrorNotReportedWhenEnvironmentNotInNotifyReleaseStages),
         ("testErrorReportedWhenEnvironmentInNotifyReleaseStages", testErrorReportedWhenEnvironmentInNotifyReleaseStages),
         ("testErrorNotBeingReportedWhenEmptyReleaseStages", testErrorNotBeingReportedWhenEmptyReleaseStages),
-        ("testErrorBeingReportedWhenNilReleaseStages", testErrorBeingReportedWhenNilReleaseStages)
+        ("testErrorBeingReportedWhenNilReleaseStages", testErrorBeingReportedWhenNilReleaseStages),
+        ("testStackTraceSizeIsComingFromConfig", testStackTraceSizeIsComingFromConfig),
+        ("testStackTraceSizeIsComingFromArguments", testStackTraceSizeIsComingFromArguments),
+        ("testThatStackTraceSizeGetsValueFromConfigWhenNil", testThatStackTraceSizeGetsValueFromConfigWhenNil),
+        ("testThatStackTraceSizeGetsDefaultValueWhenNotInConfig", testThatStackTraceSizeGetsDefaultValueWhenNotInConfig)
     ]
 
     override func setUp() {
@@ -192,7 +196,7 @@ class ReporterTests: XCTestCase {
             completion: nil
         )
         
-        XCTAssertEqual(self.payloadTransformer.lastPayloadData!.4, ["someFilter"])
+        XCTAssertEqual(self.payloadTransformer.lastPayloadData!.5, ["someFilter"])
     }
 
 
@@ -292,6 +296,38 @@ class ReporterTests: XCTestCase {
         )
         try! repo.report(error: Abort.badRequest, request: nil)
         XCTAssertNotNil(self.payloadTransformer.lastPayloadData)
+    }
+
+
+    // MARK: - Stack trace size.
+
+    func testStackTraceSizeIsComingFromConfig() {
+        let req = try! Request(method: .get, uri: "some-random-uri")
+        try! reporter.report(error: Abort.badRequest, request: req, completion: nil)
+        XCTAssertEqual(self.payloadTransformer.lastPayloadData?.4, 1337)
+    }
+
+    func testStackTraceSizeIsComingFromArguments() {
+        let req = try! Request(method: .get, uri: "some-random-uri")
+        try! reporter.report(error: Abort.badRequest, request: req, stackTraceSize: 150, completion: nil)
+        XCTAssertEqual(self.payloadTransformer.lastPayloadData?.4, 150)
+    }
+
+    func testThatStackTraceSizeGetsValueFromConfigWhenNil() {
+        let req = try! Request(method: .get, uri: "some-random-uri")
+        try! reporter.report(error: Abort.badRequest, request: req, stackTraceSize: nil, completion: nil)
+        XCTAssertEqual(self.payloadTransformer.lastPayloadData?.4, 1337)
+    }
+
+    func testThatStackTraceSizeGetsDefaultValueWhenNotInConfig() {
+        let conf: Config = Config([
+            "apiKey": "1337",
+            "notifyReleaseStages": ["mock-environment"],
+            "endpoint": "some-endpoint",
+            "filters": []
+            ])
+        let config = try! Configuration(config: conf)
+        XCTAssertEqual(config.stackTraceSize, 100)
     }
 
 
