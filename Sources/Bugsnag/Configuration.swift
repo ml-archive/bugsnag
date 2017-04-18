@@ -7,17 +7,19 @@ public protocol ConfigurationType {
     var notifyReleaseStages: [String]? { get }
     var endpoint: String { get }
     var filters: [String] { get }
-
+    var stackTraceSize: Int { get }
     init(drop: Droplet) throws
 }
 
 public struct Configuration: ConfigurationType {
-    
+    static private let defaultStackTraceValue = 100
+
     public enum Field: String {
         case apiKey                 = "apiKey"
         case notifyReleaseStages    = "notifyReleaseStages"
         case endpoint               = "endpoint"
         case filters                = "filters"
+        case stackTraceSize         = "stackTraceSize"
 
         var error: Abort {
             return .custom(
@@ -31,6 +33,7 @@ public struct Configuration: ConfigurationType {
     public let notifyReleaseStages: [String]?
     public let endpoint: String
     public let filters: [String]
+    public let stackTraceSize: Int
 
     public init(drop: Droplet) throws {
         // Set config
@@ -61,6 +64,10 @@ public struct Configuration: ConfigurationType {
             field: .filters,
             config: config
         )
+        self.stackTraceSize = try Configuration.extract(
+            field: .stackTraceSize,
+            config: config
+        ) ?? Configuration.defaultStackTraceValue
     }
     
     private static func extract(
@@ -92,4 +99,15 @@ public struct Configuration: ConfigurationType {
         
         return string
     }
+
+    private static func extract(
+        field: Field,
+        config: Config
+    ) throws -> Int? {
+        guard let size = config[field.rawValue]?.int else {
+            return nil
+        }
+        return size
+    }
+
 }
