@@ -11,6 +11,7 @@ public protocol ReporterType {
         error: Error,
         request: Request?,
         severity: Severity,
+        stackTraceSize: Int?,
         completion: (() -> ())?
     ) throws
 }
@@ -51,8 +52,10 @@ public final class Reporter: ReporterType {
         error: Error,
         request: Request?,
         severity: Severity = .error,
+        stackTraceSize: Int? = nil,
         completion complete: (() -> ())?
     ) throws {
+        let size = stackTraceSize ?? config.stackTraceSize
         if let error = error as? AbortError {
             guard
                 error.metadata?["report"]?.bool ?? true,
@@ -65,6 +68,7 @@ public final class Reporter: ReporterType {
                 metadata: error.metadata,
                 request: request,
                 severity: severity,
+                stackTraceSize: size,
                 completion: complete
             )
         } else {
@@ -73,12 +77,11 @@ public final class Reporter: ReporterType {
                 metadata: nil,
                 request: request,
                 severity: severity,
+                stackTraceSize: size,
                 completion: complete
             )
         }
     }
-
-
     // MARK: - Private helpers
 
     private func report(
@@ -86,6 +89,7 @@ public final class Reporter: ReporterType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
+        stackTraceSize: Int,
         completion complete: (() -> ())? = nil
     ) throws {
         let payload = try payloadTransformer.payloadFor(
@@ -93,6 +97,7 @@ public final class Reporter: ReporterType {
             metadata: metadata,
             request: request,
             severity: severity,
+            stackTraceSize: stackTraceSize,
             filters: config.filters
         )
 

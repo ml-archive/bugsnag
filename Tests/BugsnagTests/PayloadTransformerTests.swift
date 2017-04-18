@@ -7,6 +7,7 @@ class PayloadTransformerTests: XCTestCase {
     private var config: ConfigurationMock!
     private var payloadTransformer: PayloadTransformer!
     private var payload: JSON!
+    private let stackTraceSize: Int = 100
 
     static let allTests = [
         ("testThatItUsesApiKeyFromConfig", testThatItUsesApiKeyFromConfig),
@@ -18,7 +19,8 @@ class PayloadTransformerTests: XCTestCase {
         ("testThatUrlParametersGetsFiltered", testThatUrlParametersGetsFiltered),
         ("testThatQueryParametersGetsFiltered", testThatQueryParametersGetsFiltered),
         ("testThatFormParametersGetsFiltered", testThatFormParametersGetsFiltered),
-        ("testThatJsonParametersGetsFiltered", testThatJsonParametersGetsFiltered)
+        ("testThatJsonParametersGetsFiltered", testThatJsonParametersGetsFiltered),
+        ("testThatStackTraceSizeIsWorking", testThatStackTraceSizeIsWorking)
     ]
 
     override func setUp() {
@@ -34,6 +36,7 @@ class PayloadTransformerTests: XCTestCase {
             metadata: Node(["key": "value"]),
             request: req,
             severity: .warning,
+            stackTraceSize: self.stackTraceSize,
             filters: []
         )
     }
@@ -100,7 +103,14 @@ class PayloadTransformerTests: XCTestCase {
         let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.parameters = ["url": "value", "password": "1337", "mySecret": "lol"]
         let filters = ["password", "mySecret"]
-        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, severity: .error, filters: filters)
+        let payload = try! self.payloadTransformer.payloadFor(
+            message: "",
+            metadata: nil,
+            request: req,
+            severity: .error,
+            stackTraceSize: self.stackTraceSize,
+            filters: filters
+        )
 
         let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["urlParameters"]
 
@@ -113,7 +123,13 @@ class PayloadTransformerTests: XCTestCase {
         let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.query = ["url": "value", "password": "1337", "mySecret": "lol"]
         let filters = ["password", "mySecret"]
-        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, severity: .error, filters: filters)
+        let payload = try! self.payloadTransformer.payloadFor(
+            message: "",
+            metadata: nil,
+            request: req, severity: .error,
+            stackTraceSize: self.stackTraceSize,
+            filters: filters
+        )
 
         let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["queryParameters"]
 
@@ -126,7 +142,14 @@ class PayloadTransformerTests: XCTestCase {
         let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.formURLEncoded = ["url": "value", "password": "1337", "mySecret": "lol"]
         let filters = ["password", "mySecret"]
-        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, severity: .error, filters: filters)
+        let payload = try! self.payloadTransformer.payloadFor(
+            message: "",
+            metadata: nil,
+            request: req,
+            severity: .error,
+            stackTraceSize: self.stackTraceSize,
+            filters: filters
+        )
 
         let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["formParameters"]
 
@@ -139,12 +162,36 @@ class PayloadTransformerTests: XCTestCase {
         let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.json = try! JSON(node:["url": "value", "password": "1337", "mySecret": "lol"])
         let filters = ["password", "mySecret"]
-        let payload = try! self.payloadTransformer.payloadFor(message: "", metadata: nil, request: req, severity: .error, filters: filters)
+        let payload = try! self.payloadTransformer.payloadFor(
+            message: "",
+            metadata: nil,
+            request: req,
+            severity: .error,
+            stackTraceSize: self.stackTraceSize,
+            filters: filters
+        )
 
         let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["jsonParameters"]
 
         XCTAssertNil(urlParameters?["password"])
         XCTAssertNil(urlParameters?["mySecret"])
         XCTAssertEqual(urlParameters?["url"]?.string, "value")
+    }
+
+    func testThatStackTraceSizeIsWorking(){
+        let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
+        let size = 0
+        let emptyStackTracePayload = try! self.payloadTransformer.payloadFor(
+            message: "",
+            metadata: nil,
+            request: req,
+            severity: .error,
+            stackTraceSize: size,
+            filters: []
+        )
+        let stackTraceLine = emptyStackTracePayload["events"]?[0]?["exceptions"]?[0]?["stacktrace"]?["code"]?[0]
+        let normalStackTraceLine = self.payload["events"]?[0]?["exceptions"]?[0]?["stacktrace"]?["code"]?[0]
+        XCTAssertEqual(stackTraceLine,JSON([:]))
+        XCTAssertNotEqual(normalStackTraceLine, JSON([:]))
     }
 }

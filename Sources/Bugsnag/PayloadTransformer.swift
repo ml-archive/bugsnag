@@ -11,6 +11,7 @@ public protocol PayloadTransformerType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
+        stackTraceSize: Int,
         filters: [String]
     ) throws -> JSON
 }
@@ -24,12 +25,13 @@ internal struct PayloadTransformer: PayloadTransformerType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
+        stackTraceSize: Int,
         filters: [String]
     ) throws -> JSON {
         var code: [String: Node] = [:]
         
         var index = 0
-        for entry in FrameAddress.getStackTrace() {
+        for entry in FrameAddress.getStackTrace(maxStackSize: stackTraceSize) {
             code[String(index)] = Node(entry)
             
             index = index + 1
