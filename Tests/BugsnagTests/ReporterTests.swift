@@ -25,7 +25,8 @@ class ReporterTests: XCTestCase {
         ("testStackTraceSizeIsComingFromConfig", testStackTraceSizeIsComingFromConfig),
         ("testStackTraceSizeIsComingFromArguments", testStackTraceSizeIsComingFromArguments),
         ("testThatStackTraceSizeGetsValueFromConfigWhenNil", testThatStackTraceSizeGetsValueFromConfigWhenNil),
-        ("testThatStackTraceSizeGetsDefaultValueWhenNotInConfig", testThatStackTraceSizeGetsDefaultValueWhenNotInConfig)
+        ("testThatStackTraceSizeGetsDefaultValueWhenNotInConfig", testThatStackTraceSizeGetsDefaultValueWhenNotInConfig),
+        ("testThatNotifyReleaseStagesAcceptsNilValueInConfig", testThatNotifyReleaseStagesAcceptsNilValueInConfig)
     ]
 
     override func setUp() {
@@ -319,6 +320,17 @@ class ReporterTests: XCTestCase {
             ])
         let config = try! Configuration(config: conf)
         XCTAssertEqual(config.stackTraceSize, 100)
+    }
+
+    func testThatNotifyReleaseStagesAcceptsNilValueInConfig() {
+        let conf: Config = Config([
+            "apiKey": "1337",
+            "notifyReleaseStages": nil,
+            "endpoint": "some-endpoint",
+            "filters": []
+            ])
+        let con = try! Configuration(config: conf)
+        XCTAssertNil(con.notifyReleaseStages)
     }
 
     // MARK: - Submission
