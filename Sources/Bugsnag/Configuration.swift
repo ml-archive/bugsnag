@@ -73,18 +73,25 @@ public struct Configuration: ConfigurationType {
     private static func extract(
         field: Field,
         config: Config
-    ) throws -> [String] {
+    ) throws -> [String]? {
+        return config[field.rawValue]?.array as? [String]
+    }
+
+    private static func extract(
+        field: Field,
+        config: Config
+        ) throws -> [String] {
         // Get array
         guard let platforms = config[field.rawValue]?.array else {
             throw field.error
         }
-        
+
         // Get from config and make sure all values are strings
         return try platforms.map({
             guard let string = $0.string else {
                 throw field.error
             }
-            
+
             return string
         })
     }
