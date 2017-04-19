@@ -74,8 +74,7 @@ public struct Configuration: ConfigurationType {
         field: Field,
         config: Config
     ) throws -> [String]? {
-        let platforms = config[field.rawValue]?.array
-        return platforms?.array as? [String]
+        return config[field.rawValue]?.array as? [String]
     }
 
     private static func extract(
