@@ -24,8 +24,7 @@ class ReporterTests: XCTestCase {
         ("testErrorBeingReportedWhenNilReleaseStages", testErrorBeingReportedWhenNilReleaseStages),
         ("testStackTraceSizeIsComingFromConfig", testStackTraceSizeIsComingFromConfig),
         ("testStackTraceSizeIsComingFromArguments", testStackTraceSizeIsComingFromArguments),
-        ("testThatStackTraceSizeGetsValueFromConfigWhenNil", testThatStackTraceSizeGetsValueFromConfigWhenNil),
-        ("testThatStackTraceSizeGetsDefaultValueWhenNotInConfig", testThatStackTraceSizeGetsDefaultValueWhenNotInConfig)
+        ("testThatStackTraceSizeGetsValueFromConfigWhenNil", testThatStackTraceSizeGetsValueFromConfigWhenNil)
     ]
 
     override func setUp() {
@@ -38,7 +37,10 @@ class ReporterTests: XCTestCase {
             log: nil
         )
         let config = ConfigurationMock()
-        self.connectionManager = ConnectionManagerMock(drop: drop, config: config)
+        self.connectionManager = ConnectionManagerMock(
+            drop: drop,
+            config: config
+        )
         self.payloadTransformer = PayloadTransformerMock(
             environment: drop.environment,
             apiKey: "1337"
@@ -308,17 +310,6 @@ class ReporterTests: XCTestCase {
         let req = try! Request(method: .get, uri: "some-random-uri")
         try! reporter.report(error: Abort.badRequest, request: req, stackTraceSize: nil, completion: nil)
         XCTAssertEqual(self.payloadTransformer.lastPayloadData?.4, 1337)
-    }
-
-    func testThatStackTraceSizeGetsDefaultValueWhenNotInConfig() {
-        let conf: Config = Config([
-            "apiKey": "1337",
-            "notifyReleaseStages": ["mock-environment"],
-            "endpoint": "some-endpoint",
-            "filters": []
-            ])
-        let config = try! Configuration(config: conf)
-        XCTAssertEqual(config.stackTraceSize, 100)
     }
 
     // MARK: - Submission
