@@ -38,7 +38,7 @@ class ReporterTests: XCTestCase {
             log: nil
         )
         let config = ConfigurationMock()
-        self.connectionManager = ConnectionManagerMock(drop: drop, config: config)
+        self.connectionManager = ConnectionManagerMock(client: drop.client, url: config.endpoint)
         self.payloadTransformer = PayloadTransformerMock(
             environment: drop.environment,
             apiKey: "1337"
