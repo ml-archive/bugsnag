@@ -75,11 +75,11 @@ public struct Configuration: ConfigurationType {
         config: Config
     ) throws -> [String]? {
         // Get array
-        guard let platforms = config[field.rawValue]?.array else {
+        guard let array = config[field.rawValue]?.array else {
             return nil
         }
         // Get from config and make sure all values are strings
-        return try platforms.map({
+        return try array.map({
             guard let string = $0.string else {
                 throw field.error
             }

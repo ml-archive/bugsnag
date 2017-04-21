@@ -15,7 +15,7 @@ class ConfigurationTests: XCTestCase {
         ("testThatStackTraceSizeGetsDefaultValueWhenNotInConfig", testThatStackTraceSizeGetsDefaultValueWhenNotInConfig)
     ]
 
-    func testThatDataExtractedCorrectlyFromConfigFile(){
+    func testThatDataExtractedCorrectlyFromConfigFile() {
         let conf: Config = Config([
             "apiKey": "1337",
             "notifyReleaseStages": ["some-release-stage","other-release-stage"],
