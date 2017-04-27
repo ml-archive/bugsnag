@@ -8,7 +8,7 @@ class ConfigurationTests: XCTestCase {
         ("testThatDataExtractedCorrectlyFromConfigFile", testThatDataExtractedCorrectlyFromConfigFile),
         ("testThatErrorIsThrownWhenApiKeyNotInConfigFile", testThatErrorIsThrownWhenApiKeyNotInConfigFile),
         ("testThatErrorIsThrownWhenEndpointNotInConfigFile", testThatErrorIsThrownWhenEndpointNotInConfigFile),
-        ("testThatErrorIsThrownWhenFiltersNotInConfigFile", testThatErrorIsThrownWhenFiltersNotInConfigFile),
+        ("testThatFiltersDefaultsToEmptyListWhenNotInConfigFile", testThatFiltersDefaultsToEmptyListWhenNotInConfigFile),
         ("testDropInitIsWorkingCorrectly", testDropInitIsWorkingCorrectly),
         ("testThatErrorIsThrownWhenNoConfigFile", testThatErrorIsThrownWhenNoConfigFile),
         ("testThatNotifyReleaseStagesAcceptsNilValueInConfig", testThatNotifyReleaseStagesAcceptsNilValueInConfig),
@@ -55,16 +55,18 @@ class ConfigurationTests: XCTestCase {
         } catch {}
     }
 
-    func testThatErrorIsThrownWhenFiltersNotInConfigFile() {
+    func testThatFiltersDefaultsToEmptyListWhenNotInConfigFile() {
         let conf: Config = Config([
             "apiKey": "1337",
             "endpoint": "some-endpoint",
             "notifyReleaseStages": nil
             ])
         do {
-            _ = try Configuration(config: conf)
-            XCTFail("Error when filters not set wasn't thrown.")
-        } catch {}
+            let config = try Configuration(config: conf)
+            XCTAssertEqual(config.filters, [])
+        } catch {
+            XCTFail("Error when filters not set was thrown.")
+        }
     }
 
     func testDropInitIsWorkingCorrectly() {
