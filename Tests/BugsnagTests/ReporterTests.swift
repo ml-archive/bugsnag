@@ -24,23 +24,22 @@ class ReporterTests: XCTestCase {
         ("testErrorBeingReportedWhenNilReleaseStages", testErrorBeingReportedWhenNilReleaseStages),
         ("testStackTraceSizeIsComingFromConfig", testStackTraceSizeIsComingFromConfig),
         ("testStackTraceSizeIsComingFromArguments", testStackTraceSizeIsComingFromArguments),
-        ("testThatStackTraceSizeGetsValueFromConfigWhenNil", testThatStackTraceSizeGetsValueFromConfigWhenNil),
-        ("testThatStackTraceSizeGetsDefaultValueWhenNotInConfig", testThatStackTraceSizeGetsDefaultValueWhenNotInConfig)
+        ("testThatStackTraceSizeGetsValueFromConfigWhenNil", testThatStackTraceSizeGetsValueFromConfigWhenNil)
     ]
 
     override func setUp() {
         let drop = try! Droplet(
-            arguments: nil,
-            workDir: nil,
-            environment: .custom("mock-environment"),
-            config: nil,
-            localization: nil,
-            log: nil
+            config: Config(
+                prioritized: [.memory(name: "",
+                config: Node([:]))],
+                arguments: [],
+                environment: .custom("mock-environment")
+            )
         )
         let config = ConfigurationMock()
         self.connectionManager = ConnectionManagerMock(client: drop.client, url: config.endpoint)
         self.payloadTransformer = PayloadTransformerMock(
-            environment: drop.environment,
+            environment: drop.config.environment,
             apiKey: "1337"
         )
         self.reporter = Reporter(
@@ -219,12 +218,12 @@ class ReporterTests: XCTestCase {
 
     func testErrorNotReportedWhenEnvironmentNotInNotifyReleaseStages() {
         let drop = try! Droplet(
-            arguments: nil,
-            workDir: nil,
-            environment: .development, //currentEnvironment = "development"
-            config: nil,
-            localization: nil,
-            log: nil
+            config: Config(
+                prioritized: [.memory(name: "",
+                config: Node([:]))],
+                arguments: [],
+                environment: .development
+            )
         )
         let conf = ConfigurationMock() //notifyReleaseStages = ["mock-environment"]
         let repo = Reporter(
@@ -239,12 +238,12 @@ class ReporterTests: XCTestCase {
 
     func testErrorReportedWhenEnvironmentInNotifyReleaseStages() {
         let drop = try! Droplet(
-            arguments: nil,
-            workDir: nil,
-            environment: .custom("mock-environment"), //currentEnvironment = "mock-environment"
-            config: nil,
-            localization: nil,
-            log: nil
+            config: Config(
+                prioritized: [.memory(name: "",
+                config: Node([:]))],
+                arguments: [],
+                environment: .custom("mock-environment")
+            )
         )
         let conf = ConfigurationMock() //notifyReleaseStages = ["mock-environment"]
         let repo = Reporter(
@@ -259,12 +258,12 @@ class ReporterTests: XCTestCase {
 
     func testErrorNotBeingReportedWhenEmptyReleaseStages() {
         let drop = try! Droplet(
-            arguments: nil,
-            workDir: nil,
-            environment: .custom("mock-environment"), //currentEnvironment = "mock-environment"
-            config: nil,
-            localization: nil,
-            log: nil
+            config: Config(
+                prioritized: [.memory(name: "",
+                config: Node([:]))],
+                arguments: [],
+                environment: .custom("mock-environment")
+            )
         )
         let conf = ConfigurationMock(releaseStages: []) //notifyReleaseStages = []
         let repo = Reporter(
@@ -280,12 +279,12 @@ class ReporterTests: XCTestCase {
 
     func testErrorBeingReportedWhenNilReleaseStages() {
         let drop = try! Droplet(
-            arguments: nil,
-            workDir: nil,
-            environment: .custom("mock-environment"), //currentEnvironment = "mock-environment"
-            config: nil,
-            localization: nil,
-            log: nil
+            config: Config(
+                prioritized: [.memory(name: "",
+                config: Node([:]))],
+                arguments: [],
+                environment: .custom("mock-environment")
+            )
         )
         let conf = ConfigurationMock(releaseStages: nil) //notifyReleaseStages = nil
         let repo = Reporter(

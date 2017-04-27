@@ -41,7 +41,7 @@ public final class Reporter: ReporterType {
         )
         self.payloadTransformer = transformer ?? PayloadTransformer(
             frameAddress: FrameAddress.self,
-            environment: drop.environment,
+            environment: drop.config.environment,
             apiKey: config.apiKey
         )
     }
@@ -115,6 +115,6 @@ public final class Reporter: ReporterType {
         guard let notifyReleaseStages = config.notifyReleaseStages else {
             return true
         }
-        return notifyReleaseStages.contains(drop.environment.description)
+        return notifyReleaseStages.contains(drop.config.environment.description)
     }
 }

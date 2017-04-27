@@ -1,11 +1,24 @@
 import Vapor
 
 public final class Provider: Vapor.Provider {
-    
+
+    public static var repositoryName = "Bugsnag"
+
     var config: ConfigurationType
     
     public func boot(_ drop: Droplet) {
         drop.bugsnag = Reporter(drop: drop, config: config)
+    }
+
+    public func boot(_ config: Config) throws {
+        guard let config: Config = config["bugsnag"] else {
+            throw Abort(
+                .internalServerError,
+                reason: "Bugsnag error - bugsnag.json config is missing."
+            )
+        }
+        
+        self.config = try Configuration(config: config)
     }
     
     public init(drop: Droplet) throws {
