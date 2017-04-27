@@ -74,6 +74,16 @@ myDroplet.bugsnag?.report(error: Abort.badRequest, request: myRequest)
 
 There's also an option to pass in a completion block if you want to get notified when the submission has completed.
 
+### Metadata
+
+Remember that when using Vapor's `AbortError` type, you can pass in some metadata on your error which will also be reported to Bugsnag. This is convenient if you want to include information that can help you debug a specific error.
+
+```swift
+Abort.init(.internalServerError, metadata: ["userId": 1337], reason: "User failed to login.")
+```
+
+
+
 ## Configurations 🔧
 
 | Key                    | Example value                    | Required | Description                              |
