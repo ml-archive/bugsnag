@@ -3,13 +3,13 @@ import Bugsnag
 import HTTP
 
 internal class ConnectionManagerMock: ConnectionManagerType {
-    let drop: Droplet
-    let config: ConfigurationType
+    let client: ClientFactoryProtocol
+    let url: String
     var lastPayload: JSON? = nil
 
-    required init(drop: Droplet, config: ConfigurationType) {
-        self.drop = drop
-        self.config = config
+    required init(client: ClientFactoryProtocol, url: String) {
+        self.client = client
+        self.url = url
     }
 
     internal func submitPayload(_ json: JSON) throws -> Status {

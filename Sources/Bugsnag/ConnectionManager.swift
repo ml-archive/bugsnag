@@ -5,23 +5,23 @@ import Stacked
 
 
 public protocol ConnectionManagerType {
-    var drop: Droplet { get }
-    var config: ConfigurationType { get }
-    init(drop: Droplet, config: ConfigurationType)
+    var client: ClientFactoryProtocol { get }
+    var url: String { get }
+    init(client: ClientFactoryProtocol, url: String)
     func submitPayload(_ json: JSON) throws -> Status
 }
 
 public final class ConnectionManager: ConnectionManagerType {
-    public let drop: Droplet
-    public let config: ConfigurationType
+    public let client: ClientFactoryProtocol
+    public let url: String
     
-    public init(drop: Droplet, config: ConfigurationType) {
-        self.drop = drop
-        self.config = config
+    public init(client: ClientFactoryProtocol, url: String) {
+        self.client = client
+        self.url = url
     }
     
     public func submitPayload(_ json: JSON) throws -> Status {
-        let response = try drop.client.post(self.config.endpoint, query: [:], headers(), json.makeBody())
+        let response = try client.post(url, query: [:], headers(), json.makeBody())
         return response.status
     }
 

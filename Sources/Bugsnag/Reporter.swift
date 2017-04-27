@@ -36,8 +36,8 @@ public final class Reporter: ReporterType {
         self.drop = drop
         self.config = config
         self.connectionManager = connectionManager ?? ConnectionManager(
-            drop: drop,
-            config: config
+            client: drop.client,
+            url: config.endpoint
         )
         self.payloadTransformer = transformer ?? PayloadTransformer(
             frameAddress: FrameAddress.self,
