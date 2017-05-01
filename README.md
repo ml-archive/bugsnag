@@ -1,4 +1,4 @@
-# Bugsnag
+# Bugsnag 🐛
 [![Language](https://img.shields.io/badge/Swift-3.1-brightgreen.svg)](http://swift.org)
 [![Build Status](https://travis-ci.org/nodes-vapor/bugsnag.svg?branch=master)](https://travis-ci.org/nodes-vapor/bugsnag)
 [![codebeat badge](https://codebeat.co/badges/52c2f960-625c-4a63-ae63-52a24d747da1)](https://codebeat.co/projects/github-com-nodes-vapor-bugsnag)
