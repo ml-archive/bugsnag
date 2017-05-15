@@ -8,7 +8,7 @@ internal class ClientFactoryMock: ClientFactoryProtocol {
 
     func respond(to request: Request) throws -> Response {
         lastRequest = request
-        return Response()
+        return Response(status: .ok)
     }
 
     func makeClient(

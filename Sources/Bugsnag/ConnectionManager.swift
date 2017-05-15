@@ -3,11 +3,7 @@ import HTTP
 import Foundation
 import Stacked
 
-
 public protocol ConnectionManagerType {
-    var client: ClientFactoryProtocol { get }
-    var url: String { get }
-    init(client: ClientFactoryProtocol, url: String)
     func submitPayload(_ json: JSON) throws -> Status
 }
 
