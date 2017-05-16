@@ -31,6 +31,8 @@ public final class Provider: Vapor.Provider {
             connectionManager: connectionManager,
             transformer: transformer
         )
+        
+        drop.bugsnag = reporter
     }
 
     public func boot(_ config: Config) throws {
