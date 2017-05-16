@@ -36,6 +36,10 @@ public final class Provider: Vapor.Provider {
     }
 
     public func boot(_ config: Config) throws {
+        guard self.config == nil else {
+            return
+        }
+        
         guard let config: Config = config["bugsnag"] else {
             throw Abort(
                 .internalServerError,
