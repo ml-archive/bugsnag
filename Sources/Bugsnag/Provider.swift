@@ -5,13 +5,9 @@ public final class Provider: Vapor.Provider {
 
     public static var repositoryName = "Bugsnag"
 
-    var config: BugsnagConfig?
+    var config: BugsnagConfig
     
     public func boot(_ drop: Droplet) {
-        guard let config = config else {
-            fatalError("Bugsnag error - bugsnag.json config is missing.")
-        }
-        
         let connectionManager = ConnectionManager(
             client: EngineClient.factory,
             url: config.endpoint
@@ -36,10 +32,6 @@ public final class Provider: Vapor.Provider {
     }
 
     public func boot(_ config: Config) throws {
-        guard self.config == nil else {
-            return
-        }
-        
         guard let config: Config = config["bugsnag"] else {
             throw Abort(
                 .internalServerError,
