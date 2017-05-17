@@ -25,7 +25,7 @@ public final class Reporter: ReporterType {
     let connectionManager: ConnectionManagerType
     let payloadTransformer: PayloadTransformerType
     let defaultStackSize: Int
-    let filters: [String]
+    let defaultFilters: [String]
     
     init(
         environment: Environment,
@@ -33,14 +33,14 @@ public final class Reporter: ReporterType {
         connectionManager: ConnectionManagerType,
         transformer: PayloadTransformerType,
         defaultStackSize: Int,
-        filters: [String] = []
+        defaultFilters: [String] = []
     ) {
         self.environment = environment
         self.notifyReleaseStages = notifyReleaseStages
         self.connectionManager = connectionManager
         self.payloadTransformer = transformer
         self.defaultStackSize = defaultStackSize
-        self.filters = filters
+        self.defaultFilters = defaultFilters
     }
 
     public func report(error: Error, request: Request?) throws {
@@ -97,7 +97,7 @@ public final class Reporter: ReporterType {
             request: request,
             severity: severity,
             stackTraceSize: stackTraceSize ?? defaultStackSize,
-            filters: filters
+            filters: defaultFilters
         )
 
         // Fire and forget.

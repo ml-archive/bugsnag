@@ -36,7 +36,8 @@ class ReporterTests: XCTestCase {
             notifyReleaseStages: ["mock-environment"],
             connectionManager: connectionManager,
             transformer: payloadTransformer,
-            defaultStackSize: 100
+            defaultStackSize: 100,
+            defaultFilters: ["someFilter"]
         )
     }
 
@@ -185,7 +186,7 @@ class ReporterTests: XCTestCase {
             completion: nil
         )
         
-        //XCTAssertEqual(self.payloadTransformer.lastPayloadData!.5!, ["someFilter"])
+        XCTAssertEqual(self.payloadTransformer.lastPayloadData!.5!, ["someFilter"])
     }
 
 

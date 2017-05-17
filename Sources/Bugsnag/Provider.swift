@@ -25,7 +25,7 @@ public final class Provider: Vapor.Provider {
             connectionManager: connectionManager,
             transformer: transformer,
             defaultStackSize: config.stackTraceSize,
-            filters: config.filters
+            defaultFilters: config.filters
         )
         
         drop.bugsnag = reporter
