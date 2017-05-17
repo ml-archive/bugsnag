@@ -24,6 +24,7 @@ public final class Reporter: ReporterType {
     let notifyReleaseStages: [String]?
     let connectionManager: ConnectionManagerType
     let payloadTransformer: PayloadTransformerType
+    let defaultStackSize: Int
     let filters: [String]
     
     init(
@@ -31,12 +32,14 @@ public final class Reporter: ReporterType {
         notifyReleaseStages: [String]? = [],
         connectionManager: ConnectionManagerType,
         transformer: PayloadTransformerType,
+        defaultStackSize: Int,
         filters: [String] = []
     ) {
         self.environment = environment
         self.notifyReleaseStages = notifyReleaseStages
         self.connectionManager = connectionManager
         self.payloadTransformer = transformer
+        self.defaultStackSize = defaultStackSize
         self.filters = filters
     }
 
@@ -93,7 +96,7 @@ public final class Reporter: ReporterType {
             metadata: metadata,
             request: request,
             severity: severity,
-            stackTraceSize: stackTraceSize,
+            stackTraceSize: stackTraceSize ?? defaultStackSize,
             filters: filters
         )
 

@@ -16,9 +16,7 @@ public final class Provider: Vapor.Provider {
         let transformer = PayloadTransformer(
             frameAddress: FrameAddress.self,
             environment: config.environment,
-            apiKey: config.apiKey,
-            defaultStackSize: config.stackTraceSize,
-            defaultFilters: config.filters
+            apiKey: config.apiKey
         )
         
         let reporter = Reporter(
@@ -26,6 +24,7 @@ public final class Provider: Vapor.Provider {
             notifyReleaseStages: config.notifyReleaseStages,
             connectionManager: connectionManager,
             transformer: transformer,
+            defaultStackSize: config.stackTraceSize,
             filters: config.filters
         )
         

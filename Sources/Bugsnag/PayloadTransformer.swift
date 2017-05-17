@@ -12,8 +12,8 @@ public protocol PayloadTransformerType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
-        stackTraceSize: Int?,
-        filters: [String]?
+        stackTraceSize: Int,
+        filters: [String]
     ) throws -> JSON
 }
 
@@ -21,20 +21,15 @@ internal struct PayloadTransformer: PayloadTransformerType {
     let frameAddress: FrameAddressType.Type
     let environment: Environment
     let apiKey: String
-    let defaultStackSize: Int
-    let defaultFilters: [String]
     
     internal func payloadFor(
         message: String,
         metadata: Node?,
         request: Request?,
         severity: Severity,
-        stackTraceSize: Int? = nil,
-        filters: [String]? = nil
+        stackTraceSize: Int,
+        filters: [String]
     ) throws -> JSON {
-        let stackTraceSize = stackTraceSize ?? defaultStackSize
-        let filters = filters ?? defaultFilters
-        
         var code: [String: Node] = [:]
         
         var index = 0

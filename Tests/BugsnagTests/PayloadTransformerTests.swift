@@ -25,9 +25,7 @@ class PayloadTransformerTests: XCTestCase {
         self.payloadTransformer = PayloadTransformer(
             frameAddress: FrameAddressMock.self,
             environment: .custom("mock-environment"),
-            apiKey: "1337",
-            defaultStackSize: 100,
-            defaultFilters: []
+            apiKey: "1337"
         )
         
         let req = Request(method: .get, uri: "http://some-random-url.com/payload-test")

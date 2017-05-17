@@ -35,7 +35,8 @@ class ReporterTests: XCTestCase {
             environment: .custom("mock-environment"),
             notifyReleaseStages: ["mock-environment"],
             connectionManager: connectionManager,
-            transformer: payloadTransformer
+            transformer: payloadTransformer,
+            defaultStackSize: 100
         )
     }
 
@@ -209,7 +210,8 @@ class ReporterTests: XCTestCase {
             environment: .production,
             notifyReleaseStages: nil,
             connectionManager: self.connectionManager,
-            transformer: self.payloadTransformer
+            transformer: self.payloadTransformer,
+            defaultStackSize: 100
         )
         
         try! repo.report(error: Abort.badRequest, request: nil)
@@ -222,7 +224,8 @@ class ReporterTests: XCTestCase {
         let repo = Reporter(
             environment: .production,
             connectionManager: self.connectionManager,
-            transformer: self.payloadTransformer
+            transformer: self.payloadTransformer,
+            defaultStackSize: 100
         )
         try! repo.report(error: Abort.badRequest, request: nil)
         XCTAssertNil(self.payloadTransformer.lastPayloadData)
@@ -233,7 +236,8 @@ class ReporterTests: XCTestCase {
             environment: .custom("mock-environment"),
             notifyReleaseStages: ["mock-environment"],
             connectionManager: self.connectionManager,
-            transformer: self.payloadTransformer
+            transformer: self.payloadTransformer,
+            defaultStackSize: 100
         )
         try! repo.report(error: Abort.badRequest, request: nil)
         XCTAssertNotNil(self.payloadTransformer.lastPayloadData)
@@ -243,7 +247,8 @@ class ReporterTests: XCTestCase {
         let repo = Reporter(
             environment: .custom("mock-environment"),
             connectionManager: self.connectionManager,
-            transformer: self.payloadTransformer
+            transformer: self.payloadTransformer,
+            defaultStackSize: 100
         )
         try! repo.report(error: Abort.badRequest, request: nil)
         XCTAssertNil(self.payloadTransformer.lastPayloadData)
