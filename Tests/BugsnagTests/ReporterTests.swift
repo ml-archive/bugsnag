@@ -204,7 +204,19 @@ class ReporterTests: XCTestCase {
 
 
     // MARK: - Notify release stages.
-
+    func testErrorBeingReportedWhenNilReleaseStages() {
+        let repo = Reporter(
+            environment: .production,
+            notifyReleaseStages: nil,
+            connectionManager: self.connectionManager,
+            transformer: self.payloadTransformer
+        )
+        
+        try! repo.report(error: Abort.badRequest, request: nil)
+        XCTAssertNotNil(self.payloadTransformer.lastPayloadData)
+    }
+    
+    
     func testErrorNotReportedWhenEnvironmentNotInNotifyReleaseStages() {
         //notifyReleaseStages = ["mock-environment"]
         let repo = Reporter(
@@ -217,7 +229,6 @@ class ReporterTests: XCTestCase {
     }
 
     func testErrorReportedWhenEnvironmentInNotifyReleaseStages() {
-        //notifyReleaseStages = ["mock-environment"]
         let repo = Reporter(
             environment: .custom("mock-environment"),
             notifyReleaseStages: ["mock-environment"],
@@ -229,7 +240,6 @@ class ReporterTests: XCTestCase {
     }
 
     func testErrorNotBeingReportedWhenEmptyReleaseStages() {
-        //notifyReleaseStages = []
         let repo = Reporter(
             environment: .custom("mock-environment"),
             connectionManager: self.connectionManager,

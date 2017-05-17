@@ -1,32 +1,28 @@
 import Vapor
 
-public struct BugsnagConfig {
-    public enum Error: Swift.Error {
-        case invalidConfig(field: String, Config)
-    }
+internal struct BugsnagConfig {
+    internal let apiKey: String
+    internal let notifyReleaseStages: [String]?
+    internal let endpoint: String
+    internal let filters: [String]
+    internal let stackTraceSize: Int
+    internal let environment: Environment
     
-    public let apiKey: String
-    public let notifyReleaseStages: [String]
-    public let endpoint: String
-    public let filters: [String]
-    public let stackTraceSize: Int
-    public let environment: Environment
-    
-    public init(_ config: Config) throws {
+    internal init(_ config: Config) throws {
         apiKey = try config.get("apiKey")
         
         notifyReleaseStages = try config["notifyReleaseStages"]?.array?.map {
             guard let string = $0.string else {
-                throw Error.invalidConfig(field: "notifyReleaseStages", config)
+                throw Abort(.internalServerError, reason: "Invalid field for: notifyReleaseStages")
             }
             
             return string
-        } ?? []
+        }
         
         endpoint = try config.get("endpoint")
         filters = try config["filters"]?.array?.map {
             guard let string = $0.string else {
-                throw Error.invalidConfig(field: "filters", config)
+                throw Abort(.internalServerError, reason: "Invalid field for: filters")
             }
             
             return string

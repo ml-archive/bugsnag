@@ -24,7 +24,7 @@ class ConfigurationTests: XCTestCase {
         ])
         let con = try! BugsnagConfig(conf)
         XCTAssertEqual(con.apiKey, "1337")
-        XCTAssertEqual(con.notifyReleaseStages, ["some-release-stage","other-release-stage"])
+        XCTAssertEqual(con.notifyReleaseStages!, ["some-release-stage","other-release-stage"])
         XCTAssertEqual(con.endpoint, "some-endpoint")
         XCTAssertEqual(con.filters, ["some-filter", "another-filter"])
         XCTAssertEqual(con.stackTraceSize, 99)
@@ -84,7 +84,7 @@ class ConfigurationTests: XCTestCase {
             "filters": []
         ])
         let con = try! BugsnagConfig(conf)
-        XCTAssert(con.notifyReleaseStages.isEmpty)
+        XCTAssert(con.notifyReleaseStages == nil)
     }
 
     func testThatStackTraceSizeGetsDefaultValueWhenNotInConfig() {

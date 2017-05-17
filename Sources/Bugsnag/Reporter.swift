@@ -21,20 +21,23 @@ public enum Severity: String {
 
 public final class Reporter: ReporterType {
     let environment: Environment
-    let notifyReleaseStages: [String]
+    let notifyReleaseStages: [String]?
     let connectionManager: ConnectionManagerType
     let payloadTransformer: PayloadTransformerType
+    let filters: [String]
     
     init(
         environment: Environment,
-        notifyReleaseStages: [String] = [],
+        notifyReleaseStages: [String]? = [],
         connectionManager: ConnectionManagerType,
-        transformer: PayloadTransformerType
+        transformer: PayloadTransformerType,
+        filters: [String] = []
     ) {
         self.environment = environment
         self.notifyReleaseStages = notifyReleaseStages
         self.connectionManager = connectionManager
         self.payloadTransformer = transformer
+        self.filters = filters
     }
 
     public func report(error: Error, request: Request?) throws {
@@ -91,7 +94,7 @@ public final class Reporter: ReporterType {
             request: request,
             severity: severity,
             stackTraceSize: stackTraceSize,
-            filters: nil
+            filters: filters
         )
 
         // Fire and forget.
@@ -103,6 +106,11 @@ public final class Reporter: ReporterType {
     }
 
     private func shouldNotifyForReleaseStage() -> Bool {
+        // If a user doesn't explicitly set this, report on all stages
+        guard let notifyReleaseStages = notifyReleaseStages else {
+            return true
+        }
+        
         return notifyReleaseStages.contains(environment.description)
     }
 }

@@ -25,7 +25,8 @@ public final class Provider: Vapor.Provider {
             environment: config.environment,
             notifyReleaseStages: config.notifyReleaseStages,
             connectionManager: connectionManager,
-            transformer: transformer
+            transformer: transformer,
+            filters: config.filters
         )
         
         drop.bugsnag = reporter
