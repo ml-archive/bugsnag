@@ -4,7 +4,6 @@ import XCTest
 import HTTP
 
 class PayloadTransformerTests: XCTestCase {
-    private var config: ConfigurationMock!
     private var payloadTransformer: PayloadTransformer!
     private var payload: JSON!
 
@@ -23,8 +22,13 @@ class PayloadTransformerTests: XCTestCase {
     ]
 
     override func setUp() {
-        self.payloadTransformer = PayloadTransformer(frameAddress: FrameAddressMock.self, environment: .custom("mock-environment"), apiKey: "1337")
-        let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
+        self.payloadTransformer = PayloadTransformer(
+            frameAddress: FrameAddressMock.self,
+            environment: .custom("mock-environment"),
+            apiKey: "1337"
+        )
+        
+        let req = Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.parameters = ["url": "value"]
         req.query = ["query": "value"]
         req.formURLEncoded = ["form": "value"]
@@ -41,7 +45,6 @@ class PayloadTransformerTests: XCTestCase {
     }
 
     override func tearDown() {
-        self.config = nil
         self.payloadTransformer = nil
     }
 
@@ -99,7 +102,7 @@ class PayloadTransformerTests: XCTestCase {
     }
 
     func testThatUrlParametersGetsFiltered() {
-        let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
+        let req = Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.parameters = ["url": "value", "password": "1337", "mySecret": "lol"]
         let filters = ["password", "mySecret"]
         let payload = try! self.payloadTransformer.payloadFor(
@@ -119,7 +122,7 @@ class PayloadTransformerTests: XCTestCase {
     }
 
     func testThatQueryParametersGetsFiltered() {
-        let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
+        let req = Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.query = ["url": "value", "password": "1337", "mySecret": "lol"]
         let filters = ["password", "mySecret"]
         let payload = try! self.payloadTransformer.payloadFor(
@@ -138,7 +141,7 @@ class PayloadTransformerTests: XCTestCase {
     }
 
     func testThatFormParametersGetsFiltered() {
-        let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
+        let req = Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.formURLEncoded = ["url": "value", "password": "1337", "mySecret": "lol"]
         let filters = ["password", "mySecret"]
         let payload = try! self.payloadTransformer.payloadFor(
@@ -158,7 +161,7 @@ class PayloadTransformerTests: XCTestCase {
     }
 
     func testThatJsonParametersGetsFiltered() {
-        let req = try! Request(method: .get, uri: "http://some-random-url.com/payload-test")
+        let req = Request(method: .get, uri: "http://some-random-url.com/payload-test")
         req.json = try! JSON(node:["url": "value", "password": "1337", "mySecret": "lol"])
         let filters = ["password", "mySecret"]
         let payload = try! self.payloadTransformer.payloadFor(

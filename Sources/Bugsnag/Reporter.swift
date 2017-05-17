@@ -4,10 +4,8 @@ import Core
 import Stacked
 
 public protocol ReporterType {
-    
-    var drop: Droplet { get }
-    var config: ConfigurationType { get }
     func report(error: Error, request: Request?) throws
+    
     func report(
         error: Error,
         request: Request?,
@@ -22,28 +20,27 @@ public enum Severity: String {
 }
 
 public final class Reporter: ReporterType {
-    public let drop: Droplet
-    public let config: ConfigurationType
+    let environment: Environment
+    let notifyReleaseStages: [String]?
     let connectionManager: ConnectionManagerType
     let payloadTransformer: PayloadTransformerType
+    let defaultStackSize: Int
+    let defaultFilters: [String]
     
     init(
-        drop: Droplet,
-        config: ConfigurationType,
-        connectionManager: ConnectionManagerType? = nil,
-        transformer: PayloadTransformerType? = nil
+        environment: Environment,
+        notifyReleaseStages: [String]? = [],
+        connectionManager: ConnectionManagerType,
+        transformer: PayloadTransformerType,
+        defaultStackSize: Int,
+        defaultFilters: [String] = []
     ) {
-        self.drop = drop
-        self.config = config
-        self.connectionManager = connectionManager ?? ConnectionManager(
-            client: drop.client,
-            url: config.endpoint
-        )
-        self.payloadTransformer = transformer ?? PayloadTransformer(
-            frameAddress: FrameAddress.self,
-            environment: drop.config.environment,
-            apiKey: config.apiKey
-        )
+        self.environment = environment
+        self.notifyReleaseStages = notifyReleaseStages
+        self.connectionManager = connectionManager
+        self.payloadTransformer = transformer
+        self.defaultStackSize = defaultStackSize
+        self.defaultFilters = defaultFilters
     }
 
     public func report(error: Error, request: Request?) throws {
@@ -57,33 +54,33 @@ public final class Reporter: ReporterType {
         stackTraceSize: Int? = nil,
         completion complete: (() -> ())?
     ) throws {
-        let size = stackTraceSize ?? config.stackTraceSize
-        if let error = error as? AbortError {
-            guard
-                error.metadata?["report"]?.bool ?? true,
-                shouldNotifyForReleaseStage()
-            else {
-                return
-            }
-            try self.report(
-                message: error.reason,
-                metadata: error.metadata,
-                request: request,
-                severity: severity,
-                stackTraceSize: size,
-                completion: complete
-            )
-        } else {
-            try self.report(
+        guard let error = error as? AbortError else {
+            try report(
                 message: Status.internalServerError.reasonPhrase,
                 metadata: nil,
                 request: request,
                 severity: severity,
-                stackTraceSize: size,
+                stackTraceSize: stackTraceSize,
                 completion: complete
             )
+            
+            return
         }
+        
+        guard error.metadata?["report"]?.bool ?? true, shouldNotifyForReleaseStage() else {
+            return
+        }
+        
+        try report(
+            message: error.reason,
+            metadata: error.metadata,
+            request: request,
+            severity: severity,
+            stackTraceSize: stackTraceSize,
+            completion: complete
+        )
     }
+    
     // MARK: - Private helpers
 
     private func report(
@@ -91,7 +88,7 @@ public final class Reporter: ReporterType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
-        stackTraceSize: Int,
+        stackTraceSize: Int?,
         completion complete: (() -> ())? = nil
     ) throws {
         let payload = try payloadTransformer.payloadFor(
@@ -99,8 +96,8 @@ public final class Reporter: ReporterType {
             metadata: metadata,
             request: request,
             severity: severity,
-            stackTraceSize: stackTraceSize,
-            filters: config.filters
+            stackTraceSize: stackTraceSize ?? defaultStackSize,
+            filters: defaultFilters
         )
 
         // Fire and forget.
@@ -112,9 +109,11 @@ public final class Reporter: ReporterType {
     }
 
     private func shouldNotifyForReleaseStage() -> Bool {
-        guard let notifyReleaseStages = config.notifyReleaseStages else {
+        // If a user doesn't explicitly set this, report on all stages
+        guard let notifyReleaseStages = notifyReleaseStages else {
             return true
         }
-        return notifyReleaseStages.contains(drop.config.environment.description)
+        
+        return notifyReleaseStages.contains(environment.description)
     }
 }

@@ -1,13 +1,34 @@
 import Vapor
+import Stacked
 
 public final class Provider: Vapor.Provider {
 
     public static var repositoryName = "Bugsnag"
 
-    var config: ConfigurationType
+    var config: BugsnagConfig
     
     public func boot(_ drop: Droplet) {
-        drop.bugsnag = Reporter(drop: drop, config: config)
+        let connectionManager = ConnectionManager(
+            client: EngineClient.factory,
+            url: config.endpoint
+        )
+        
+        let transformer = PayloadTransformer(
+            frameAddress: FrameAddress.self,
+            environment: config.environment,
+            apiKey: config.apiKey
+        )
+        
+        let reporter = Reporter(
+            environment: config.environment,
+            notifyReleaseStages: config.notifyReleaseStages,
+            connectionManager: connectionManager,
+            transformer: transformer,
+            defaultStackSize: config.stackTraceSize,
+            defaultFilters: config.filters
+        )
+        
+        drop.bugsnag = reporter
     }
 
     public func boot(_ config: Config) throws {
@@ -18,11 +39,7 @@ public final class Provider: Vapor.Provider {
             )
         }
         
-        self.config = try Configuration(config: config)
-    }
-    
-    public init(drop: Droplet) throws {
-        config = try Configuration(drop: drop)
+        self.config = try BugsnagConfig(config)
     }
 
     public init(config: Config) throws {
@@ -33,7 +50,7 @@ public final class Provider: Vapor.Provider {
             )
         }
         
-        self.config = try Configuration(config: config)
+        self.config = try BugsnagConfig(config)
     }
     
     // is automatically called directly after boot()

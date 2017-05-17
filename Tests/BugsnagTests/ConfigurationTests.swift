@@ -9,7 +9,6 @@ class ConfigurationTests: XCTestCase {
         ("testThatErrorIsThrownWhenApiKeyNotInConfigFile", testThatErrorIsThrownWhenApiKeyNotInConfigFile),
         ("testThatErrorIsThrownWhenEndpointNotInConfigFile", testThatErrorIsThrownWhenEndpointNotInConfigFile),
         ("testThatFiltersDefaultsToEmptyListWhenNotInConfigFile", testThatFiltersDefaultsToEmptyListWhenNotInConfigFile),
-        ("testDropInitIsWorkingCorrectly", testDropInitIsWorkingCorrectly),
         ("testThatErrorIsThrownWhenNoConfigFile", testThatErrorIsThrownWhenNoConfigFile),
         ("testThatNotifyReleaseStagesAcceptsNilValueInConfig", testThatNotifyReleaseStagesAcceptsNilValueInConfig),
         ("testThatStackTraceSizeGetsDefaultValueWhenNotInConfig", testThatStackTraceSizeGetsDefaultValueWhenNotInConfig)
@@ -22,8 +21,8 @@ class ConfigurationTests: XCTestCase {
             "endpoint": "some-endpoint",
             "filters": ["some-filter", "another-filter"],
             "stackTraceSize": 99
-            ])
-        let con = try! Configuration(config: conf)
+        ])
+        let con = try! BugsnagConfig(conf)
         XCTAssertEqual(con.apiKey, "1337")
         XCTAssertEqual(con.notifyReleaseStages!, ["some-release-stage","other-release-stage"])
         XCTAssertEqual(con.endpoint, "some-endpoint")
@@ -36,9 +35,9 @@ class ConfigurationTests: XCTestCase {
             "notifyReleaseStages": nil,
             "endpoint": "some-endpoint",
             "filters": []
-            ])
+        ])
         do {
-            _ = try Configuration(config: conf)
+            _ = try BugsnagConfig(conf)
             XCTFail("Error when ApiKey not set wasn't thrown.")
         } catch {}
     }
@@ -50,7 +49,7 @@ class ConfigurationTests: XCTestCase {
             "filters": []
             ])
         do {
-            _ = try Configuration(config: conf)
+            _ = try BugsnagConfig(conf)
             XCTFail("Error when endpoint not set wasn't thrown.")
         } catch {}
     }
@@ -60,37 +59,19 @@ class ConfigurationTests: XCTestCase {
             "apiKey": "1337",
             "endpoint": "some-endpoint",
             "notifyReleaseStages": nil
-            ])
+        ])
         do {
-            let config = try Configuration(config: conf)
+            let config = try BugsnagConfig(conf)
             XCTAssertEqual(config.filters, [])
         } catch {
-            XCTFail("Error when filters not set was thrown.")
+            XCTFail("Error when filters not set was thrown. \(error)")
         }
     }
 
-    func testDropInitIsWorkingCorrectly() {
-        let config = Config(["bugsnag": [
-            "apiKey": "1337",
-            "notifyReleaseStages": ["some-release-stage","other-release-stage"],
-            "endpoint": "some-endpoint",
-            "filters": ["some-filter", "another-filter"],
-            "stackTraceSize": 99
-            ]])
-        let drop = try! Droplet(config: config)
-        let con = try! Configuration(drop: drop)
-
-        XCTAssertEqual(con.apiKey, "1337")
-        XCTAssertEqual(con.notifyReleaseStages!, ["some-release-stage","other-release-stage"])
-        XCTAssertEqual(con.endpoint, "some-endpoint")
-        XCTAssertEqual(con.filters, ["some-filter", "another-filter"])
-        XCTAssertEqual(con.stackTraceSize, 99)
-    }
-
     func testThatErrorIsThrownWhenNoConfigFile() {
-        let drop = try! Droplet()
+        let config = Config([:])
         do {
-            _ = try Configuration(drop: drop)
+            _ = try BugsnagConfig(config)
             XCTFail("Error when config file not found wasn't thrown.")
         } catch {}
     }
@@ -101,9 +82,9 @@ class ConfigurationTests: XCTestCase {
             "notifyReleaseStages": nil,
             "endpoint": "some-endpoint",
             "filters": []
-            ])
-        let con = try! Configuration(config: conf)
-        XCTAssertNil(con.notifyReleaseStages)
+        ])
+        let con = try! BugsnagConfig(conf)
+        XCTAssert(con.notifyReleaseStages == nil)
     }
 
     func testThatStackTraceSizeGetsDefaultValueWhenNotInConfig() {
@@ -112,8 +93,8 @@ class ConfigurationTests: XCTestCase {
             "notifyReleaseStages": nil,
             "endpoint": "some-endpoint",
             "filters": []
-            ])
-        let config = try! Configuration(config: conf)
+        ])
+        let config = try! BugsnagConfig(conf)
         XCTAssertEqual(config.stackTraceSize, 100)
     }
 }

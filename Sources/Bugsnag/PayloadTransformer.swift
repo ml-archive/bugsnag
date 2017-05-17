@@ -21,7 +21,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
     let frameAddress: FrameAddressType.Type
     let environment: Environment
     let apiKey: String
-
+    
     internal func payloadFor(
         message: String,
         metadata: Node?,
@@ -68,7 +68,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
         
         try requestObj.set("method", request?.method.description)
         try requestObj.set("headers", headers)
-        try requestObj.set("urlParameters", filterOutKeys(filters, inNode: optionalNode(request?.parameters)))
+        try requestObj.set("urlParameters", filterOutKeys(filters, inNode: optionalNode(request?.parameters.makeNode(in: nil))))
         try requestObj.set("queryParameters", filterOutKeys(filters, inNode: optionalNode(request?.query)))
         try requestObj.set("formParameters", filterOutKeys(filters, inNode: optionalNode(request?.formURLEncoded)))
         try requestObj.set("jsonParameters", filterOutKeys(filters, inNode: optionalNode(request?.json?.makeNode(in: nil))))
