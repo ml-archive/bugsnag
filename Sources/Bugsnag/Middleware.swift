@@ -1,8 +1,12 @@
 import Vapor
 import HTTP
 
-public final class Middleware: HTTP.Middleware {
+public final class Middleware: HTTP.Middleware, ConfigInitializable {
     let reporter: ReporterType
+
+    public init(config: Config) throws {
+        self.reporter = try ReporterFactory.make(config: config)
+    }
 
     internal init(reporter: ReporterType) throws {
         self.reporter = reporter
