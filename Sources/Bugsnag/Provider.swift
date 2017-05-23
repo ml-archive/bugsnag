@@ -8,26 +8,7 @@ public final class Provider: Vapor.Provider {
     var config: BugsnagConfig
     
     public func boot(_ drop: Droplet) {
-        let connectionManager = ConnectionManager(
-            client: EngineClient.factory,
-            url: config.endpoint
-        )
-        
-        let transformer = PayloadTransformer(
-            frameAddress: FrameAddress.self,
-            environment: config.environment,
-            apiKey: config.apiKey
-        )
-        
-        let reporter = Reporter(
-            environment: config.environment,
-            notifyReleaseStages: config.notifyReleaseStages,
-            connectionManager: connectionManager,
-            transformer: transformer,
-            defaultStackSize: config.stackTraceSize,
-            defaultFilters: config.filters
-        )
-        
+        let reporter = ReporterFactory.make(bugsnagConfig: config)
         drop.bugsnag = reporter
     }
 
