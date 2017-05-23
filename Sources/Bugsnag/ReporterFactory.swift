@@ -11,7 +11,6 @@ public struct ReporterFactory {
         }
 
         let bugsnagConfig = try BugsnagConfig(config)
-
         return ReporterFactory.make(bugsnagConfig: bugsnagConfig)
     }
 
