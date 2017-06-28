@@ -192,4 +192,19 @@ class PayloadTransformerTests: XCTestCase {
         XCTAssertEqual(FrameAddressMock.lastStackSize, 99)
 
     }
+    
+    func testAbortExtensions() {
+        let errorReported = Abort.serverError.report()
+        let errorNotReported = Abort.serverError.doNotReport()
+        
+        // ensure status code is the same
+        XCTAssertEqual(errorReported.status, Abort.serverError.status)
+        XCTAssertEqual(errorNotReported.status, Abort.serverError.status)
+        
+        XCTAssertNotNil(errorReported.metadata)
+        XCTAssertNotNil(errorNotReported.metadata)
+        
+        XCTAssertEqual(errorReported.metadata?["report"]?.bool, true)
+        XCTAssertEqual(errorNotReported.metadata?["report"]?.bool, false)
+    }
 }

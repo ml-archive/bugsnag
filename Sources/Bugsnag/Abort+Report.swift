@@ -11,7 +11,7 @@ extension Abort {
     
     func addReportMetadata(_ shouldReport: Bool) -> Abort {
         var metadata = self.metadata ?? Node.object([:])
-        metadata["report"] = true
+        try? metadata.set("report", shouldReport)
         
         let result = Abort.init(
             status,
