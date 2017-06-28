@@ -18,7 +18,8 @@ class PayloadTransformerTests: XCTestCase {
         ("testThatQueryParametersGetsFiltered", testThatQueryParametersGetsFiltered),
         ("testThatFormParametersGetsFiltered", testThatFormParametersGetsFiltered),
         ("testThatJsonParametersGetsFiltered", testThatJsonParametersGetsFiltered),
-        ("testThatStackTraceSizeIsWorking", testThatStackTraceSizeIsWorking)
+        ("testThatStackTraceSizeIsWorking", testThatStackTraceSizeIsWorking),
+        ("testAbortExtensions", testAbortExtensions)
     ]
 
     override func setUp() {
