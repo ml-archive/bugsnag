@@ -32,6 +32,7 @@ public final class Provider: Vapor.Provider {
         }
         
         self.config = try BugsnagConfig(config)
+        try config.addConfigurable(middleware: Middleware(config: config), name: "bugsnag")
     }
     
     // is automatically called directly after boot()
