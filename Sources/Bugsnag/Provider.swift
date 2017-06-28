@@ -13,6 +13,8 @@ public final class Provider: Vapor.Provider {
     }
 
     public func boot(_ config: Config) throws {
+        try config.addConfigurable(middleware: Middleware(config: config), name: "bugsnag")
+        
         guard let config: Config = config["bugsnag"] else {
             throw Abort(
                 .internalServerError,
@@ -24,6 +26,8 @@ public final class Provider: Vapor.Provider {
     }
 
     public init(config: Config) throws {
+        try config.addConfigurable(middleware: Middleware(config: config), name: "bugsnag")
+        
         guard let config: Config = config["bugsnag"] else {
             throw Abort(
                 .internalServerError,
@@ -32,7 +36,6 @@ public final class Provider: Vapor.Provider {
         }
         
         self.config = try BugsnagConfig(config)
-        try config.addConfigurable(middleware: Middleware(config: config), name: "bugsnag")
     }
     
     // is automatically called directly after boot()
