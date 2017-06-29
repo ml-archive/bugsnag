@@ -1,6 +1,8 @@
 # Bugsnag 🐛
-[![Language](https://img.shields.io/badge/Swift-3.1-brightgreen.svg)](http://swift.org)
-[![Build Status](https://travis-ci.org/nodes-vapor/bugsnag.svg?branch=master)](https://travis-ci.org/nodes-vapor/bugsnag)
+[![Swift Version](https://img.shields.io/badge/Swift-3.1-brightgreen.svg)](http://swift.org)
+[![Vapor Version](https://img.shields.io/badge/Vapor-2-F6CBCA.svg)](http://vapor.codes)
+[![Linux Build Status](https://img.shields.io/circleci/project/github/nodes-vapor/bugsnag.svg?label=Linux)](https://circleci.com/gh/nodes-vapor/bugsnag)
+[![macOS Build Status](https://img.shields.io/travis/nodes-vapor/bugsnag.svg?label=macOS)](https://travis-ci.org/nodes-vapor/bugsnag)
 [![codebeat badge](https://codebeat.co/badges/52c2f960-625c-4a63-ae63-52a24d747da1)](https://codebeat.co/projects/github-com-nodes-vapor-bugsnag)
 [![codecov](https://codecov.io/gh/nodes-vapor/bugsnag/branch/master/graph/badge.svg)](https://codecov.io/gh/nodes-vapor/bugsnag)
 [![Readme Score](http://readme-score-api.herokuapp.com/score.svg?url=https://github.com/nodes-vapor/bugsnag)](http://clayallsopp.github.io/readme-score?url=https://github.com/nodes-vapor/bugsnag)
@@ -98,6 +100,7 @@ Abort.init(.internalServerError, metadata: ["userId": 1337], reason: "User faile
 ## 🏆 Credits
 
 This package is developed and maintained by the Vapor team at [Nodes](https://www.nodesagency.com).
+The package owner for this project is [Steffen](https://github.com/steffendsommer).
 
 
 ## 📄 License
