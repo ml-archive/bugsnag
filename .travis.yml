@@ -9,6 +9,8 @@ before_install:
   brew tap vapor/tap;
   brew update;
   brew install vapor;
+  brew tap nodes-vapor/homebrew-tap
+  brew install cstack
 
 script:
   - swift build
