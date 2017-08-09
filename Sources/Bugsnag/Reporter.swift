@@ -43,8 +43,8 @@ public final class Reporter: ReporterType {
         self.defaultFilters = defaultFilters
     }
 
-    public func report(error: Error, request: Request?) throws {
-        try report(error: error, request: request, completion: nil)
+    public func report(error: Error, request: Request?) {
+        report(error: error, request: request, completion: nil)
     }
 
     public func report(
@@ -53,9 +53,9 @@ public final class Reporter: ReporterType {
         severity: Severity = .error,
         stackTraceSize: Int? = nil,
         completion complete: (() -> ())?
-    ) throws {
+    ) {
         guard let error = error as? AbortError else {
-            try report(
+            report(
                 message: Status.internalServerError.reasonPhrase,
                 metadata: nil,
                 request: request,
@@ -66,16 +66,30 @@ public final class Reporter: ReporterType {
             
             return
         }
-        
+
         guard error.metadata?["report"]?.bool ?? true, shouldNotifyForReleaseStage() else {
             return
         }
-        
-        try report(
+
+        let stackError = error as? StacktraceError
+
+        var metadata = error.metadata
+        metadata?["host"] = Node(request?.uri.hostname ?? "")
+
+        let stackTrace = stackError?.stacktrace
+        let lineNumber = stackError?.line
+        let funcName = stackError?.function
+        let fileName = stackError?.file
+
+        report(
             message: error.reason,
-            metadata: error.metadata,
+            metadata: metadata,
             request: request,
             severity: severity,
+            stackTrace: stackTrace,
+            lineNumber: lineNumber == nil ? nil : Int(lineNumber!),
+            funcName: funcName,
+            fileName: fileName,
             stackTraceSize: stackTraceSize,
             completion: complete
         )
@@ -88,23 +102,34 @@ public final class Reporter: ReporterType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
+        stackTrace: [String]? = nil,
+        lineNumber: Int? = nil,
+        funcName: String? = nil,
+        fileName: String? = nil,
         stackTraceSize: Int?,
         completion complete: (() -> ())? = nil
-    ) throws {
-        let payload = try payloadTransformer.payloadFor(
+    ) {
+        let payload = try? payloadTransformer.payloadFor(
             message: message,
             metadata: metadata,
             request: request,
             severity: severity,
+            stackTrace: stackTrace,
+            lineNumber: lineNumber,
+            funcName: funcName,
+            fileName: fileName,
             stackTraceSize: stackTraceSize ?? defaultStackSize,
             filters: defaultFilters
         )
 
         // Fire and forget.
         // TODO: Consider queue and retry mechanism.
-        background {
-            _ = try? self.connectionManager.submitPayload(payload)
-            if let complete = complete { complete() }
+
+        if let payload = payload {
+            background {
+                _ = try? self.connectionManager.submitPayload(payload)
+                if let complete = complete { complete() }
+            }
         }
     }
 
