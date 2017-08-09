@@ -66,16 +66,27 @@ public final class Reporter: ReporterType {
             
             return
         }
-        
+
         guard error.metadata?["report"]?.bool ?? true, shouldNotifyForReleaseStage() else {
             return
         }
-        
+
+        let stackError = error as? StacktraceError
+
+        let stackTrace = stackError?.stacktrace
+        let lineNumber = stackError?.line
+        let funcName = stackError?.function
+        let fileName = stackError?.file
+
         try report(
             message: error.reason,
             metadata: error.metadata,
             request: request,
             severity: severity,
+            stackTrace: stackTrace,
+            lineNumber: lineNumber == nil ? nil : Int(lineNumber!),
+            funcName: funcName,
+            fileName: fileName,
             stackTraceSize: stackTraceSize,
             completion: complete
         )
@@ -88,6 +99,10 @@ public final class Reporter: ReporterType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
+        stackTrace: [String]? = nil,
+        lineNumber: Int? = nil,
+        funcName: String? = nil,
+        fileName: String? = nil,
         stackTraceSize: Int?,
         completion complete: (() -> ())? = nil
     ) throws {
@@ -96,6 +111,10 @@ public final class Reporter: ReporterType {
             metadata: metadata,
             request: request,
             severity: severity,
+            stackTrace: stackTrace,
+            lineNumber: lineNumber,
+            funcName: funcName,
+            fileName: fileName,
             stackTraceSize: stackTraceSize ?? defaultStackSize,
             filters: defaultFilters
         )
