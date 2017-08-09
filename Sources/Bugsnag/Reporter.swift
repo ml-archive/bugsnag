@@ -73,6 +73,9 @@ public final class Reporter: ReporterType {
 
         let stackError = error as? StacktraceError
 
+        var metadata = error.metadata
+        metadata?["host"] = Node(request?.uri.hostname ?? "")
+
         let stackTrace = stackError?.stacktrace
         let lineNumber = stackError?.line
         let funcName = stackError?.function
@@ -80,7 +83,7 @@ public final class Reporter: ReporterType {
 
         report(
             message: error.reason,
-            metadata: error.metadata,
+            metadata: metadata,
             request: request,
             severity: severity,
             stackTrace: stackTrace,
