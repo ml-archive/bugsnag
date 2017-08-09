@@ -31,7 +31,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
         filters: [String]
     ) throws -> JSON {
         var code: [String: Node] = [:]
-        
+
         var index = 0
         for entry in frameAddress.getStackTrace(maxStackSize: stackTraceSize) {
             code[String(index)] = Node(entry)
@@ -61,7 +61,6 @@ internal struct PayloadTransformer: PayloadTransformerType {
             }
         }
 
-
         let customMetadata = metadata ?? Node([])
         
         var requestObj = Node.object([:])
@@ -79,20 +78,18 @@ internal struct PayloadTransformer: PayloadTransformerType {
             "metaData": customMetadata
         ])
 
-        let event: Node = Node([
-            Node([
-                "payloadVersion": 2,
-                "exceptions": Node([
-                    Node([
-                        "errorClass": Node(message),
-                        "message": Node(message),
-                        "stacktrace": stacktrace
-                    ])
-                ]),
-                "app": app,
-                "severity": Node(severity.rawValue),
-                "metaData": metadata
-            ])
+        let event = Node([
+            "payloadVersion": 2,
+            "exceptions": Node([
+                Node([
+                    "errorClass": Node(message),
+                    "message": Node(message),
+                    "stacktrace": stacktrace
+                ])
+            ]),
+            "app": app,
+            "severity": Node(severity.rawValue),
+            "metaData": metadata
         ])
     
         return try JSON(node: [
@@ -102,7 +99,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
                 "version": "1.0.11",
                 "url": "https://github.com/nodes-vapor/bugsnag"
             ]),
-            "events": event,
+            "events": Node([event]),
         ])
     }
 
