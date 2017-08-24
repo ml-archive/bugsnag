@@ -69,18 +69,21 @@ See the configuration section for an explanation of the different options.
 
 ### Automatic reporting
 
-This package comes with a middleware that will automatically report any thrown errors to bugsnag. For best error data, please make sure that the errso being thrown conform to Vapor's `AbortError` type. 
+This package comes with a middleware that will automatically report any thrown errors to bugsnag. For best error data, please make sure that the errors being thrown conform to Vapor's `AbortError` type. 
 
-To setup the middleware, then first make sure to import the package, in e.g. `main.swift`.
+To setup the middleware, then first make sure to import the package (in e.g. `Config+Setup.swift`):
 
 ```Swift
 import Bugsnag
 ```
 
 Next, add the middleware:
+
 ```swift
-try drop.middleware.append(Bugsnag.Middleware(drop: drop))
+addConfigurable(middleware: Bugsnag.Middleware.init, name: "bugsnag")
 ```
+
+Don't forget to add the middleware to your `droplet.json` config as well.
 
 ### Manual reporting
 
@@ -89,16 +92,16 @@ Sometimes it's convenient to report errors silently without letting the client k
 First, you'll have to make sure to import the package as desribed above (in Automatic reporting), then you need to add the Bugsnag provider:
 
 ```swift
-try drop.addProvider(Bugsnag.Provider.self)
+try addProvider(Bugsnag.Provider.self)
 ```
 
-Then whenever you want to report to Bugsnag, you can access the Bugsnag reporter through your `Droplet`:
+You're now able to get a reference to a `Reporter` through the `Droplet`. You can then use this `Reporter` to manually report errors:
 
 ```swift
 myDroplet.bugsnag?.report(error: Abort.badRequest, request: myRequest)
 ```
 
-There's also an option to pass in a completion block if you want to get notified when the submission has completed.
+Consider injecting the reporter into the controllers that might need it instead of passing around the `Droplet`. There's also an option to pass in a completion block if you want to get notified when the submission has completed.
 
 ### Metadata
 
