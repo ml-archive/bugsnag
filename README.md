@@ -13,10 +13,34 @@ Reporting errors to [Bugsnag](https://www.bugsnag.com/).
 
 ## 📦 Installation
 
+### Installing CStack
+
+Bugsnag uses [Stacked](https://github.com/nodes-vapor/stacked) (which depends on [CStack](https://github.com/nodes-vapor/cstack)) in order to provide unified stack traces across macOS and Linux. For this to work, there's some installation to be done on the machine running the project. See the Stacked repo for more information, but here's a short copy/pasta:
+
+#### macOS and Homebrew
+
+First add the tap:
+
+```
+brew tap nodes-vapor/homebrew-tap
+```
+
+And next, install the library by running:
+
+```
+brew install cstack
+```
+
+#### Linux and APT
+
+We're working hard on making `CStack` available on Linux (through APT) and we'll make sure to update this readme as soon as it gets ready.
+
+### Integrating Bugsnag in your project
+
 Update your `Package.swift` file.
 
 ```swift
-.Package(url: "https://github.com/nodes-vapor/bugsnag.git", Version(1,0,0, prereleaseIdentifiers: ["beta"]))
+.Package(url: "https://github.com/nodes-vapor/bugsnag.git", majorVersion: 2)
 ```
 
 
@@ -26,7 +50,7 @@ Create a `bugsnag.json` configuration file with your Bugsnag credentials and con
 
 ```json
 {
-    "apiKey": "#BUGSNAG_KEY#",
+    "apiKey": "my-bugsnag-key",
   	"endpoint": "https://notify.bugsnag.com",
     "notifyReleaseStages": [
         "staging",
