@@ -12,6 +12,10 @@ public protocol PayloadTransformerType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
+        stackTrace: [String]?,
+        lineNumber: Int?,
+        funcName: String?,
+        fileName: String?,
         stackTraceSize: Int,
         filters: [String]
     ) throws -> JSON
@@ -27,13 +31,17 @@ internal struct PayloadTransformer: PayloadTransformerType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
+        stackTrace: [String]? = nil,
+        lineNumber: Int? = nil,
+        funcName: String? = nil,
+        fileName: String? = nil,
         stackTraceSize: Int,
         filters: [String]
     ) throws -> JSON {
         var code: [String: Node] = [:]
-        
+
         var index = 0
-        for entry in frameAddress.getStackTrace(maxStackSize: stackTraceSize) {
+        for entry in stackTrace ?? frameAddress.getStackTrace(maxStackSize: stackTraceSize) {
             code[String(index)] = Node(entry)
             
             index = index + 1
@@ -41,10 +49,10 @@ internal struct PayloadTransformer: PayloadTransformerType {
         
         let stacktrace = Node([
             Node([
-                "file": Node(message),
-                "lineNumber": 0,
+                "file": Node((fileName ?? "") + ": " + message),
+                "lineNumber": Node(lineNumber ?? 0),
                 "columnNumber": 0,
-                "method": "NA",
+                "method": Node(funcName ?? "NA"),
                 "code": Node(code)
             ])
         ])
@@ -60,7 +68,6 @@ internal struct PayloadTransformer: PayloadTransformerType {
                 headers[key.key] = Node(value)
             }
         }
-
 
         let customMetadata = metadata ?? Node([])
         
@@ -79,20 +86,18 @@ internal struct PayloadTransformer: PayloadTransformerType {
             "metaData": customMetadata
         ])
 
-        let event: Node = Node([
-            Node([
-                "payloadVersion": 2,
-                "exceptions": Node([
-                    Node([
-                        "errorClass": Node(message),
-                        "message": Node(message),
-                        "stacktrace": stacktrace
-                    ])
-                ]),
-                "app": app,
-                "severity": Node(severity.rawValue),
-                "metaData": metadata
-            ])
+        let event = Node([
+            "payloadVersion": 2,
+            "exceptions": Node([
+                Node([
+                    "errorClass": Node(message),
+                    "message": Node(message),
+                    "stacktrace": stacktrace
+                ])
+            ]),
+            "app": app,
+            "severity": Node(severity.rawValue),
+            "metaData": metadata
         ])
     
         return try JSON(node: [
@@ -102,7 +107,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
                 "version": "1.0.11",
                 "url": "https://github.com/nodes-vapor/bugsnag"
             ]),
-            "events": event,
+            "events": Node([event]),
         ])
     }
 
