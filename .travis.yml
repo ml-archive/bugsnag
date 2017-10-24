@@ -21,7 +21,7 @@ script:
   - swift build
   - swift build -c release
   - swift package generate-xcodeproj --enable-code-coverage
-  - xcodebuild -scheme Bugsnag -enableCodeCoverage YES test | xcpretty
+  - xcodebuild "-L/usr/local/lib/" -scheme Bugsnag -enableCodeCoverage YES test | xcpretty
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
