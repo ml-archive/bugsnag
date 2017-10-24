@@ -13,6 +13,7 @@ before_install:
   brew install cmysql;
   gem install xcpretty;
   brew install cstack;
+  ls /usr/local/lib/;
 
 script:
   - set -o pipefail
