@@ -1,7 +1,9 @@
 # Bugsnag
-[![Language](https://img.shields.io/badge/Swift-3-brightgreen.svg)](http://swift.org)
-[![Build Status](https://travis-ci.org/nodes-vapor/bugsnag.svg?branch=master)](https://travis-ci.org/nodes-vapor/bugsnag)
-[![codecov](https://codecov.io/gh/nodes-vapor/bugsnag/branch/master/graph/badge.svg)](https://codecov.io/gh/nodes-vapor/bugsnag)
+[![Swift Version](https://img.shields.io/badge/Swift-3-brightgreen.svg)](http://swift.org)
+[![Vapor Version](https://img.shields.io/badge/Vapor-1-F6CBCA.svg)](http://vapor.codes)
+[![Circle CI](https://circleci.com/gh/nodes-vapor/bugsnag/tree/vapor-1.svg?style=shield)](https://circleci.com/gh/nodes-vapor/bugsnag)
+[![codebeat badge](https://codebeat.co/badges/a63c1fe3-7ab8-400d-9e4a-02054ecd1b95)](https://codebeat.co/projects/github-com-nodes-vapor-bugsnag-vapor-1)
+[![Readme Score](http://readme-score-api.herokuapp.com/score.svg?url=https://github.com/nodes-vapor/bugsnag)](http://clayallsopp.github.io/readme-score?url=https://github.com/nodes-vapor/bugsnag)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/nodes-vapor/bugsnag/master/LICENSE)
 
 
