@@ -54,7 +54,7 @@ class ReporterTests: XCTestCase {
         let exp = expectation(description: "Custom abort error will be reported")
 
         let req = Request(method: .get, uri: "some-random-uri")
-        try! reporter.report(
+        reporter.report(
             error: MyCustomError(),
             request: req,
             severity: .error,
@@ -75,7 +75,7 @@ class ReporterTests: XCTestCase {
         let exp = expectation(description: "Bad request error will be reported")
 
         let req = Request(method: .get, uri: "some-random-uri")
-        try! reporter.report(
+        reporter.report(
             error: Abort.badRequest,
             request: req,
             severity: .error,
@@ -107,15 +107,16 @@ class ReporterTests: XCTestCase {
             metadata: metadata
         )
 
-        try! reporter.report(
+        reporter.report(
             error: error,
             request: req,
             severity: .error,
             completion: {
-                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.0, error.reason)
-                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.1, error.metadata)
-                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.2?.method, req.method)
-                XCTAssertEqual(self.payloadTransformer.lastPayloadData!.2?.uri.description, req.uri.description)
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData?.message, error.reason)
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData?.metadata?["key1"], error.metadata?["key1"])
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData?.metadata?["key2"], error.metadata?["key2"])
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData?.request?.method, req.method)
+                XCTAssertEqual(self.payloadTransformer.lastPayloadData?.request?.uri.description, req.uri.description)
                 XCTAssertNotNil(self.connectionManager.lastPayload)
                 exp.fulfill()
             }
@@ -136,7 +137,7 @@ class ReporterTests: XCTestCase {
             metadata: Node(["report": false])
         )
 
-        try! reporter.report(
+        reporter.report(
             error: error,
             request: req,
             severity: .error,
@@ -160,7 +161,7 @@ class ReporterTests: XCTestCase {
             metadata: Node(["report": true])
         )
 
-        try! reporter.report(
+        reporter.report(
             error: error,
             request: req,
             severity: .error,
@@ -180,13 +181,13 @@ class ReporterTests: XCTestCase {
     func testThatFiltersComeFromConfig() {
         let req = Request(method: .get, uri: "some-random-uri")
 
-        try! reporter.report(
+        reporter.report(
             error: Abort.badRequest,
             request: req,
             completion: nil
         )
         
-        XCTAssertEqual(self.payloadTransformer.lastPayloadData!.5!, ["someFilter"])
+        XCTAssertEqual(self.payloadTransformer.lastPayloadData!.filters!, ["someFilter"])
     }
 
 
@@ -194,13 +195,13 @@ class ReporterTests: XCTestCase {
 
     func testSeverityGetsDefaultValue() {
         let req = Request(method: .get, uri: "some-random-uri")
-        try! reporter.report(error: Abort.badRequest, request: req, completion: nil)
+        reporter.report(error: Abort.badRequest, request: req, completion: nil)
         XCTAssertEqual(self.payloadTransformer.lastPayloadData?.3, Severity.error)
     }
 
     func testSeverityGetsGivenValue() {
         let req = Request(method: .get, uri: "some-random-uri")
-        try! reporter.report(error: Abort.badRequest, request: req, severity: Severity.info, completion: nil)
+        reporter.report(error: Abort.badRequest, request: req, severity: Severity.info, completion: nil)
         XCTAssertEqual(self.payloadTransformer.lastPayloadData?.3, Severity.info)
     }
 
@@ -215,7 +216,7 @@ class ReporterTests: XCTestCase {
             defaultStackSize: 100
         )
         
-        try! repo.report(error: Abort.badRequest, request: nil)
+        repo.report(error: Abort.badRequest, request: nil)
         XCTAssertNotNil(self.payloadTransformer.lastPayloadData)
     }
     
@@ -228,7 +229,7 @@ class ReporterTests: XCTestCase {
             transformer: self.payloadTransformer,
             defaultStackSize: 100
         )
-        try! repo.report(error: Abort.badRequest, request: nil)
+        repo.report(error: Abort.badRequest, request: nil)
         XCTAssertNil(self.payloadTransformer.lastPayloadData)
     }
 
@@ -240,7 +241,7 @@ class ReporterTests: XCTestCase {
             transformer: self.payloadTransformer,
             defaultStackSize: 100
         )
-        try! repo.report(error: Abort.badRequest, request: nil)
+        repo.report(error: Abort.badRequest, request: nil)
         XCTAssertNotNil(self.payloadTransformer.lastPayloadData)
     }
 
@@ -251,9 +252,8 @@ class ReporterTests: XCTestCase {
             transformer: self.payloadTransformer,
             defaultStackSize: 100
         )
-        try! repo.report(error: Abort.badRequest, request: nil)
+        repo.report(error: Abort.badRequest, request: nil)
         XCTAssertNil(self.payloadTransformer.lastPayloadData)
-
     }
 
 
@@ -261,8 +261,8 @@ class ReporterTests: XCTestCase {
 
     func testStackTraceSizeIsComingFromArguments() {
         let req = Request(method: .get, uri: "some-random-uri")
-        try! reporter.report(error: Abort.badRequest, request: req, stackTraceSize: 150, completion: nil)
-        XCTAssertEqual(self.payloadTransformer.lastPayloadData?.4, 150)
+        reporter.report(error: Abort.badRequest, request: req, stackTraceSize: 150, completion: nil)
+        XCTAssertEqual(self.payloadTransformer.lastPayloadData?.stackTraceSize, 150)
     }
 
     func testThatStackTraceSizeGetsDefaultValueWhenNotInConfig() {
@@ -283,7 +283,7 @@ class ReporterTests: XCTestCase {
         let exp = expectation(description: "Submit payload")
 
         let req = Request(method: .get, uri: "some-random-uri")
-        try! reporter.report(
+        reporter.report(
             error: Abort.badRequest,
             request: req,
             severity: .error,
