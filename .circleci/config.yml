@@ -14,11 +14,12 @@ jobs:
             brew tap vapor/homebrew-tap
             brew install cmysql
             brew install ctls
+            brew install cstack
       - run:
           name: Build and Run Tests
           no_output_timeout: 1800
           command: |
-            swift package generate-xcodeproj --enable-code-coverage    
+            swift package generate-xcodeproj --enable-code-coverage
             xcodebuild -scheme Bugsnag-Package -enableCodeCoverage YES test | xcpretty
       - run:
           name: Report coverage to Codecov
