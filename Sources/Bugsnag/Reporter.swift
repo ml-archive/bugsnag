@@ -4,6 +4,8 @@ import Core
 import Stacked
 
 public protocol ReporterType {
+    func report(error: Error, request: Request?, userId: String?, userName: String?, userEmail: String?) throws
+    
     func report(error: Error, request: Request?) throws
     
     func report(
@@ -11,6 +13,9 @@ public protocol ReporterType {
         request: Request?,
         severity: Severity,
         stackTraceSize: Int?,
+        userId: String?,
+        userName: String?,
+        userEmail: String?,
         completion: (() -> ())?
     ) throws
 }
@@ -20,6 +25,11 @@ public enum Severity: String {
 }
 
 public final class Reporter: ReporterType {
+    public func report(error: Error, request: Request?, userId: String?, userName: String?, userEmail: String?) throws {
+        report(error: error, request: request, severity: .error, stackTraceSize: nil, userId: userId, userName: userName, userEmail: userEmail, completion: nil)
+    }
+    
+    
     let environment: Environment
     let notifyReleaseStages: [String]?
     let connectionManager: ConnectionManagerType
@@ -44,16 +54,19 @@ public final class Reporter: ReporterType {
     }
 
     public func report(error: Error, request: Request?) {
-        report(error: error, request: request, completion: nil)
+        report(error: error, request: request, severity: .error, stackTraceSize: nil, userId: nil, userName: nil, userEmail: nil, completion: nil)
     }
-
+    
     public func report(
         error: Error,
         request: Request?,
         severity: Severity = .error,
         stackTraceSize: Int? = nil,
+        userId: String?,
+        userName: String?,
+        userEmail: String?,
         completion complete: (() -> ())?
-    ) {
+        ) {
         guard let error = error as? AbortError else {
             report(
                 message: Status.internalServerError.reasonPhrase,
@@ -61,6 +74,9 @@ public final class Reporter: ReporterType {
                 request: request,
                 severity: severity,
                 stackTraceSize: stackTraceSize,
+                userId: userId,
+                userName: userName,
+                userEmail: userEmail,
                 completion: complete
             )
             
@@ -91,6 +107,9 @@ public final class Reporter: ReporterType {
             funcName: funcName,
             fileName: fileName,
             stackTraceSize: stackTraceSize,
+            userId: userId,
+            userName: userName,
+            userEmail: userEmail,
             completion: complete
         )
     }
@@ -107,8 +126,11 @@ public final class Reporter: ReporterType {
         funcName: String? = nil,
         fileName: String? = nil,
         stackTraceSize: Int?,
+        userId: String?,
+        userName: String?,
+        userEmail: String?,
         completion complete: (() -> ())? = nil
-    ) {
+        ) {
         let payload = try? payloadTransformer.payloadFor(
             message: message,
             metadata: metadata,
@@ -119,7 +141,10 @@ public final class Reporter: ReporterType {
             funcName: funcName,
             fileName: fileName,
             stackTraceSize: stackTraceSize ?? defaultStackSize,
-            filters: defaultFilters
+            filters: defaultFilters,
+            userId: userId,
+            userName: userName,
+            userEmail: userEmail
         )
 
         // Fire and forget.

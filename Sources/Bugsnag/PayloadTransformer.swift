@@ -17,8 +17,11 @@ public protocol PayloadTransformerType {
         funcName: String?,
         fileName: String?,
         stackTraceSize: Int,
-        filters: [String]
-    ) throws -> JSON
+        filters: [String],
+        userId: String?,
+        userName: String?,
+        userEmail: String?
+        ) throws -> JSON
 }
 
 internal struct PayloadTransformer: PayloadTransformerType {
@@ -36,8 +39,11 @@ internal struct PayloadTransformer: PayloadTransformerType {
         funcName: String? = nil,
         fileName: String? = nil,
         stackTraceSize: Int,
-        filters: [String]
-    ) throws -> JSON {
+        filters: [String],
+        userId: String?,
+        userName: String?,
+        userEmail: String?
+        ) throws -> JSON {
         var code: [String: Node] = [:]
 
         var index = 0
@@ -86,6 +92,11 @@ internal struct PayloadTransformer: PayloadTransformerType {
             "metaData": customMetadata
         ])
 
+        var userJson = JSON()
+        try userJson.set("id", userId)
+        try userJson.set("name", userName)
+        try userJson.set("email", userEmail)
+        
         let event = Node([
             "payloadVersion": 2,
             "exceptions": Node([
@@ -97,6 +108,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
             ]),
             "app": app,
             "severity": Node(severity.rawValue),
+            "user": userJson.makeNode(in: nil),
             "metaData": metadata
         ])
     
