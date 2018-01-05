@@ -58,6 +58,9 @@ class ReporterTests: XCTestCase {
             error: MyCustomError(),
             request: req,
             severity: .error,
+            userId: nil,
+            userName: nil,
+            userEmail: nil,
             completion: {
                 XCTAssertEqual(self.payloadTransformer.lastPayloadData!.0, Status.internalServerError.reasonPhrase)
                 XCTAssertNil(self.payloadTransformer.lastPayloadData!.1)
@@ -79,6 +82,9 @@ class ReporterTests: XCTestCase {
             error: Abort.badRequest,
             request: req,
             severity: .error,
+            userId: nil,
+            userName: nil,
+            userEmail: nil,
             completion: {
                 XCTAssertEqual(self.payloadTransformer.lastPayloadData!.0, Abort.badRequest.reason)
                 XCTAssertNil(self.payloadTransformer.lastPayloadData!.1)
@@ -111,6 +117,9 @@ class ReporterTests: XCTestCase {
             error: error,
             request: req,
             severity: .error,
+            userId: nil,
+            userName: nil,
+            userEmail: nil,
             completion: {
                 XCTAssertEqual(self.payloadTransformer.lastPayloadData?.message, error.reason)
                 XCTAssertEqual(self.payloadTransformer.lastPayloadData?.metadata?["key1"], error.metadata?["key1"])
@@ -141,6 +150,9 @@ class ReporterTests: XCTestCase {
             error: error,
             request: req,
             severity: .error,
+            userId: nil,
+            userName: nil,
+            userEmail: nil,
             completion: {
                 XCTFail("Error reported when not supposed to.")
             }
@@ -165,6 +177,9 @@ class ReporterTests: XCTestCase {
             error: error,
             request: req,
             severity: .error,
+            userId: nil,
+            userName: nil,
+            userEmail: nil,
             completion: {
                 XCTAssertNotNil(self.payloadTransformer.lastPayloadData)
                 XCTAssertNotNil(self.connectionManager.lastPayload)
@@ -184,6 +199,9 @@ class ReporterTests: XCTestCase {
         reporter.report(
             error: Abort.badRequest,
             request: req,
+            userId: nil,
+            userName: nil,
+            userEmail: nil,
             completion: nil
         )
         
@@ -195,13 +213,13 @@ class ReporterTests: XCTestCase {
 
     func testSeverityGetsDefaultValue() {
         let req = Request(method: .get, uri: "some-random-uri")
-        reporter.report(error: Abort.badRequest, request: req, completion: nil)
+        reporter.report(error: Abort.badRequest, request: req, userId: nil, userName: nil, userEmail: nil, completion: nil)
         XCTAssertEqual(self.payloadTransformer.lastPayloadData?.3, Severity.error)
     }
 
     func testSeverityGetsGivenValue() {
         let req = Request(method: .get, uri: "some-random-uri")
-        reporter.report(error: Abort.badRequest, request: req, severity: Severity.info, completion: nil)
+        reporter.report(error: Abort.badRequest, request: req,  severity: Severity.info, userId: nil, userName: nil, userEmail: nil,completion: nil)
         XCTAssertEqual(self.payloadTransformer.lastPayloadData?.3, Severity.info)
     }
 
@@ -261,7 +279,7 @@ class ReporterTests: XCTestCase {
 
     func testStackTraceSizeIsComingFromArguments() {
         let req = Request(method: .get, uri: "some-random-uri")
-        reporter.report(error: Abort.badRequest, request: req, stackTraceSize: 150, completion: nil)
+        reporter.report(error: Abort.badRequest, request: req, stackTraceSize: 150, userId: nil, userName: nil, userEmail: nil,completion: nil)
         XCTAssertEqual(self.payloadTransformer.lastPayloadData?.stackTraceSize, 150)
     }
 
@@ -287,6 +305,9 @@ class ReporterTests: XCTestCase {
             error: Abort.badRequest,
             request: req,
             severity: .error,
+            userId: nil,
+            userName: nil,
+            userEmail: nil,
             completion: {
                 XCTAssertEqual(self.connectionManager.lastPayload, try! JSON(node: ["transformer": "mock"]))
                 exp.fulfill()

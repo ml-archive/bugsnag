@@ -4,6 +4,7 @@ import HTTP
 import Stacked
 
 internal class PayloadTransformerMock: PayloadTransformerType {
+    
     let frameAddress: FrameAddressType.Type = FrameAddressMock.self
     let environment: Environment
     let apiKey: String
@@ -18,6 +19,9 @@ internal class PayloadTransformerMock: PayloadTransformerType {
         funcName: String?,
         fileName: String?,
         stackTraceSize: Int?,
+        userId: String?,
+        userName: String?,
+        userEmail: String?,
         filters: [String]?
     )? = nil
 
@@ -36,7 +40,10 @@ internal class PayloadTransformerMock: PayloadTransformerType {
         funcName: String?,
         fileName: String?,
         stackTraceSize: Int,
-        filters: [String]
+        filters: [String],
+        userId: String?,
+        userName: String?,
+        userEmail: String?
     ) throws -> JSON {
         self.lastPayloadData = (
             message: message,
@@ -48,6 +55,9 @@ internal class PayloadTransformerMock: PayloadTransformerType {
             funcName: funcName,
             fileName: fileName,
             stackTraceSize: stackTraceSize,
+            userId: userId,
+            userName: userName,
+            userEmail: userEmail,
             filters: filters
         )
 

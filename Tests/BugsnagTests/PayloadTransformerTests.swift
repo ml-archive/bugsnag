@@ -41,7 +41,10 @@ class PayloadTransformerTests: XCTestCase {
             request: req,
             severity: .warning,
             stackTraceSize: 100,
-            filters: []
+            filters: [],
+            userId: "1",
+            userName: "test name",
+            userEmail: "email@email.com"
         )
     }
 
@@ -61,13 +64,17 @@ class PayloadTransformerTests: XCTestCase {
         let expectedQueryParams = Node(["query": "value"])
         let expectedFormParams = Node(["form": "value"])
         let expectedJsonParams = Node(["json": "value"])
-
+        
+        let userRequest = payload["events"]?[0]
+        let expectedUserParams = Node(["id": "1", "name": "test name", "email": "email@email.com"])
+        
         XCTAssertEqual(request?["method"]?.string, "GET")
         XCTAssertEqual(request?["headers"]?.makeNode(in: nil), expectedHeaders)
         XCTAssertEqual(request?["urlParameters"]?.wrapped, expectedUrlParams.wrapped)
         XCTAssertEqual(request?["queryParameters"]?.wrapped, expectedQueryParams.wrapped)
         XCTAssertEqual(request?["formParameters"]?.wrapped, expectedFormParams.wrapped)
         XCTAssertEqual(request?["jsonParameters"]?.wrapped, expectedJsonParams.wrapped)
+        XCTAssertEqual(userRequest?["user"]?.wrapped, expectedUserParams.wrapped)
         XCTAssertEqual(request?["url"]?.string, "/payload-test")
     }
 
@@ -112,7 +119,10 @@ class PayloadTransformerTests: XCTestCase {
             request: req,
             severity: .error,
             stackTraceSize: 0,
-            filters: filters
+            filters: filters,
+            userId: "1",
+            userName: "test name",
+            userEmail: "email@email.com"
         )
 
         let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["urlParameters"]
@@ -131,7 +141,10 @@ class PayloadTransformerTests: XCTestCase {
             metadata: nil,
             request: req, severity: .error,
             stackTraceSize: 0,
-            filters: filters
+            filters: filters,
+            userId: "1",
+            userName: "test name",
+            userEmail: "email@email.com"
         )
 
         let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["queryParameters"]
@@ -151,7 +164,10 @@ class PayloadTransformerTests: XCTestCase {
             request: req,
             severity: .error,
             stackTraceSize: 0,
-            filters: filters
+            filters: filters,
+            userId: "1",
+            userName: "test name",
+            userEmail: "email@email.com"
         )
 
         let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["formParameters"]
@@ -171,7 +187,10 @@ class PayloadTransformerTests: XCTestCase {
             request: req,
             severity: .error,
             stackTraceSize: 0,
-            filters: filters
+            filters: filters,
+            userId: "1",
+            userName: "test name",
+            userEmail: "email@email.com"
         )
 
         let urlParameters = payload["events"]?[0]?["metaData"]?["request"]?["jsonParameters"]
@@ -188,7 +207,10 @@ class PayloadTransformerTests: XCTestCase {
             request: nil,
             severity: .error,
             stackTraceSize: 99,
-            filters: []
+            filters: [],
+            userId: "1",
+            userName: "test name",
+            userEmail: "email@email.com"
         )
         XCTAssertEqual(FrameAddressMock.lastStackSize, 99)
 
