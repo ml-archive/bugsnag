@@ -1,9 +1,7 @@
 import Vapor
-import Stacked
 import HTTP
 
 public protocol PayloadTransformerType {
-    var frameAddress: FrameAddressType.Type { get }
     var environment: Environment { get }
     var apiKey: String { get }
 
@@ -12,17 +10,18 @@ public protocol PayloadTransformerType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
-        stackTrace: [String]?,
         lineNumber: Int?,
         funcName: String?,
         fileName: String?,
-        stackTraceSize: Int,
-        filters: [String]
-    ) throws -> JSON
+        filters: [String],
+        userId: String?,
+        userName: String?,
+        userEmail: String?
+        ) throws -> JSON
 }
 
 internal struct PayloadTransformer: PayloadTransformerType {
-    let frameAddress: FrameAddressType.Type
+    
     let environment: Environment
     let apiKey: String
     
@@ -31,32 +30,25 @@ internal struct PayloadTransformer: PayloadTransformerType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
-        stackTrace: [String]? = nil,
         lineNumber: Int? = nil,
         funcName: String? = nil,
         fileName: String? = nil,
-        stackTraceSize: Int,
-        filters: [String]
-    ) throws -> JSON {
-        var code: [String: Node] = [:]
-
-        var index = 0
-        for entry in stackTrace ?? frameAddress.getStackTrace(maxStackSize: stackTraceSize) {
-            code[String(index)] = Node(entry)
-            
-            index = index + 1
-        }
+        filters: [String],
+        userId: String?,
+        userName: String?,
+        userEmail: String?
+        ) throws -> JSON {
         
-        let stacktrace = Node([
-            Node([
-                "file": Node((fileName ?? "") + ": " + message),
-                "lineNumber": Node(lineNumber ?? 0),
-                "columnNumber": 0,
-                "method": Node(funcName ?? "NA"),
-                "code": Node(code)
-            ])
-        ])
-   
+        let internalStacktraceNode = try Node(node:
+            ["file": fileName ?? nil,
+             "lineNumber": Node(lineNumber ?? 0),
+             "columnNumber": 0,
+             "method": Node(funcName ?? "NA")
+            ]
+        )
+        
+        let stacktrace = Node([internalStacktraceNode])
+        
         let app: Node = Node([
             "releaseStage": Node(environment.description),
             "type": "Vapor"
@@ -86,6 +78,11 @@ internal struct PayloadTransformer: PayloadTransformerType {
             "metaData": customMetadata
         ])
 
+        var userJson = JSON()
+        try userJson.set("id", userId)
+        try userJson.set("name", userName)
+        try userJson.set("email", userEmail)
+        
         let event = Node([
             "payloadVersion": 2,
             "exceptions": Node([
@@ -97,6 +94,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
             ]),
             "app": app,
             "severity": Node(severity.rawValue),
+            "user": userJson.makeNode(in: nil),
             "metaData": metadata
         ])
     

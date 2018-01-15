@@ -1,5 +1,4 @@
 import Vapor
-import Stacked
 
 public final class Provider: Vapor.Provider {
 
