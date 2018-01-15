@@ -1,7 +1,6 @@
 import Vapor
 import HTTP
 import Foundation
-import Stacked
 
 public protocol ConnectionManagerType {
     func submitPayload(_ json: JSON) throws -> Status

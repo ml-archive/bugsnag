@@ -1,5 +1,4 @@
 import Vapor
-import Stacked
 
 public struct ReporterFactory {
     public static func make(config: Config) throws -> Reporter {
@@ -21,7 +20,6 @@ public struct ReporterFactory {
         )
         
         let transformer = PayloadTransformer(
-            frameAddress: FrameAddress.self,
             environment: bugsnagConfig.environment,
             apiKey: bugsnagConfig.apiKey
         )
@@ -31,7 +29,6 @@ public struct ReporterFactory {
             notifyReleaseStages: bugsnagConfig.notifyReleaseStages,
             connectionManager: connectionManager,
             transformer: transformer,
-            defaultStackSize: bugsnagConfig.stackTraceSize,
             defaultFilters: bugsnagConfig.filters
         )
     }

@@ -1,9 +1,7 @@
 import Vapor
-import Stacked
 import HTTP
 
 public protocol PayloadTransformerType {
-    var frameAddress: FrameAddressType.Type { get }
     var environment: Environment { get }
     var apiKey: String { get }
 
@@ -12,11 +10,9 @@ public protocol PayloadTransformerType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
-        stackTrace: [String]?,
         lineNumber: Int?,
         funcName: String?,
         fileName: String?,
-        stackTraceSize: Int,
         filters: [String],
         userId: String?,
         userName: String?,
@@ -25,7 +21,7 @@ public protocol PayloadTransformerType {
 }
 
 internal struct PayloadTransformer: PayloadTransformerType {
-    let frameAddress: FrameAddressType.Type
+    
     let environment: Environment
     let apiKey: String
     
@@ -34,32 +30,21 @@ internal struct PayloadTransformer: PayloadTransformerType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
-        stackTrace: [String]? = nil,
         lineNumber: Int? = nil,
         funcName: String? = nil,
         fileName: String? = nil,
-        stackTraceSize: Int,
         filters: [String],
         userId: String?,
         userName: String?,
         userEmail: String?
         ) throws -> JSON {
-        var code: [String: Node] = [:]
 
-        var index = 0
-        for entry in stackTrace ?? frameAddress.getStackTrace(maxStackSize: stackTraceSize) {
-            code[String(index)] = Node(entry)
-            
-            index = index + 1
-        }
-        
         let stacktrace = Node([
             Node([
                 "file": Node((fileName ?? "") + ": " + message),
                 "lineNumber": Node(lineNumber ?? 0),
                 "columnNumber": 0,
-                "method": Node(funcName ?? "NA"),
-                "code": Node(code)
+                "method": Node(funcName ?? "NA")
             ])
         ])
    
