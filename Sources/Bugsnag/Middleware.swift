@@ -19,7 +19,7 @@ public final class Middleware: HTTP.Middleware, ConfigInitializable {
         do {
             return try next.respond(to: request)
         } catch let error {
-            try self.reporter.report(error: error, request: request)
+            try self.reporter.report(error: error, request: request, lineNumber: nil, funcName: nil, fileName: nil)
             throw error
         }
     }

@@ -3,9 +3,9 @@ import HTTP
 import Core
 
 public protocol ReporterType {
-    func report(error: Error, request: Request?, userId: String?, userName: String?, userEmail: String?) throws
+    func report(error: Error, request: Request?, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?) throws
     
-    func report(error: Error, request: Request?) throws
+    func report(error: Error, request: Request?, lineNumber: Int?, funcName: String?, fileName: String?) throws
     
     func report(
         error: Error,
@@ -14,6 +14,9 @@ public protocol ReporterType {
         userId: String?,
         userName: String?,
         userEmail: String?,
+        lineNumber: Int?,
+        funcName: String?,
+        fileName: String?,
         completion: (() -> ())?
     ) throws
 }
@@ -23,8 +26,8 @@ public enum Severity: String {
 }
 
 public final class Reporter: ReporterType {
-    public func report(error: Error, request: Request?, userId: String?, userName: String?, userEmail: String?) throws {
-        report(error: error, request: request, severity: .error, userId: userId, userName: userName, userEmail: userEmail, completion: nil)
+    public func report(error: Error, request: Request?, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?) throws {
+        report(error: error, request: request, severity: .error, userId: userId, userName: userName, userEmail: userEmail, lineNumber: lineNumber, funcName: funcName, fileName: fileName, completion: nil)
     }
     
     
@@ -48,8 +51,8 @@ public final class Reporter: ReporterType {
         self.defaultFilters = defaultFilters
     }
 
-    public func report(error: Error, request: Request?) {
-        report(error: error, request: request, severity: .error, userId: nil, userName: nil, userEmail: nil, completion: nil)
+    public func report(error: Error, request: Request?, lineNumber: Int?, funcName: String?, fileName: String?) {
+        report(error: error, request: request, severity: .error, userId: nil, userName: nil, userEmail: nil, lineNumber: lineNumber, funcName: funcName, fileName: fileName, completion: nil)
     }
     
     public func report(
@@ -59,6 +62,9 @@ public final class Reporter: ReporterType {
         userId: String?,
         userName: String?,
         userEmail: String?,
+        lineNumber: Int?,
+        funcName: String?,
+        fileName: String?,
         completion complete: (() -> ())?
         ) {
         guard let error = error as? AbortError else {
@@ -67,6 +73,9 @@ public final class Reporter: ReporterType {
                 metadata: nil,
                 request: request,
                 severity: severity,
+                lineNumber: lineNumber,
+                funcName: funcName,
+                fileName: fileName,
                 userId: userId,
                 userName: userName,
                 userEmail: userEmail,
@@ -88,9 +97,9 @@ public final class Reporter: ReporterType {
             metadata: metadata,
             request: request,
             severity: severity,
-            lineNumber: nil,
-            funcName: nil,
-            fileName: nil,
+            lineNumber: lineNumber,
+            funcName: funcName,
+            fileName: fileName,
             userId: userId,
             userName: userName,
             userEmail: userEmail,
@@ -105,9 +114,9 @@ public final class Reporter: ReporterType {
         metadata: Node?,
         request: Request?,
         severity: Severity,
-        lineNumber: Int? = #line,
-        funcName: String? = #function,
-        fileName: String? = #file,
+        lineNumber: Int? = nil,
+        funcName: String? = nil,
+        fileName: String? = nil,
         userId: String?,
         userName: String?,
         userEmail: String?,

@@ -38,16 +38,17 @@ internal struct PayloadTransformer: PayloadTransformerType {
         userName: String?,
         userEmail: String?
         ) throws -> JSON {
-
-        let stacktrace = Node([
-            Node([
-                "file": Node((fileName ?? "") + ": " + message),
-                "lineNumber": Node(lineNumber ?? 0),
-                "columnNumber": 0,
-                "method": Node(funcName ?? "NA")
-            ])
-        ])
-   
+        
+        let internalStacktraceNode = try Node(node:
+            ["file": fileName ?? nil,
+             "lineNumber": Node(lineNumber ?? 0),
+             "columnNumber": 0,
+             "method": Node(funcName ?? "NA")
+            ]
+        )
+        
+        let stacktrace = Node([internalStacktraceNode])
+        
         let app: Node = Node([
             "releaseStage": Node(environment.description),
             "type": "Vapor"
