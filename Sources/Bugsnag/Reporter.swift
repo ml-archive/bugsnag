@@ -3,13 +3,13 @@ import HTTP
 import Core
 
 public protocol ReporterType {
-    func report(error: Error, request: Request?, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?) throws
+    func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?) throws
     
-    func report(error: Error, request: Request?, lineNumber: Int?, funcName: String?, fileName: String?) throws
+    func report(error: Error, request: Request, lineNumber: Int?, funcName: String?, fileName: String?) throws
     
     func report(
         error: Error,
-        request: Request?,
+        request: Request,
         severity: Severity,
         userId: String?,
         userName: String?,
@@ -25,39 +25,36 @@ public enum Severity: String {
     case error, warning, info
 }
 
-public final class Reporter: ReporterType {
-    public func report(error: Error, request: Request?, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?) throws {
+public final class Reporter: ReporterType, Service {
+    public func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?) throws {
         report(error: error, request: request, severity: .error, userId: userId, userName: userName, userEmail: userEmail, lineNumber: lineNumber, funcName: funcName, fileName: fileName, completion: nil)
     }
     
     
     let environment: Environment
     let notifyReleaseStages: [String]?
-    let connectionManager: ConnectionManagerType
+    let connectionManager: ConnectionManager
     let payloadTransformer: PayloadTransformerType
-    let defaultFilters: [String]
     
     init(
         environment: Environment,
         notifyReleaseStages: [String]? = [],
-        connectionManager: ConnectionManagerType,
-        transformer: PayloadTransformerType,
-        defaultFilters: [String] = []
+        connectionManager: ConnectionManager,
+        transformer: PayloadTransformerType
     ) {
         self.environment = environment
         self.notifyReleaseStages = notifyReleaseStages
         self.connectionManager = connectionManager
         self.payloadTransformer = transformer
-        self.defaultFilters = defaultFilters
     }
 
-    public func report(error: Error, request: Request?, lineNumber: Int?, funcName: String?, fileName: String?) {
+    public func report(error: Error, request: Request, lineNumber: Int?, funcName: String?, fileName: String?) {
         report(error: error, request: request, severity: .error, userId: nil, userName: nil, userEmail: nil, lineNumber: lineNumber, funcName: funcName, fileName: fileName, completion: nil)
     }
     
     public func report(
         error: Error,
-        request: Request?,
+        request: Request,
         severity: Severity = .error,
         userId: String?,
         userName: String?,
@@ -69,8 +66,7 @@ public final class Reporter: ReporterType {
         ) {
         guard let error = error as? AbortError else {
             report(
-                message: Status.internalServerError.reasonPhrase,
-                metadata: nil,
+                message: "Internal Server Error",
                 request: request,
                 severity: severity,
                 lineNumber: lineNumber,
@@ -85,16 +81,12 @@ public final class Reporter: ReporterType {
             return
         }
 
-        guard error.metadata?["report"]?.bool ?? true, shouldNotifyForReleaseStage() else {
+        guard shouldNotifyForReleaseStage() else {
             return
         }
 
-        var metadata = error.metadata
-        metadata?["host"] = Node(request?.uri.hostname ?? "")
-
         report(
             message: error.reason,
-            metadata: metadata,
             request: request,
             severity: severity,
             lineNumber: lineNumber,
@@ -111,8 +103,7 @@ public final class Reporter: ReporterType {
 
     private func report(
         message: String,
-        metadata: Node?,
-        request: Request?,
+        request: Request,
         severity: Severity,
         lineNumber: Int? = nil,
         funcName: String? = nil,
@@ -124,24 +115,19 @@ public final class Reporter: ReporterType {
         ) {
         let payload = try? payloadTransformer.payloadFor(
             message: message,
-            metadata: metadata,
             request: request,
             severity: severity,
             lineNumber: lineNumber,
             funcName: funcName,
             fileName: fileName,
-            filters: defaultFilters,
             userId: userId,
             userName: userName,
             userEmail: userEmail
         )
 
-        // Fire and forget.
-        // TODO: Consider queue and retry mechanism.
-
         if let payload = payload {
             background {
-                _ = try? self.connectionManager.submitPayload(payload)
+                _ = try? self.connectionManager.submitPayload(payload, request: request)
                 if let complete = complete { complete() }
             }
         }
@@ -153,6 +139,6 @@ public final class Reporter: ReporterType {
             return true
         }
         
-        return notifyReleaseStages.contains(environment.description)
+        return notifyReleaseStages.contains(environment.name)
     }
 }

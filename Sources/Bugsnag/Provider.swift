@@ -1,51 +1,29 @@
 import Vapor
 
 public final class Provider: Vapor.Provider {
-
-    public static var repositoryName = "Bugsnag"
-
-    var config: BugsnagConfig
+    public static var repositoryName = "bugsnag"
     
-    public func boot(_ drop: Droplet) {
-        let reporter = ReporterFactory.make(bugsnagConfig: config)
-        drop.bugsnag = reporter
+    let environment: Environment
+    let notifyReleaseStages: [String]?
+    let apiKey: String
+    
+    init(environment: Environment, notifyReleaseStages: [String]?, apiKey: String) {
+        self.environment = environment
+        self.notifyReleaseStages = notifyReleaseStages
+        self.apiKey = apiKey
     }
-
-    public func boot(_ config: Config) throws {
-        try config.addConfigurable(middleware: Middleware(config: config), name: "bugsnag")
+    
+    public func register(_ services: inout Services) throws {
+        let payloadTransformer = PayloadTransformer(environment: environment, apiKey: apiKey)
+        let connectionManager = ConnectionManager(url: "https://notify.bugsnag.com")
         
-        guard let bConfig: Config = config["bugsnag"] else {
-            throw Abort(
-                .internalServerError,
-                reason: "Bugsnag error - bugsnag.json config is missing."
-            )
-        }
-        // NOTE: there is a bug in Vapor where extracted configs don't have the
-        // same environment as the root config
-        bConfig.environment = config.environment
-        self.config = try BugsnagConfig(bConfig)
-    }
-
-    public init(config: Config) throws {
-        try config.addConfigurable(middleware: Middleware(config: config), name: "bugsnag")
+        let reporter = Reporter(environment: environment,
+                 notifyReleaseStages: notifyReleaseStages,
+                 connectionManager: connectionManager,
+                 transformer: payloadTransformer)
         
-        guard let bConfig: Config = config["bugsnag"] else {
-            throw Abort(
-                .internalServerError,
-                reason: "Bugsnag error - bugsnag.json config is missing."
-            )
-        }
-        // NOTE: there is a bug in Vapor where extracted configs don't have the
-        // same environment as the root config
-        bConfig.environment = config.environment
-        self.config = try BugsnagConfig(bConfig)
+        services.register(reporter)
     }
     
-    // is automatically called directly after boot()
-    public func afterInit(_ drop: Droplet) {}
-    
-    // is automatically called directly after afterInit()
-    public func beforeRun(_: Droplet) {}
-    
-    public func beforeServe(_: Droplet) {}
+    public func boot(_ worker: Container) throws { }
 }

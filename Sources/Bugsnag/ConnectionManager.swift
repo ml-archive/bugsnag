@@ -2,32 +2,20 @@ import Vapor
 import HTTP
 import Foundation
 
-public protocol ConnectionManagerType {
-    func submitPayload(_ json: JSON) throws -> Status
-}
-
-public final class ConnectionManager: ConnectionManagerType {
-    public let client: ClientFactoryProtocol
+public final class ConnectionManager {
     public let url: String
     
-    public init(client: ClientFactoryProtocol, url: String) {
-        self.client = client
+    public init(url: String) {
         self.url = url
     }
     
-    public func submitPayload(_ json: JSON) throws -> Status {
-        let response = try client.post(url, query: [:], headers(), json.makeBody())
-        return response.status
+    public func submitPayload<C: Content>(_ content: C, request: Request) throws {
+        let _ = try request.make(EngineClient.self).post(URI(url), content: content)
     }
-
-
+    
     // MARK: - Private helpers
 
-    private func headers() -> [HeaderKey: String] {
-        let headers = [
-            HeaderKey("Content-Type"): "application/json",
-        ]
-        
-        return headers
+    private func headers() -> HTTPHeaders {
+        return HTTPHeaders(dictionaryLiteral: (HTTPHeaders.Name.contentType, "application/json"))
     }
 }
