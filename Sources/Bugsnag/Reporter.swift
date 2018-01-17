@@ -1,6 +1,5 @@
 import Vapor
 import HTTP
-import Core
 
 public protocol ReporterType {
     func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?) throws
@@ -126,10 +125,8 @@ public final class Reporter: ReporterType, Service {
         )
 
         if let payload = payload {
-            background {
-                _ = try? self.connectionManager.submitPayload(payload, request: request)
-                if let complete = complete { complete() }
-            }
+            _ = try? self.connectionManager.submitPayload(payload, request: request)
+            if let complete = complete { complete() }
         }
     }
 
