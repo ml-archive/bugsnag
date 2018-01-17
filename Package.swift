@@ -8,10 +8,11 @@ let package = Package(
         .library(name: "Bugsnag", targets: ["Bugsnag"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/vapor/vapor.git", .branch("beta"))
+        .package(url: "https://github.com/vapor/vapor.git", .branch("beta")),
+        .package(url: "https://github.com/vapor/core.git", .branch("beta"))
     ],
     targets: [
         .target(name: "Bugsnag", dependencies: ["Vapor"]),
-        .testTarget(name: "BugsnagTests", dependencies: ["Bugsnag"])
+        .testTarget(name: "BugsnagTests", dependencies: ["Bugsnag", "Core"])
     ]
 )
