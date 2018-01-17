@@ -12,7 +12,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/core.git", .branch("beta"))
     ],
     targets: [
-        .target(name: "Bugsnag", dependencies: ["Vapor"]),
-        .testTarget(name: "BugsnagTests", dependencies: ["Bugsnag", "Core"])
+        .target(name: "Bugsnag", dependencies: ["Vapor", "Core"]),
+        .testTarget(name: "BugsnagTests", dependencies: ["Bugsnag"])
     ]
 )
