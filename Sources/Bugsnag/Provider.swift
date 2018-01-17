@@ -1,6 +1,6 @@
 import Vapor
 
-public final class Provider: Vapor.Provider {
+public final class BugsnagProvider: Vapor.Provider {
     public static var repositoryName = "bugsnag"
     
     let environment: Environment

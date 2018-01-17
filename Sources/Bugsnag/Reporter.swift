@@ -1,5 +1,5 @@
 import Vapor
-import HTTP
+import HTTP
 
 public protocol ReporterType {
     func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?) throws
