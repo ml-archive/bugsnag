@@ -7,7 +7,7 @@ public final class BugsnagProvider: Vapor.Provider {
     let notifyReleaseStages: [String]?
     let apiKey: String
     
-    init(environment: Environment, notifyReleaseStages: [String]?, apiKey: String) {
+    public init(environment: Environment, notifyReleaseStages: [String]?, apiKey: String) {
         self.environment = environment
         self.notifyReleaseStages = notifyReleaseStages
         self.apiKey = apiKey
