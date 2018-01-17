@@ -17,12 +17,12 @@ public final class BugsnagProvider: Vapor.Provider {
         let payloadTransformer = PayloadTransformer(environment: environment, apiKey: apiKey)
         let connectionManager = ConnectionManager(url: "https://notify.bugsnag.com")
         
-        let reporter = Reporter(environment: environment,
+        let bugsnag = Bugsnag(environment: environment,
                  notifyReleaseStages: notifyReleaseStages,
                  connectionManager: connectionManager,
                  transformer: payloadTransformer)
         
-        services.register(reporter)
+        services.register(bugsnag)
     }
     
     public func boot(_ worker: Container) throws { }

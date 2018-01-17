@@ -24,7 +24,7 @@ public enum Severity: String {
     case error, warning, info
 }
 
-public final class Reporter: ReporterType, Service {
+public final class Bugsnag: ReporterType, Service {
     public func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?) throws {
         report(error: error, request: request, severity: .error, userId: userId, userName: userName, userEmail: userEmail, lineNumber: lineNumber, funcName: funcName, fileName: fileName, completion: nil)
     }
