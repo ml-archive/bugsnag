@@ -4,6 +4,9 @@ import PackageDescription
 
 let package = Package(
     name: "Bugsnag",
+    products: [
+        .library(name: "Bugsnag", targets: ["Bugsnag"]),
+    ],
     dependencies: [
         .package(url: "https://github.com/vapor/vapor.git", .branch("beta"))
     ],
