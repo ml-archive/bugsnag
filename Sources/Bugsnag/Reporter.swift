@@ -125,7 +125,7 @@ public final class Bugsnag: ReporterType, Service {
         )
 
         if let payload = payload {
-            _ = try? self.connectionManager.submitPayload(payload, request: request)
+            _ = try? self.connectionManager.submitPayload(payload)
             if let complete = complete { complete() }
         }
     }

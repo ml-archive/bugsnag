@@ -14,15 +14,18 @@ public final class BugsnagProvider: Vapor.Provider {
     }
     
     public func register(_ services: inout Services) throws {
-        let payloadTransformer = PayloadTransformer(environment: environment, apiKey: apiKey)
-        let connectionManager = ConnectionManager(url: "https://notify.bugsnag.com")
-        
-        let bugsnag = Bugsnag(environment: environment,
-                 notifyReleaseStages: notifyReleaseStages,
-                 connectionManager: connectionManager,
-                 transformer: payloadTransformer)
-        
-        services.register(bugsnag)
+        services.register(Bugsnag.self) { container -> Bugsnag in
+            let payloadTransformer = PayloadTransformer(environment: self.environment, apiKey: self.apiKey)
+            let client = try container.make(Client.self, for: Bugsnag.self)
+            let connectionManager = ConnectionManager(url: "https://notify.bugsnag.com", client: client)
+            
+            let bugsnag = Bugsnag(environment: self.environment,
+                                  notifyReleaseStages: self.notifyReleaseStages,
+                                  connectionManager: connectionManager,
+                                  transformer: payloadTransformer)
+            
+            return bugsnag
+        }
     }
     
     public func boot(_ worker: Container) throws { }
