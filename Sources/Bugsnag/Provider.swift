@@ -15,27 +15,33 @@ public final class Provider: Vapor.Provider {
     public func boot(_ config: Config) throws {
         try config.addConfigurable(middleware: Middleware(config: config), name: "bugsnag")
         
-        guard let config: Config = config["bugsnag"] else {
+        guard let bConfig: Config = config["bugsnag"] else {
             throw Abort(
                 .internalServerError,
                 reason: "Bugsnag error - bugsnag.json config is missing."
             )
         }
         
-        self.config = try BugsnagConfig(config)
+        // NOTE: there is a bug in Vapor where extracted configs don't have the
+        // same environment as the root config
+        bConfig.environment = config.environment
+        self.config = try BugsnagConfig(bConfig)
     }
 
     public init(config: Config) throws {
         try config.addConfigurable(middleware: Middleware(config: config), name: "bugsnag")
         
-        guard let config: Config = config["bugsnag"] else {
+        guard let bConfig: Config = config["bugsnag"] else {
             throw Abort(
                 .internalServerError,
                 reason: "Bugsnag error - bugsnag.json config is missing."
             )
         }
         
-        self.config = try BugsnagConfig(config)
+        // NOTE: there is a bug in Vapor where extracted configs don't have the
+        // same environment as the root config
+        bConfig.environment = config.environment
+        self.config = try BugsnagConfig(bConfig)
     }
     
     // is automatically called directly after boot()

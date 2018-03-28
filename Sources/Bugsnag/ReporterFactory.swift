@@ -3,14 +3,17 @@ import Stacked
 
 public struct ReporterFactory {
     public static func make(config: Config) throws -> Reporter {
-        guard let config: Config = config["bugsnag"] else {
+        guard let bConfig: Config = config["bugsnag"] else {
             throw Abort(
                 .internalServerError,
                 reason: "Bugsnag error - bugsnag.json config is missing."
             )
         }
 
-        let bugsnagConfig = try BugsnagConfig(config)
+        // NOTE: there is a bug in Vapor where extracted configs don't have the
+        // same environment as the root config
+        bConfig.environment = config.environment
+        let bugsnagConfig = try BugsnagConfig(bConfig)
         return ReporterFactory.make(bugsnagConfig: bugsnagConfig)
     }
 
