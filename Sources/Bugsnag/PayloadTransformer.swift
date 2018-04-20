@@ -7,17 +7,15 @@ public protocol PayloadTransformerType {
 
     func payloadFor(
         message: String,
-        metadata: Node?,
         request: Request?,
         severity: Severity,
         lineNumber: Int?,
         funcName: String?,
         fileName: String?,
-        filters: [String],
         userId: String?,
         userName: String?,
         userEmail: String?
-        ) throws -> JSON
+        ) throws -> BugsnagPayload
 }
 
 internal struct PayloadTransformer: PayloadTransformerType {
@@ -27,108 +25,35 @@ internal struct PayloadTransformer: PayloadTransformerType {
     
     internal func payloadFor(
         message: String,
-        metadata: Node?,
         request: Request?,
         severity: Severity,
         lineNumber: Int? = nil,
         funcName: String? = nil,
         fileName: String? = nil,
-        filters: [String],
         userId: String?,
         userName: String?,
         userEmail: String?
-        ) throws -> JSON {
+        ) throws -> BugsnagPayload {
         
-        let internalStacktraceNode = try Node(node:
-            ["file": fileName ?? nil,
-             "lineNumber": Node(lineNumber ?? 0),
-             "columnNumber": 0,
-             "method": Node(funcName ?? "NA")
-            ]
-        )
+        let stacktrace = BugsnagPayload.Event.Stacktrace(file: fileName ?? "",
+                                                         lineNumber: lineNumber ?? 0,
+                                                         columnNumber: 0,
+                                                         method: funcName ?? "")
         
-        let stacktrace = Node([internalStacktraceNode])
+        let exception = BugsnagPayload.Event.Exception(errorClass: message, message: message, stacktrace: [stacktrace])
+        let metadata = BugsnagPayload.Event.Metadata(url: request?.http.urlString ?? "")
+        let app = BugsnagPayload.Event.App(releaseStage: environment.name, type: "Vapor")
         
-        let app: Node = Node([
-            "releaseStage": Node(environment.description),
-            "type": "Vapor"
-        ])
+        let event = BugsnagPayload.Event(payloadVersion: 2,
+                                         exceptions: [exception],
+                                         app: app,
+                                         severity: severity.rawValue,
+                                         user: BugsnagPayload.Event.User(id: userId, name: userName, email: userEmail),
+                                         metadata: metadata)
         
-        var headers: [String: Node] = [:]
-        if let requestHeaders = request?.headers {
-            for (key, value) in requestHeaders {
-                headers[key.key] = Node(value)
-            }
-        }
+        let notifier = BugsnagPayload.Notifier(name: "Bugsnag Vapor", version: "2.0.0", url: "https://github.com/gotranseo/bugsnag")
+        let payload = BugsnagPayload(apiKey: apiKey, notifier: notifier, events: [event])
 
-        let customMetadata = metadata ?? Node([])
-        
-        var requestObj = Node.object([:])
-        
-        try requestObj.set("method", request?.method.description)
-        try requestObj.set("headers", headers)
-        try requestObj.set("urlParameters", filterOutKeys(filters, inNode: optionalNode(request?.parameters.makeNode(in: nil))))
-        try requestObj.set("queryParameters", filterOutKeys(filters, inNode: optionalNode(request?.query)))
-        try requestObj.set("formParameters", filterOutKeys(filters, inNode: optionalNode(request?.formURLEncoded)))
-        try requestObj.set("jsonParameters", filterOutKeys(filters, inNode: optionalNode(request?.json?.makeNode(in: nil))))
-        try requestObj.set("url", request?.uri.path)
-
-        let metadata = Node([
-            "request": requestObj,
-            "metaData": customMetadata
-        ])
-
-        var userJson = JSON()
-        try userJson.set("id", userId)
-        try userJson.set("name", userName)
-        try userJson.set("email", userEmail)
-        
-        let event = Node([
-            "payloadVersion": 2,
-            "exceptions": Node([
-                Node([
-                    "errorClass": Node(message),
-                    "message": Node(message),
-                    "stacktrace": stacktrace
-                ])
-            ]),
-            "app": app,
-            "severity": Node(severity.rawValue),
-            "user": userJson.makeNode(in: nil),
-            "metaData": metadata
-        ])
-    
-        return try JSON(node: [
-            "apiKey": apiKey,
-            "notifier": Node([
-                "name": "Bugsnag Vapor",
-                "version": "1.0.11",
-                "url": "https://github.com/nodes-vapor/bugsnag"
-            ]),
-            "events": Node([event]),
-        ])
-    }
-
-
-    // MARK: - Private helpers.
-
-    private func optionalNode(_ node: Node?) -> Node {
-        return node ?? Node.null
-    }
-
-    private func filterOutKeys(_ keys: [String], inNode node: Node) -> Node {
-        var outcome: [String: Node] = [:]
-
-        guard let nodeObjects = node.object else {
-            return node
-        }
-
-        for obj in nodeObjects {
-            if !(keys.contains(obj.key)) {
-                outcome[obj.key] = obj.value
-            }
-        }
-
-        return Node.object(outcome)
+        return payload
     }
 }
