@@ -8,7 +8,7 @@ let package = Package(
         .library(name: "Bugsnag", targets: ["Bugsnag"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/vapor/vapor.git", .branch("beta"))
+        .package(url: "https://github.com/vapor/vapor.git", from: "3.0.0-rc.2")
     ],
     targets: [
         .target(name: "Bugsnag", dependencies: ["Vapor"]),

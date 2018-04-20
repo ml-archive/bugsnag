@@ -11,13 +11,13 @@ public final class ConnectionManager {
         self.client = client
     }
     
-    public func submitPayload<C: Content>(_ content: C) throws {
-        let _ = client.post(URI(url), content: content)
+    public func submitPayload<C: Content>(_ content: C) throws -> Future<Response> {
+        return client.post(url, content: content)
     }
     
     // MARK: - Private helpers
 
     private func headers() -> HTTPHeaders {
-        return HTTPHeaders(dictionaryLiteral: (HTTPHeaders.Name.contentType, "application/json"))
+        return HTTPHeaders([("Content-Type", "application/json")])
     }
 }

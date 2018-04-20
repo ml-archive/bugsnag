@@ -31,13 +31,13 @@ public final class Bugsnag: ReporterType, Service {
     
     
     let environment: Environment
-    let notifyReleaseStages: [String]?
+    let notifyReleaseStages: [Environment]?
     let connectionManager: ConnectionManager
     let payloadTransformer: PayloadTransformerType
     
     init(
         environment: Environment,
-        notifyReleaseStages: [String]? = [],
+        notifyReleaseStages: [Environment]? = [],
         connectionManager: ConnectionManager,
         transformer: PayloadTransformerType
     ) {
@@ -125,8 +125,10 @@ public final class Bugsnag: ReporterType, Service {
         )
 
         if let payload = payload {
-            _ = try? self.connectionManager.submitPayload(payload)
-            if let complete = complete { complete() }
+            _ = try? self.connectionManager.submitPayload(payload).map(to: Void.self) { _ in
+                if let complete = complete { complete() }
+                return ()
+            }
         }
     }
 
@@ -136,6 +138,6 @@ public final class Bugsnag: ReporterType, Service {
             return true
         }
         
-        return notifyReleaseStages.contains(environment.name)
+        return notifyReleaseStages.contains(environment)
     }
 }

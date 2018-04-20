@@ -41,7 +41,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
                                                          method: funcName ?? "")
         
         let exception = BugsnagPayload.Event.Exception(errorClass: message, message: message, stacktrace: [stacktrace])
-        let metadata = BugsnagPayload.Event.Metadata(method: request?.method.string ?? "", url: request?.uri.description ?? "")
+        let metadata = BugsnagPayload.Event.Metadata(url: request?.http.urlString ?? "")
         let app = BugsnagPayload.Event.App(releaseStage: environment.name, type: "Vapor")
         
         let event = BugsnagPayload.Event(payloadVersion: 2,
@@ -51,7 +51,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
                                          user: BugsnagPayload.Event.User(id: userId, name: userName, email: userEmail),
                                          metadata: metadata)
         
-        let notifier = BugsnagPayload.Notifier(name: "Bugsnag Vapor", version: "2.0.0", url: "https://github.com/mcdappdev/bugsnag")
+        let notifier = BugsnagPayload.Notifier(name: "Bugsnag Vapor", version: "2.0.0", url: "https://github.com/gotranseo/bugsnag")
         let payload = BugsnagPayload(apiKey: apiKey, notifier: notifier, events: [event])
 
         return payload

@@ -97,11 +97,9 @@ public final class BugsnagPayload: Content {
         }
         
         public final class Metadata: Content {
-            let method: String
             let url: String
             
-            init(method: String, url: String) {
-                self.method = method
+            init(url: String) {
                 self.url = url
             }
         }
