@@ -17,24 +17,21 @@ public final class BugsnagClient: Service, Middleware {
                 return res
             }
         } catch let error {
-            // try self.report(error: error, request: request)
-            self.report(on: request)
+            try self.report(on: request, with: error)
             throw error
         }
     }
     
-    private func report(on request: Request) {
+    private func report(on request: Request, with error: Error) throws {
+        let body = try RequestBuilder(request: request.http, error: error).build()
+        
         _ = HTTPClient.connect(hostname: "notify.bugsnag.com", on: request)
             .flatMap(to: HTTPResponse.self) { client in
-                let apiKey : String = "d70977c90ea82f8fa72c0d655bda637e"
-                
                 let headers = HTTPHeaders.init([
                     ("Content-Type", "application/json"),
-                    ("Bugsnag-Api-Key", apiKey),
-                    ("Bugsnag-Payload-Version", "4")
+                    ("Bugsnag-Api-Key", self.apiKey),
+                    ("Bugsnag-Payload-Version", self.payloadVersion.string)
                 ])
-                
-                let body : LosslessHTTPBodyRepresentable = HTTPBody(string: "test")
                 
                 let req = HTTPRequest(method: .POST, url: "/", headers: headers, body: body)
                 return client.send(req)
@@ -42,7 +39,5 @@ public final class BugsnagClient: Service, Middleware {
             .map(to: Void.self) { response in
                 print(response.status)
         }
-        
-        //print("lol")
     }
 }

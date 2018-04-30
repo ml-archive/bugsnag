@@ -1,3 +1,4 @@
+import Vapor
 
 struct BugsnagPayload: Encodable {
     let apiKey: String
@@ -14,25 +15,25 @@ struct BugsnagNotifier: Encodable {
 struct BugsnagEvent: Encodable {
     let payloadVersion: String
     let exceptions: [BugsnagException]
-    let breadcrumbs: [BugsnagBreadcrumb]
+    // let breadcrumbs: [BugsnagBreadcrumb]
     let request: BugsnagRequest
-    let threads: [BugsnagThread]
-    let context: String
-    let groupingHash: String
-    let unhandled: Bool
-    let severity: String
-    let severityReason: BugsnagSeverityReason
-    let user: BugsnagUser
-    let app: BugsnagApp
-    let device: BugsnagDevice
-    let session: BugsnagSession
-    let metaData: BugsnagMetaData
+    // let threads: [BugsnagThread]
+    // let context: String
+    // let groupingHash: String
+    // let unhandled: Bool
+    // let severity: String
+    // let severityReason: BugsnagSeverityReason
+    // let user: BugsnagUser
+    // let app: BugsnagApp
+    // let device: BugsnagDevice
+    // let session: BugsnagSession
+    // let metaData: BugsnagMetaData
 }
 
 struct BugsnagException: Encodable {
     let errorClass: String
     let message: String
-    let stacktrace: [BugsnagStacktrace]
+    // let stacktrace: [BugsnagStacktrace]
     let type: String
 }
 
@@ -44,11 +45,11 @@ struct BugsnagBreadcrumb: Encodable {
 }
 
 struct BugsnagRequest: Encodable {
-    let clientIp: String
-    let headers: [String]
-    let httpMethod: String
-    let url: String
-    let referer: String
+    let clientIp: String?
+    let headers: [String]?
+    let httpMethod: String?
+    let url: String?
+    let referer: String?
 }
 
 struct BugsnagThread: Encodable {
