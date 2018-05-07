@@ -83,11 +83,11 @@ public final class RequestBuilder {
         )
     }
  
-    fileprivate func parseHeaders(headers: HTTPHeaders) -> [String] {
-        var extractedHeaders: [String] = []
+    fileprivate func parseHeaders(headers: HTTPHeaders) -> [String:String] {
+        var extractedHeaders: [String:String] = [:]
         
         headers.forEach { header in
-            extractedHeaders.append(header.name  + ": " + header.value)
+            extractedHeaders[header.name] = header.value
         }
         
         return extractedHeaders

@@ -46,7 +46,7 @@ struct BugsnagBreadcrumb: Encodable {
 
 struct BugsnagRequest: Encodable {
     let clientIp: String?
-    let headers: [String]?
+    let headers: [String:String]?
     let httpMethod: String?
     let url: String?
     let referer: String?
