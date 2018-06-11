@@ -4,40 +4,63 @@ public final class BugsnagClient: Service, Middleware {
     public let apiKey: String
     public let hostName: String
     public let payloadVersion: UInt8
+    public let releaseStage: String
     
     public init(_ config: BugsnagConfig) {
         self.apiKey = config.apiKey
         self.hostName = config.hostName
         self.payloadVersion = config.payloadVersion
+        self.releaseStage = config.releaseStage
     }
     
     public func respond(to request: Request, chainingTo next: Responder) throws -> EventLoopFuture<Response> {
+        var response: Future<Response>
+        
         do {
-            return try next.respond(to: request).map(to: Response.self) { res in
-                return res
-            }
+            response =  try next.respond(to: request)
         } catch let error {
-            try self.report(on: request, with: error)
+            self.report(on: request, with: error)
             throw error
+        }
+        
+        // TODO: Find a better way that doesn't care about responding
+        return response.thenIfError { error in
+            self.report(on: request, with: error)
+            return response
         }
     }
     
-    private func report(on request: Request, with error: Error) throws {
-        let body = try RequestBuilder(request: request.http, error: error).build()
-        
-        _ = HTTPClient.connect(hostname: "notify.bugsnag.com", on: request)
-            .flatMap(to: HTTPResponse.self) { client in
-                let headers = HTTPHeaders.init([
-                    ("Content-Type", "application/json"),
-                    ("Bugsnag-Api-Key", self.apiKey),
-                    ("Bugsnag-Payload-Version", self.payloadVersion.string)
-                ])
-                
-                let req = HTTPRequest(method: .POST, url: "/", headers: headers, body: body)
-                return client.send(req)
+    private func report(
+        on request: Request,
+        with error: Error
+    ) {
+        do {
+            let body = try RequestBuilder(
+                request: request.http,
+                error: error,
+                releaseStage: self.releaseStage
+            ).build()
+            
+            _ = HTTPClient.connect(hostname: "notify.bugsnag.com", on: request)
+                .flatMap(to: HTTPResponse.self) { client in
+                    let headers = HTTPHeaders.init([
+                        ("Content-Type", "application/json"),
+                        ("Bugsnag-Api-Key", self.apiKey),
+                        ("Bugsnag-Payload-Version", self.payloadVersion.string)
+                    ])
+                    
+                    let req = HTTPRequest(method: .POST, url: "/", headers: headers, body: body)
+                    return client.send(req)
+                }
+                .map(to: Void.self) { response in
+                    print(response.status)
             }
-            .map(to: Void.self) { response in
-                print(response.status)
+        } catch {
+            // fail silently
         }
+    }
+    
+    public static func report(error: Error, meta: [String]?) throws {
+        
     }
 }

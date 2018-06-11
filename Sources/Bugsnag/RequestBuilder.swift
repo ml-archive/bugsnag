@@ -5,11 +5,13 @@ public final class RequestBuilder {
     
     private let request: HTTPRequest
     private let error: Error
+    private let releaseStage: String
     
-    public init(request: HTTPRequest, error: Error)
+    public init(request: HTTPRequest, error: Error, releaseStage: String)
     {
         self.request = request
         self.error = error
+        self.releaseStage = releaseStage
     }
     
     public func build() throws -> LosslessHTTPBodyRepresentable {
@@ -38,7 +40,7 @@ public final class RequestBuilder {
             payloadVersion: "4",
             exceptions: [self.bugsnagException()],
 //            breadcrumbs: <#T##[BugsnagBreadcrumb]#>,
-            request: self.bugsnagRequest()
+            request: self.bugsnagRequest(),
 //            threads: <#T##[BugsnagThread]#>,
 //            context: <#T##String#>,
 //            groupingHash: <#T##String#>,
@@ -46,20 +48,23 @@ public final class RequestBuilder {
 //            severity: <#T##String#>,
 //            severityReason: <#T##BugsnagSeverityReason#>,
 //            user: <#T##BugsnagUser#>,
-//            app: <#T##BugsnagApp#>,
+            app: self.bugsnagApp(),
 //            device: <#T##BugsnagDevice#>,
 //            session: <#T##BugsnagSession#>,
-//            metaData: <#T##BugsnagMetaData#>
+            metaData: self.bugsnagMetaData()
         )
     }
     
     private func bugsnagRequest() -> BugsnagRequest {
+        let body = self.request.body.data ?? Data()
+        
         return BugsnagRequest(
             clientIp: String(describing: self.request.remotePeer.hostname),
             headers: self.parseHeaders(headers: self.request.headers),
             httpMethod: "\(self.request.method)",
             url: self.request.urlString,
-            referer: self.request.remotePeer.description
+            referer: self.request.remotePeer.description,
+            body: String(data: body, encoding: .utf8)
         )
     }
     
@@ -81,6 +86,23 @@ public final class RequestBuilder {
             // let stacktrace: [BugsnagStacktrace]
             type: status.reasonPhrase
         )
+    }
+    
+    private func bugsnagApp() -> BugsnagApp {
+        let app = BugsnagApp(
+            releaseStage: self.releaseStage
+        )
+        
+        return app
+    }
+    
+    private func bugsnagMetaData() -> BugsnagMetaData {
+        let meta = BugsnagMetaData(meta: [
+            "Error localized description": self.error.localizedDescription,
+            "Request debug description": self.request.debugDescription
+        ])
+        
+        return meta
     }
  
     fileprivate func parseHeaders(headers: HTTPHeaders) -> [String:String] {

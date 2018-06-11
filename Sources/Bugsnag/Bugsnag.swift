@@ -24,10 +24,10 @@ struct BugsnagEvent: Encodable {
     // let severity: String
     // let severityReason: BugsnagSeverityReason
     // let user: BugsnagUser
-    // let app: BugsnagApp
+    let app: BugsnagApp
     // let device: BugsnagDevice
     // let session: BugsnagSession
-    // let metaData: BugsnagMetaData
+    let metaData: BugsnagMetaData
 }
 
 struct BugsnagException: Encodable {
@@ -50,6 +50,7 @@ struct BugsnagRequest: Encodable {
     let httpMethod: String?
     let url: String?
     let referer: String?
+    let body: String?
 }
 
 struct BugsnagThread: Encodable {
@@ -71,18 +72,18 @@ struct BugsnagUser: Encodable {
 }
 
 struct BugsnagApp: Encodable {
-    let id: String
-    let version: String
-    let versionCode: Int
-    let bundleVersion: String
-    let codeBundleId: String
-    let buildUUID: String
+//    let id: String
+//    let version: String
+//    let versionCode: Int
+//    let bundleVersion: String
+//    let codeBundleId: String
+//    let buildUUID: String
     let releaseStage: String
-    let type: String
-    let dsymUUIDs: [String]
-    let duration: UInt
-    let durationInForeground: UInt
-    let inForeground: Bool
+//    let type: String
+//    let dsymUUIDs: [String]
+//    let duration: UInt
+//    let durationInForeground: UInt
+//    let inForeground: Bool
 }
 
 struct BugsnagDevice: Encodable {
@@ -103,7 +104,7 @@ struct BugsnagDevice: Encodable {
 }
 
 struct BugsnagMetaData: Encodable {
-    let data: [String]
+    let meta: [String:String]
 }
 
 struct BugsnagStacktrace: Encodable {
