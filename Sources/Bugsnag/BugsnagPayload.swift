@@ -38,14 +38,16 @@ public final class BugsnagPayload: Content {
         let severity: String
         let user: User
         let metadata: Metadata
+        let request: Request
         
-        init(payloadVersion: Int, exceptions: [Exception], app: App, severity: String, user: User, metadata: Metadata) {
+        init(payloadVersion: Int, exceptions: [Exception], app: App, severity: String, user: User, metadata: Metadata, request: Request) {
             self.payloadVersion = payloadVersion
             self.exceptions = exceptions
             self.app = app
             self.severity = severity
             self.user = user
             self.metadata = metadata
+            self.request = request
         }
         
         public final class Exception: Content {
@@ -93,6 +95,20 @@ public final class BugsnagPayload: Content {
                 self.id = id
                 self.name = name
                 self.email = email
+            }
+        }
+        
+        public final class Request: Content {
+            let clientIp: String?
+            let headers: [String: String]?
+            let httpMethod: String?
+            let url: String?
+            
+            init(clientIp: String?, headers: [String: String]?, httpMethod: String?, url: String?) {
+                self.clientIp = clientIp
+                self.headers = headers
+                self.httpMethod = httpMethod
+                self.url = url
             }
         }
         

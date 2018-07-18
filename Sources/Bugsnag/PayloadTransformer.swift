@@ -44,12 +44,26 @@ internal struct PayloadTransformer: PayloadTransformerType {
         let metadata = BugsnagPayload.Event.Metadata(url: request?.http.urlString ?? "")
         let app = BugsnagPayload.Event.App(releaseStage: environment.name, type: "Vapor")
         
+        var headersDict = [String: String]()
+        
+        if let req = request {
+            for header in req.http.headers {
+                headersDict[header.name] = header.value
+            }
+        }
+        
+        let requestContent = BugsnagPayload.Event.Request(clientIp: request?.http.remotePeer.hostname,
+                                                          headers: headersDict,
+                                                          httpMethod: request?.http.method.string,
+                                                          url: request?.http.url.path)
+        
         let event = BugsnagPayload.Event(payloadVersion: 2,
                                          exceptions: [exception],
                                          app: app,
                                          severity: severity.rawValue,
                                          user: BugsnagPayload.Event.User(id: userId, name: userName, email: userEmail),
-                                         metadata: metadata)
+                                         metadata: metadata,
+                                         request: requestContent)
         
         let notifier = BugsnagPayload.Notifier(name: "Bugsnag Vapor", version: "2.0.0", url: "https://github.com/gotranseo/bugsnag")
         let payload = BugsnagPayload(apiKey: apiKey, notifier: notifier, events: [event])
