@@ -14,7 +14,8 @@ public protocol PayloadTransformerType {
         fileName: String?,
         userId: String?,
         userName: String?,
-        userEmail: String?
+        userEmail: String?,
+        version: String?
         ) throws -> BugsnagPayload
 }
 
@@ -32,7 +33,8 @@ internal struct PayloadTransformer: PayloadTransformerType {
         fileName: String? = nil,
         userId: String?,
         userName: String?,
-        userEmail: String?
+        userEmail: String?,
+        version: String?
         ) throws -> BugsnagPayload {
         
         let stacktrace = BugsnagPayload.Event.Stacktrace(file: fileName ?? "",
@@ -42,7 +44,7 @@ internal struct PayloadTransformer: PayloadTransformerType {
         
         let exception = BugsnagPayload.Event.Exception(errorClass: message, message: message, stacktrace: [stacktrace])
         let metadata = BugsnagPayload.Event.Metadata(url: request?.http.urlString ?? "")
-        let app = BugsnagPayload.Event.App(releaseStage: environment.name, type: "Vapor")
+        let app = BugsnagPayload.Event.App(releaseStage: environment.name, type: "Vapor", version: version)
         
         var headersDict = [String: String]()
         

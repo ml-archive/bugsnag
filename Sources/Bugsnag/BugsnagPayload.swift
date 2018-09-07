@@ -79,10 +79,12 @@ public final class BugsnagPayload: Content {
         public final class App: Content {
             let releaseStage: String
             let type: String
+            let version: String?
             
-            init(releaseStage: String, type: String) {
+            init(releaseStage: String, type: String, version: String?) {
                 self.releaseStage = releaseStage
                 self.type = type
+                self.version = version
             }
         }
         

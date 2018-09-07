@@ -2,9 +2,9 @@ import Vapor
 import HTTP
 
 public protocol ReporterType {
-    func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?) throws
+    func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) throws
     
-    func report(error: Error, request: Request, lineNumber: Int?, funcName: String?, fileName: String?) throws
+    func report(error: Error, request: Request, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) throws
     
     func report(
         error: Error,
@@ -16,6 +16,7 @@ public protocol ReporterType {
         lineNumber: Int?,
         funcName: String?,
         fileName: String?,
+        version: String?,
         completion: (() -> ())?
     ) throws
 }
@@ -25,8 +26,8 @@ public enum Severity: String {
 }
 
 public final class Bugsnag: ReporterType, Service {
-    public func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?) throws {
-        report(error: error, request: request, severity: .error, userId: userId, userName: userName, userEmail: userEmail, lineNumber: lineNumber, funcName: funcName, fileName: fileName, completion: nil)
+    public func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) throws {
+        report(error: error, request: request, severity: .error, userId: userId, userName: userName, userEmail: userEmail, lineNumber: lineNumber, funcName: funcName, fileName: fileName, version: version, completion: nil)
     }
     
     
@@ -47,8 +48,8 @@ public final class Bugsnag: ReporterType, Service {
         self.payloadTransformer = transformer
     }
 
-    public func report(error: Error, request: Request, lineNumber: Int?, funcName: String?, fileName: String?) {
-        report(error: error, request: request, severity: .error, userId: nil, userName: nil, userEmail: nil, lineNumber: lineNumber, funcName: funcName, fileName: fileName, completion: nil)
+    public func report(error: Error, request: Request, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) {
+        report(error: error, request: request, severity: .error, userId: nil, userName: nil, userEmail: nil, lineNumber: lineNumber, funcName: funcName, fileName: fileName, version: version, completion: nil)
     }
     
     public func report(
@@ -61,6 +62,7 @@ public final class Bugsnag: ReporterType, Service {
         lineNumber: Int?,
         funcName: String?,
         fileName: String?,
+        version: String?,
         completion complete: (() -> ())?
         ) {
         guard let error = error as? AbortError else {
@@ -74,6 +76,7 @@ public final class Bugsnag: ReporterType, Service {
                 userId: userId,
                 userName: userName,
                 userEmail: userEmail,
+                version: version,
                 completion: complete
             )
             
@@ -94,6 +97,7 @@ public final class Bugsnag: ReporterType, Service {
             userId: userId,
             userName: userName,
             userEmail: userEmail,
+            version: version,
             completion: complete
         )
     }
@@ -110,6 +114,7 @@ public final class Bugsnag: ReporterType, Service {
         userId: String?,
         userName: String?,
         userEmail: String?,
+        version: String?,
         completion complete: (() -> ())? = nil
         ) {
         let payload = try? payloadTransformer.payloadFor(
@@ -121,7 +126,8 @@ public final class Bugsnag: ReporterType, Service {
             fileName: fileName,
             userId: userId,
             userName: userName,
-            userEmail: userEmail
+            userEmail: userEmail,
+            version: version
         )
 
         if let payload = payload {
