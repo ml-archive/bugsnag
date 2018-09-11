@@ -1,7 +1,8 @@
 import XCTest
 
-import bugsnagTests
+import BugsnagTests
 
 var tests = [XCTestCaseEntry]()
-tests += BugsnagTests.allTests()
+tests += BugsnagTests.__allTests()
+
 XCTMain(tests)

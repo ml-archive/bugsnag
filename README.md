@@ -47,5 +47,5 @@ public func configure(
 }
 ```
 
-**Pitfall:** _Vapor's Error middleware overrides any `Error` it catches, meaning that if Bugsnag middleware is registered after the Error middleware, no errors exists for Bugsnag to report_
+**Pitfall:** _Vapor's Error middleware overrides any `Error` it catches, meaning that if Bugsnag middleware is registered after the Error middleware, no errors exist for Bugsnag to report_
 
