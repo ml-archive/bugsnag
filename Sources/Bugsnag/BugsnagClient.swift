@@ -5,12 +5,14 @@ public final class BugsnagClient: Service, Middleware {
     public let hostName: String
     public let payloadVersion: UInt8
     public let releaseStage: String
+    let debug: Bool
     
     public init(_ config: BugsnagConfig) {
         self.apiKey = config.apiKey
         self.hostName = config.hostName
         self.payloadVersion = config.payloadVersion
         self.releaseStage = config.releaseStage
+        self.debug = config.debug
     }
     
     public func respond(to request: Request, chainingTo next: Responder) throws -> EventLoopFuture<Response> {
@@ -53,8 +55,11 @@ public final class BugsnagClient: Service, Middleware {
                     return client.send(req)
                 }
                 .map(to: Void.self) { response in
-                    print(response.status)
-            }
+                    if self.debug {
+                        print("Bugsnag response:")
+                        print(response.status.code, response.status.reasonPhrase)
+                    }
+                }
         } catch {
             // fail silently
         }

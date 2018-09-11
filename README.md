@@ -31,7 +31,11 @@ public func configure(
     ...
 
     // Register provider
-    let bugsnagConfig: BugsnagConfig = BugsnagConfig(apiKey: "[YOUR BUGSNAG KEY]")
+    let bugsnagConfig: BugsnagConfig = BugsnagConfig(
+        apiKey: [YOUR BUGSNAG API KEY],
+        releaseStage: environment.name,
+        debug: false
+    )
     services.register(BugsnagClient(bugsnagConfig))
 
     ...
