@@ -27,7 +27,7 @@ public final class Reporter: ReporterType {
     let connectionManager: ConnectionManagerType
     let payloadTransformer: PayloadTransformerType
     
-    init(
+    public init(
         drop: Droplet,
         config: ConfigurationType,
         connectionManager: ConnectionManagerType? = nil,
