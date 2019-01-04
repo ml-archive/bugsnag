@@ -29,23 +29,39 @@ public func configure(
     _ services: inout Services
 ) throws {
     ...
-
     // Register provider
-    let bugsnagConfig: BugsnagConfig = BugsnagConfig(
-        apiKey: [YOUR BUGSNAG API KEY],
+    let reporter = BugsnagReporter(
+        apiKey: "<YOUR BUGSNAG API KEY>",
         releaseStage: environment.name,
         debug: false
     )
-    services.register(BugsnagClient(bugsnagConfig))
+    services.register(reporter)
 
     ...
 
     // Register middleware
-    middlewares.use(BugsnagClient.self) // Catch errors and report to bugsnag
+    middlewares.use(reporter) // Catch errors and report to bugsnag
 
     ...
 }
 ```
 
-**Pitfall:** _Vapor's Error middleware overrides any `Error` it catches, meaning that if Bugsnag middleware is registered after the Error middleware, no errors exist for Bugsnag to report_
+### Reporting
+Bugsnag offers three different types of reports: info, warning and error. To make a report just instantiate a `BugsnagReporter` and use the respective functions.
 
+##### Examples
+```swift
+let reporter = try req.make(BugsnagReporter.self)
+
+reporter.info(Abort(.upgradeRequired), on: req)
+reporter.warning(Abort(.notFound), on: req)
+reporter.error(Abort(.internalServerError), on: req)
+```
+
+Reporting an error returns a discardable future. Just map the result if you would like to do more work after the report has been sent.
+
+```swift
+return reporter.error(yourError, on: req).flatMap {
+    ...
+}
+```

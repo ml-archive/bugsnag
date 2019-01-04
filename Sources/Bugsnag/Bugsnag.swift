@@ -17,11 +17,10 @@ struct BugsnagEvent: Encodable {
     let exceptions: [BugsnagException]
     // let breadcrumbs: [BugsnagBreadcrumb]
     let request: BugsnagRequest
-    // let threads: [BugsnagThread]
     // let context: String
     // let groupingHash: String
     // let unhandled: Bool
-    // let severity: String
+     let severity: String
     // let severityReason: BugsnagSeverityReason
     // let user: BugsnagUser
     let app: BugsnagApp
@@ -33,7 +32,7 @@ struct BugsnagEvent: Encodable {
 struct BugsnagException: Encodable {
     let errorClass: String
     let message: String
-    // let stacktrace: [BugsnagStacktrace]
+    let stacktrace: [BugsnagStacktrace]
     let type: String
 }
 
