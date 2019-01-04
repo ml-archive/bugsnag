@@ -1,4 +1,5 @@
 import Vapor
+import Authentication
 
 public final class BugsnagReporter: Service, Middleware {
     public let apiKey: String
@@ -8,6 +9,8 @@ public final class BugsnagReporter: Service, Middleware {
     let hostName = "https://notify.bugsnag.com/"
     let payloadVersion: UInt8 = 4
     let app: BugsnagApp
+
+    var userTypes: [Authenticatable.Type] = []
 
     public init(apiKey: String, releaseStage: String, debug: Bool = false) {
         self.apiKey = apiKey
@@ -48,9 +51,11 @@ public final class BugsnagReporter: Service, Middleware {
     }
 
     func buildBody(
-        _ req: HTTPRequest,
+        _ req: Request,
         error: Error,
         severity: String,
+        userId: Int?,
+        userMetadata: [String: CustomDebugStringConvertible],
         callsite: (file: String, function: String, line: Int)
     ) throws -> LosslessHTTPBodyRepresentable {
         let notifier = BugsnagNotifier(
@@ -77,32 +82,46 @@ public final class BugsnagReporter: Service, Middleware {
             type: status.reasonPhrase
         )
 
+        let http = req.http
+
         var body: String? = nil
-        if let data = req.body.data {
+        if let data = http.body.data {
             body = String(data: data, encoding: .utf8)
         }
 
         let eventRequest = BugsnagRequest(
-            clientIp: req.remotePeer.hostname ?? "",
-            headers: parseHeaders(headers: req.headers),
-            httpMethod: "\(req.method)",
-            url: req.urlString,
-            referer: req.remotePeer.description,
+            clientIp: http.remotePeer.hostname ?? "",
+            headers: parseHeaders(headers: http.headers),
+            httpMethod: "\(http.method)",
+            url: http.urlString,
+            referer: http.remotePeer.description,
             body: body
         )
 
-        let metadata = BugsnagMetaData(meta: [
+        var metadata: [String: String] = [
             "Error localized description": error.localizedDescription,
-            "Request debug description": req.debugDescription
-        ])
+            "Request debug description": http.debugDescription
+        ]
+
+        metadata.reserveCapacity(2 + userMetadata.count)
+        for (key, value) in userMetadata {
+            metadata[key] = value.debugDescription
+        }
+
+        var user: BugsnagUser? = nil
+        if let id = userId {
+            user = BugsnagUser(id: "\(id)")
+        }
 
         let event = BugsnagEvent(
             payloadVersion: "4",
             exceptions: [exception],
             request: eventRequest,
+            unhandled: true,
             severity: severity,
+            user: user,
             app: app,
-            metaData: metadata
+            metaData: BugsnagMetaData(meta: metadata)
         )
 
         let payload = BugsnagPayload(
@@ -117,14 +136,18 @@ public final class BugsnagReporter: Service, Middleware {
     func report(
         severity: String,
         _ error: Error,
+        userId: Int?,
+        metadata: [String: CustomDebugStringConvertible],
         callsite: (String, String, Int),
         on request: Request
     ) -> Future<Void> {
         do {
             let body = try buildBody(
-                request.http,
+                request,
                 error: error,
                 severity: severity,
+                userId: userId,
+                userMetadata: metadata,
                 callsite: callsite
             )
 
@@ -155,6 +178,7 @@ public final class BugsnagReporter: Service, Middleware {
     @discardableResult
     public func info(
         _ error: Error,
+        metadata: [String: CustomDebugStringConvertible] = [:],
         on request: Request,
         file: String = #file,
         function: String = #function,
@@ -163,6 +187,8 @@ public final class BugsnagReporter: Service, Middleware {
         return report(
             severity: "info",
             error,
+            userId: nil,
+            metadata: metadata,
             callsite: (file, function, line),
             on: request
         )
@@ -171,6 +197,7 @@ public final class BugsnagReporter: Service, Middleware {
     @discardableResult
     public func warning(
         _ error: Error,
+        metadata: [String: CustomDebugStringConvertible] = [:],
         on request: Request,
         file: String = #file,
         function: String = #function,
@@ -179,6 +206,8 @@ public final class BugsnagReporter: Service, Middleware {
         return report(
             severity: "warning",
             error,
+            userId: nil,
+            metadata: metadata,
             callsite: (file, function, line),
             on: request
         )
@@ -187,6 +216,7 @@ public final class BugsnagReporter: Service, Middleware {
     @discardableResult
     public func error(
         _ error: Error,
+        metadata: [String: CustomDebugStringConvertible] = [:],
         on request: Request,
         file: String = #file,
         function: String = #function,
@@ -195,6 +225,76 @@ public final class BugsnagReporter: Service, Middleware {
         return report(
             severity: "error",
             error,
+            userId: nil,
+            metadata: metadata,
+            callsite: (file, function, line),
+            on: request
+        )
+    }
+
+    // MARK: Automatic user tracking
+
+    @discardableResult
+    public func info<U: BugsnagReportableUser>(
+        userType: U.Type,
+        _ error: Error,
+        metadata: [String: CustomDebugStringConvertible] = [:],
+        on request: Request,
+        file: String = #file,
+        function: String = #function,
+        line: Int = #line
+    ) throws -> Future<Void> {
+        let userId = try request.authenticated(userType)?.id
+
+        return report(
+            severity: "info",
+            error,
+            userId: userId,
+            metadata: metadata,
+            callsite: (file, function, line),
+            on: request
+        )
+    }
+
+    @discardableResult
+    public func warning<U: BugsnagReportableUser>(
+        userType: U.Type,
+        _ error: Error,
+        metadata: [String: CustomDebugStringConvertible] = [:],
+        on request: Request,
+        file: String = #file,
+        function: String = #function,
+        line: Int = #line
+    ) throws -> Future<Void> {
+        let userId = try request.authenticated(userType)?.id
+
+        return report(
+            severity: "warning",
+            error,
+            userId: userId,
+            metadata: metadata,
+            callsite: (file, function, line),
+            on: request
+        )
+    }
+
+    @discardableResult
+    public func error<U: BugsnagReportableUser>(
+        userType: U.Type,
+        _ error: Error,
+        metadata: [String: CustomDebugStringConvertible] = [:],
+        on request: Request,
+        file: String = #file,
+        function: String = #function,
+        line: Int = #line
+    ) throws -> Future<Void> {
+        let userId = try request.authenticated(userType)?.id
+
+        return report(
+            severity: "error",
+            error,
+            userId: userId,
+            metadata: metadata,
             callsite: (file, function, line),
             on: request
         )

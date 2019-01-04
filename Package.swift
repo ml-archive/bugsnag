@@ -10,11 +10,12 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/vapor/vapor.git", from: "3.0.0"),
+        .package(url: "https://github.com/vapor/auth.git", from: "2.0.0"),
     ],
     targets: [
         .target(
             name: "Bugsnag",
-            dependencies: ["Vapor"]),
+            dependencies: ["Vapor", "Authentication"]),
         .testTarget(
             name: "BugsnagTests",
             dependencies: ["Bugsnag", "Vapor"]),

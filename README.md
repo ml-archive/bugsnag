@@ -58,10 +58,28 @@ reporter.warning(Abort(.notFound), on: req)
 reporter.error(Abort(.internalServerError), on: req)
 ```
 
+It's also possible to attach metadata to the report.
+```swift
+reporter.error(
+    Abort(.internalServerError),
+    metadata: ["key": "value"],
+    on: req
+)
+```
+
 Reporting an error returns a discardable future. Just map the result if you would like to do more work after the report has been sent.
 
 ```swift
 return reporter.error(yourError, on: req).flatMap {
     ...
 }
+```
+
+#### Users
+Conforming your `Authenticatable` model to `BugsnagReportableUser` allows you to lazily pair the data to a report. The protocol requires your model to have an `id` field.
+
+```swift
+extension YourUser: BugsnagReportableUser {}
+
+try reporter.error(userType: YourUser.self, Abort(.notFound), on: req)
 ```
