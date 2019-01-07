@@ -83,3 +83,27 @@ extension YourUser: BugsnagReportableUser {}
 
 try reporter.error(userType: YourUser.self, Abort(.notFound), on: req)
 ```
+
+#### Breadcrumbs
+Breadcrumbs enable you to attach custom events to your reports. Leave a breadcrumb using the convenience function on `Request`.
+
+```swift
+req.breadcrumb(
+    name: "Something happened!",
+    type: .manual,
+    metadata: ["foo": "bar"]
+)
+```
+
+The breadcrumb types are provided by Bugsnag:
+```swift
+enum BreadcrumbType {
+    case navigation
+    case request
+    case process
+    case log
+    case user
+    case state
+    case error
+    case manual
+}
