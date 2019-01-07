@@ -82,6 +82,9 @@ public final class BugsnagReporter: Service, Middleware {
             type: status.reasonPhrase
         )
 
+        let breadcrumbs = try req.privateContainer.make(BreadcrumbContainer.self)
+            .breadcrumbs
+
         let http = req.http
 
         var body: String? = nil
@@ -116,6 +119,7 @@ public final class BugsnagReporter: Service, Middleware {
         let event = BugsnagEvent(
             payloadVersion: "4",
             exceptions: [exception],
+            breadcrumbs: breadcrumbs,
             request: eventRequest,
             unhandled: true,
             severity: severity,

@@ -1,6 +1,26 @@
 import Vapor
 import Authentication
 
+public final class BugsnagProvider: Provider {
+    let reporter: BugsnagReporter
+
+    public init(apiKey: String, releaseStage: String, debug: Bool = false) {
+        reporter = BugsnagReporter(apiKey: apiKey, releaseStage: releaseStage, debug: debug)
+    }
+
+    public func register(_ services: inout Services) throws {
+        services.register(reporter)
+        services.register { container in
+            return BreadcrumbContainer()
+        }
+    }
+
+    public func didBoot(_ container: Container) throws -> EventLoopFuture<Void> {
+        return .done(on: container)
+    }
+}
+
+
 public protocol BugsnagReportableUser: Authenticatable {
     var id: Int? { get }
 }
@@ -20,6 +40,7 @@ struct BugsnagNotifier: Encodable {
 struct BugsnagEvent: Encodable {
     let payloadVersion: String
     let exceptions: [BugsnagException]
+    let breadcrumbs: [BugsnagBreadcrumb]
     let request: BugsnagRequest
     let unhandled: Bool
     let severity: String
@@ -33,6 +54,13 @@ struct BugsnagException: Encodable {
     let message: String
     let stacktrace: [BugsnagStacktrace]
     let type: String
+}
+
+struct BugsnagBreadcrumb: Encodable {
+    let timestamp: String
+    let name: String
+    let type: String
+    let metaData: BugsnagMetaData
 }
 
 struct BugsnagRequest: Encodable {
