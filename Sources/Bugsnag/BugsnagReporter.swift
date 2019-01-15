@@ -9,10 +9,17 @@ public final class BugsnagReporter: Service, Middleware {
     let hostName = "notify.bugsnag.com"
     let payloadVersion: UInt8 = 4
     let app: BugsnagApp
+    let shouldReport: Bool
 
-    public init(apiKey: String, releaseStage: String, debug: Bool = false) {
+    public init(
+        apiKey: String,
+        releaseStage: String,
+        shouldReport: Bool,
+        debug: Bool = false
+    ) {
         self.apiKey = apiKey
         self.releaseStage = releaseStage
+        self.shouldReport = shouldReport
         self.debug = debug
 
         app = BugsnagApp(
@@ -143,6 +150,10 @@ public final class BugsnagReporter: Service, Middleware {
         callsite: (String, String, Int),
         on request: Request
     ) -> Future<Void> {
+        guard shouldReport else {
+            return request.future()
+        }
+
         do {
             let body = try buildBody(
                 request,

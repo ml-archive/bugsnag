@@ -1,7 +1,7 @@
 import Vapor
 
-public final class BreadcrumbContainer: Service {
-    public var breadcrumbs: [BugsnagBreadcrumb] = []
+final class BreadcrumbContainer: Service {
+    var breadcrumbs: [BugsnagBreadcrumb] = []
 
     init() {}
 }

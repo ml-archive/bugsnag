@@ -32,6 +32,7 @@ public func configure(
     let reporter = BugsnagReporter(
         apiKey: "<YOUR BUGSNAG API KEY>",
         releaseStage: environment.name,
+        shouldReport: environment.name != "local"
         debug: false
     )
     services.register(reporter)

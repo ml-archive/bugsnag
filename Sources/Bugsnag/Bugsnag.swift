@@ -4,8 +4,18 @@ import Authentication
 public final class BugsnagProvider: Provider {
     let reporter: BugsnagReporter
 
-    public init(apiKey: String, releaseStage: String, debug: Bool = false) {
-        reporter = BugsnagReporter(apiKey: apiKey, releaseStage: releaseStage, debug: debug)
+    public init(
+        apiKey: String,
+        releaseStage: String,
+        shouldReport: Bool,
+        debug: Bool = false
+    ) {
+        reporter = BugsnagReporter(
+            apiKey: apiKey,
+            releaseStage: releaseStage,
+            shouldReport: shouldReport,
+            debug: debug
+        )
     }
 
     public func register(_ services: inout Services) throws {
