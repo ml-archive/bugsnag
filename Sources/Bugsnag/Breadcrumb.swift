@@ -1,10 +1,11 @@
 import Vapor
 
-final class BreadcrumbContainer: Service {
-    var breadcrumbs: [BugsnagBreadcrumb] = []
+public final class BreadcrumbContainer: Service {
+    public var breadcrumbs: [BugsnagBreadcrumb] = []
 
     init() {}
 }
+
 public enum BreadcrumbType: String {
     case navigation
     case request

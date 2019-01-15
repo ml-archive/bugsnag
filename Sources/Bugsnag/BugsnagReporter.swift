@@ -6,11 +6,9 @@ public final class BugsnagReporter: Service, Middleware {
     public let releaseStage: String
     public let debug: Bool
 
-    let hostName = "https://notify.bugsnag.com/"
+    let hostName = "notify.bugsnag.com"
     let payloadVersion: UInt8 = 4
     let app: BugsnagApp
-
-    var userTypes: [Authenticatable.Type] = []
 
     public init(apiKey: String, releaseStage: String, debug: Bool = false) {
         self.apiKey = apiKey
@@ -155,7 +153,7 @@ public final class BugsnagReporter: Service, Middleware {
                 callsite: callsite
             )
 
-            return HTTPClient.connect(hostname: "notify.bugsnag.com", on: request)
+            return HTTPClient.connect(hostname: hostName, on: request)
                 .flatMap(to: HTTPResponse.self) { client in
                     let headers = HTTPHeaders([
                         ("Content-Type", "application/json"),
