@@ -7,14 +7,14 @@ final class BreadcrumbContainer: Service {
 }
 
 public enum BreadcrumbType: String {
-    case navigation
-    case request
-    case process
-    case log
-    case user
-    case state
     case error
+    case log
     case manual
+    case navigation
+    case process
+    case request
+    case state
+    case user
 }
 
 extension Request {
@@ -25,7 +25,7 @@ extension Request {
         metadata: [String: CustomDebugStringConvertible] = [:]
     ) -> Request {
         do {
-            let container = try make(BreadcrumbContainer.self)
+            let container = try privateContainer.make(BreadcrumbContainer.self)
 
             var meta: [String: String] = [:]
             meta.reserveCapacity(metadata.count)
@@ -44,10 +44,10 @@ extension Request {
 
             let metadata = BugsnagMetaData(meta: meta)
             let breadcrumb = BugsnagBreadcrumb(
-                timestamp: date,
+                metaData: metadata,
                 name: name,
-                type: type.rawValue,
-                metaData: metadata
+                timestamp: date,
+                type: type.rawValue
             )
 
             container.breadcrumbs.append(breadcrumb)

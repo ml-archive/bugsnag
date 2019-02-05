@@ -16,7 +16,7 @@ Reporting errors to [Bugsnag](https://www.bugsnag.com/).
 Update your `Package.swift` file.
 
 ```swift
-.package(url: "https://github.com/nodes-vapor/bugsnag.git", .branch("vapor-3"))
+.package(url: "https://github.com/nodes-vapor/bugsnag.git", .upToNextMinor(from: "3.0.0"))
 ```
 
 Update `Sources/App/configure.swift`

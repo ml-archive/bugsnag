@@ -1,35 +1,43 @@
-import Vapor
 import Authentication
+import Vapor
 
-public final class BugsnagProvider: Provider {
-    let reporter: BugsnagReporter
+public struct BugsnagConfig {
+    let apiKey: String
+    let releaseStage: String
+    let shouldReport: Bool
+    let debug: Bool
 
     public init(
         apiKey: String,
         releaseStage: String,
-        shouldReport: Bool,
+        shouldReport: Bool = true,
         debug: Bool = false
     ) {
-        reporter = BugsnagReporter(
-            apiKey: apiKey,
-            releaseStage: releaseStage,
-            shouldReport: shouldReport,
-            debug: debug
-        )
+        self.apiKey = apiKey
+        self.releaseStage = releaseStage
+        self.shouldReport = shouldReport
+        self.debug = debug
+    }
+}
+
+public final class BugsnagProvider: Provider {
+    private let config: BugsnagConfig
+    
+    public init(config: BugsnagConfig) {
+        self.config = config
     }
 
     public func register(_ services: inout Services) throws {
-        services.register(reporter)
+        services.register(BugsnagReporter(config: config))
         services.register { container in
             return BreadcrumbContainer()
         }
     }
 
-    public func didBoot(_ container: Container) throws -> EventLoopFuture<Void> {
+    public func didBoot(_ container: Container) throws -> Future<Void> {
         return .done(on: container)
     }
 }
-
 
 public protocol BugsnagReportableUser: Authenticatable {
     var id: Int? { get }
@@ -37,26 +45,26 @@ public protocol BugsnagReportableUser: Authenticatable {
 
 struct BugsnagPayload: Encodable {
     let apiKey: String
-    let notifier: BugsnagNotifier
     let events: [BugsnagEvent]
+    let notifier: BugsnagNotifier
 }
 
 struct BugsnagNotifier: Encodable {
     let name: String
-    let version: String
     let url: String
+    let version: String
 }
 
 struct BugsnagEvent: Encodable {
-    let payloadVersion: String
-    let exceptions: [BugsnagException]
-    let breadcrumbs: [BugsnagBreadcrumb]
-    let request: BugsnagRequest
-    let unhandled: Bool
-    let severity: String
-    let user: BugsnagUser?
     let app: BugsnagApp
+    let breadcrumbs: [BugsnagBreadcrumb]
+    let exceptions: [BugsnagException]
     let metaData: BugsnagMetaData
+    let payloadVersion: String
+    let request: BugsnagRequest
+    let severity: String
+    let unhandled: Bool
+    let user: BugsnagUser?
 }
 
 struct BugsnagException: Encodable {
@@ -67,19 +75,28 @@ struct BugsnagException: Encodable {
 }
 
 struct BugsnagBreadcrumb: Encodable {
-    let timestamp: String
-    let name: String
-    let type: String
     let metaData: BugsnagMetaData
+    let name: String
+    let timestamp: String
+    let type: String
 }
 
 struct BugsnagRequest: Encodable {
-    let clientIp: String?
-    let headers: [String: String]?
-    let httpMethod: String?
-    let url: String?
-    let referer: String?
     let body: String?
+    let clientIp: String?
+    let headers: [String: String]
+    let httpMethod: String
+    let referer: String
+    let url: String
+
+    init(httpRequest: HTTPRequest) {
+        self.body = httpRequest.body.data.flatMap { String(data: $0, encoding: .utf8) }
+        self.clientIp = httpRequest.remotePeer.hostname
+        self.headers = Dictionary(httpRequest.headers.map { $0 }) { first, second in second }
+        self.httpMethod = httpRequest.method.string
+        self.referer = httpRequest.remotePeer.description
+        self.url = httpRequest.urlString
+    }
 }
 
 struct BugsnagThread: Encodable {
@@ -90,8 +107,8 @@ struct BugsnagThread: Encodable {
 }
 
 struct BugsnagSeverityReason: Encodable {
-    let type: String
     let attributes: [String]
+    let type: String
 }
 
 struct BugsnagUser: Encodable {
@@ -108,15 +125,16 @@ struct BugsnagMetaData: Encodable {
 
 struct BugsnagStacktrace: Encodable {
     let file: String
+    let method: String
     let lineNumber: Int
     let columnNumber: Int
-    let method: String
-    let inProject: Bool
-    let code: [String]
+    
+    let code: [String] = []
+    let inProject = true
 }
 
 struct BugsnagSession: Encodable {
+    let events: [Int]
     let id: String
     let startedAt: String
-    let events: [Int]
 }
