@@ -63,8 +63,34 @@ struct BugsnagEvent: Encodable {
     let payloadVersion: String
     let request: BugsnagRequest
     let severity: String
-    let unhandled: Bool
+    let unhandled = true
     let user: BugsnagUser?
+
+    init(
+        app: BugsnagApp,
+        breadcrumbs: [BugsnagBreadcrumb],
+        error: Error,
+        httpRequest: HTTPRequest,
+        metadata: [String: CustomDebugStringConvertible],
+        payloadVersion: String,
+        severity: Severity,
+        stacktrace: BugsnagStacktrace,
+        userId: Int?
+    ) {
+        self.app = app
+        self.breadcrumbs = breadcrumbs
+        self.exceptions = [BugsnagException(error: error, stacktrace: stacktrace)]
+        self.metaData = BugsnagMetaData(
+            meta: [
+                "Error localized description": error.localizedDescription,
+                "Request debug description": httpRequest.debugDescription
+            ].merging(metadata.mapValues { $0.debugDescription }) { a, b in b }
+        )
+        self.payloadVersion = payloadVersion
+        self.request = BugsnagRequest(httpRequest: httpRequest)
+        self.severity = severity.value
+        self.user = userId.map { BugsnagUser(id: "\($0)") }
+    }
 }
 
 struct BugsnagException: Encodable {
@@ -72,6 +98,14 @@ struct BugsnagException: Encodable {
     let message: String
     let stacktrace: [BugsnagStacktrace]
     let type: String
+
+    init(error: Error, stacktrace: BugsnagStacktrace) {
+        let abort = error as? AbortError
+        self.errorClass = error.localizedDescription
+        self.message = abort?.reason ?? "Something went wrong"
+        self.stacktrace = [stacktrace]
+        self.type = (abort?.status ?? .internalServerError).reasonPhrase
+    }
 }
 
 struct BugsnagBreadcrumb: Encodable {

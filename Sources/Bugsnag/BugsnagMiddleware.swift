@@ -2,7 +2,7 @@ import Authentication
 import Vapor
 
 public struct BugsnagMiddleware {
-    let reporter: BugsnagReporter
+    let reporter: ErrorReporter
 }
 
 extension BugsnagMiddleware: Middleware {
@@ -10,7 +10,7 @@ extension BugsnagMiddleware: Middleware {
         return Future.flatMap(on: req) {
                 try next.respond(to: req)
             }.catchFlatMap { error in
-                self.reporter.error(error, on: req)
+                self.reporter.report(error, on: req)
                 throw error
             }
     }

@@ -2,7 +2,8 @@ import XCTest
 
 extension BugsnagTests {
     static let __allTests = [
-        ("testExample", testExample),
+        ("testMiddleware", testMiddleware),
+        ("testSendReport", testSendReport),
     ]
 }
 

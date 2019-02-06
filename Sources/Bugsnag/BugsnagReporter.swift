@@ -13,11 +13,21 @@ public struct BugsnagReporter: Service {
         version: "3"
     )
     private let payloadVersion = "4"
+    private let sendReport: (String, HTTPHeaders, Data, Request) -> Future<HTTPResponse>
 
     public init(
-        config: BugsnagConfig
+        config: BugsnagConfig,
+        sendReport: ((String, HTTPHeaders, Data, Request) -> Future<HTTPResponse>)? = nil
     ) {
         self.config = config
+
+        self.sendReport = sendReport ?? { (hostName, headers, body, req) in
+            HTTPClient
+                .connect(hostname: hostName, on: req)
+                .flatMap(to: HTTPResponse.self) { client in
+                    client.send(.init(method: .POST, headers: headers, body: body))
+                }
+        }
 
         app = BugsnagApp(
             releaseStage: config.releaseStage
@@ -28,52 +38,31 @@ public struct BugsnagReporter: Service {
             ("Bugsnag-Payload-Version", payloadVersion)
         ])
     }
+}
 
-    func buildBody(
+extension BugsnagReporter: ErrorReporter {
+    private func buildBody(
         _ req: Request,
         error: Error,
-        severity: String,
+        severity: Severity,
         userId: Int?,
-        userMetadata: [String: CustomDebugStringConvertible],
-        callsite: (file: String, function: String, line: Int, column: Int)
-    ) throws -> LosslessHTTPBodyRepresentable {
-        let abort = error as? AbortError
-        let reason = abort?.reason ?? "Something went wrong"
-        let status = abort?.status ?? .internalServerError
-
-        let exception = BugsnagException(
-            errorClass: error.localizedDescription,
-            message: reason,
-            stacktrace: [BugsnagStacktrace(
-                file: callsite.file,
-                method: callsite.function,
-                lineNumber: callsite.line,
-                columnNumber: callsite.column
-            )],
-            type: status.reasonPhrase
-        )
-
+        metadata: [String: CustomDebugStringConvertible],
+        stacktrace: BugsnagStacktrace
+    ) throws -> Data {
         let breadcrumbs: [BugsnagBreadcrumb] = (try? req.privateContainer
             .make(BreadcrumbContainer.self))?
             .breadcrumbs ?? []
 
-        let http = req.http
-
-        let metadata = [
-            "Error localized description": error.localizedDescription,
-            "Request debug description": http.debugDescription
-        ].merging(userMetadata.mapValues { $0.debugDescription }) { a, b in b }
-
         let event = BugsnagEvent(
             app: app,
             breadcrumbs: breadcrumbs,
-            exceptions: [exception],
-            metaData: BugsnagMetaData(meta: metadata),
+            error: error,
+            httpRequest: req.http,
+            metadata: metadata,
             payloadVersion: payloadVersion,
-            request: BugsnagRequest(httpRequest: http),
             severity: severity,
-            unhandled: true,
-            user: userId.map { BugsnagUser(id: "\($0)") }
+            stacktrace: stacktrace,
+            userId: userId
         )
 
         let payload = BugsnagPayload(
@@ -85,33 +74,39 @@ public struct BugsnagReporter: Service {
         return try jsonEncoder.encode(payload)
     }
 
-    func report(
-        severity: String,
+    @discardableResult
+    public func report(
         _ error: Error,
+        severity: Severity,
         userId: Int?,
         metadata: [String: CustomDebugStringConvertible],
-        callsite: (file: String, function: String, line: Int, column: Int),
+        file: String = #file,
+        function: String = #function,
+        line: Int = #line,
+        column: Int = #column,
         on req: Request
     ) -> Future<Void> {
         guard config.shouldReport else {
             return req.future()
         }
 
-        do {
-            let body = try buildBody(
+        return Future.flatMap(on: req) {
+            let body = try self.buildBody(
                 req,
                 error: error,
                 severity: severity,
                 userId: userId,
-                userMetadata: metadata,
-                callsite: callsite
+                metadata: metadata,
+                stacktrace: BugsnagStacktrace(
+                    file: file,
+                    method: function,
+                    lineNumber: line,
+                    columnNumber: column
+                )
             )
 
-            return HTTPClient
-                .connect(hostname: hostName, on: req)
-                .flatMap(to: HTTPResponse.self) { client in
-                    client.send(.init(method: .POST, url: "/", headers: self.headers, body: body))
-                }
+            return self
+                .sendReport(self.hostName, self.headers, body, req)
                 .do { response in
                     if self.config.debug {
                         print("Bugsnag response:")
@@ -119,141 +114,6 @@ public struct BugsnagReporter: Service {
                     }
                 }
                 .transform(to: ())
-        } catch {
-            // fail silently
         }
-
-        return req.future()
-    }
-
-    @discardableResult
-    public func info(
-        _ error: Error,
-        metadata: [String: CustomDebugStringConvertible] = [:],
-        on req: Request,
-        file: String = #file,
-        function: String = #function,
-        line: Int = #line,
-        column: Int = #column
-    ) -> Future<Void> {
-        return report(
-            severity: "info",
-            error,
-            userId: nil,
-            metadata: metadata,
-            callsite: (file, function, line, column),
-            on: req
-        )
-    }
-
-    @discardableResult
-    public func warning(
-        _ error: Error,
-        metadata: [String: CustomDebugStringConvertible] = [:],
-        on req: Request,
-        file: String = #file,
-        function: String = #function,
-        line: Int = #line,
-        column: Int = #column
-    ) -> Future<Void> {
-        return report(
-            severity: "warning",
-            error,
-            userId: nil,
-            metadata: metadata,
-            callsite: (file, function, line, column),
-            on: req
-        )
-    }
-
-    @discardableResult
-    public func error(
-        _ error: Error,
-        metadata: [String: CustomDebugStringConvertible] = [:],
-        on req: Request,
-        file: String = #file,
-        function: String = #function,
-        line: Int = #line,
-        column: Int = #column
-    ) -> Future<Void> {
-        return report(
-            severity: "error",
-            error,
-            userId: nil,
-            metadata: metadata,
-            callsite: (file, function, line, column),
-            on: req
-        )
-    }
-
-    // MARK: Automatic user tracking
-
-    @discardableResult
-    public func info<U: BugsnagReportableUser>(
-        userType: U.Type,
-        _ error: Error,
-        metadata: [String: CustomDebugStringConvertible] = [:],
-        on req: Request,
-        file: String = #file,
-        function: String = #function,
-        line: Int = #line,
-        column: Int = #column
-    ) throws -> Future<Void> {
-        let userId = try req.authenticated(userType)?.id
-
-        return report(
-            severity: "info",
-            error,
-            userId: userId,
-            metadata: metadata,
-            callsite: (file, function, line, column),
-            on: req
-        )
-    }
-
-    @discardableResult
-    public func warning<U: BugsnagReportableUser>(
-        userType: U.Type,
-        _ error: Error,
-        metadata: [String: CustomDebugStringConvertible] = [:],
-        on req: Request,
-        file: String = #file,
-        function: String = #function,
-        line: Int = #line,
-        column: Int = #column
-    ) throws -> Future<Void> {
-        let userId = try req.authenticated(userType)?.id
-
-        return report(
-            severity: "warning",
-            error,
-            userId: userId,
-            metadata: metadata,
-            callsite: (file, function, line, column),
-            on: req
-        )
-    }
-
-    @discardableResult
-    public func error<U: BugsnagReportableUser>(
-        userType: U.Type,
-        _ error: Error,
-        metadata: [String: CustomDebugStringConvertible] = [:],
-        on req: Request,
-        file: String = #file,
-        function: String = #function,
-        line: Int = #line,
-        column: Int = #column
-    ) throws -> Future<Void> {
-        let userId = try req.authenticated(userType)?.id
-
-        return report(
-            severity: "error",
-            error,
-            userId: userId,
-            metadata: metadata,
-            callsite: (file, function, line, column),
-            on: req
-        )
     }
 }
