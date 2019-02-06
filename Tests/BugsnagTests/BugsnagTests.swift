@@ -27,7 +27,7 @@ private class TestErrorReporter: ErrorReporter {
     var capturedReportParameters: (
         error: Error,
         severity: Severity,
-        userId: Int?,
+        userId: CustomStringConvertible?,
         metadata: [String : CustomDebugStringConvertible],
         file: String,
         function: String,
@@ -38,7 +38,7 @@ private class TestErrorReporter: ErrorReporter {
     func report(
         _ error: Error,
         severity: Severity,
-        userId: Int?,
+        userId: CustomStringConvertible?,
         metadata: [String : CustomDebugStringConvertible],
         file: String,
         function: String,
