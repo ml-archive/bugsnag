@@ -141,4 +141,17 @@ final class BugsnagTests: XCTestCase {
 
         XCTAssertEqual(events?.count, 1)
     }
+
+    func testReportingCanBeDisabled() throws {
+        let reporter = BugsnagReporter(
+            config: .init(apiKey: "apiKey", releaseStage: "test", shouldReport: false),
+            sendReport: { host, headers, data, request in
+                XCTFail("No error should be reported")
+                return request.future(HTTPResponse(status: .ok))
+        })
+
+        let application = try Application.test()
+        let request = Request(using: application)
+        try reporter.report(NotFound(), on: request).wait()
+    }
 }
