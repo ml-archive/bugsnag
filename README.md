@@ -29,45 +29,50 @@ public func configure(
 ) throws {
     ...
     // Register provider
-    let reporter = BugsnagReporter(
+    let bugsnagProvider = BugsnagProvider(config: BugsnagConfig(
         apiKey: "<YOUR BUGSNAG API KEY>",
         releaseStage: environment.name,
         shouldReport: environment.name != "local"
         debug: false
-    )
-    services.register(reporter)
+    ))
+    services.register(bugsnagProvider)
 
     ...
 
     // Register middleware
-    middlewares.use(reporter) // Catch errors and report to bugsnag
+
+    var middlewaresConfig = MiddlewareConfig()
+    ...
+    middlewaresConfig.use(BugsnagMiddleware.self) // Catch errors and report to bugsnag
+    ...
+    services.register(middlewaresConfig)
 
     ...
 }
 ```
 
 ### Reporting
-Bugsnag offers three different types of reports: info, warning and error. To make a report just instantiate a `BugsnagReporter` and use the respective functions.
+Bugsnag offers three different types of reports: info, warning and error. To make a report just instantiate a `ErrorReporter` and use the respective functions.
 
 ##### Examples
 ```swift
-let reporter = try req.make(BugsnagReporter.self)
+let reporter = try req.make(ErrorReporter.self) // or `BugsnagReporter.self`
 
-reporter.info(Abort(.upgradeRequired), on: req)
-reporter.warning(Abort(.notFound), on: req)
-reporter.error(Abort(.internalServerError), on: req)
+reporter.report(Abort(.upgradeRequired), severity: .info, on: req)
+reporter.report(Abort(.notFound), severity: .warning, on: req)
+reporter.report(Abort(.internalServerError), severity: .error, on: req) // you can omit the `severity` parameter since `.error` is the default
 ```
 
 It's also possible to attach metadata to the report.
 ```swift
-reporter.error(
+reporter.report(
     Abort(.internalServerError),
     metadata: ["key": "value"],
     on: req
 )
 ```
 
-Reporting an error returns a discardable future. Just map the result if you would like to do more work after the report has been sent.
+Reporting an error returns a discardable future. Just map/flatMap the result if you would like to do more work after the report has been sent.
 
 ```swift
 return reporter.error(yourError, on: req).flatMap {
@@ -76,7 +81,7 @@ return reporter.error(yourError, on: req).flatMap {
 ```
 
 #### Users
-Conforming your `Authenticatable` model to `BugsnagReportableUser` allows you to lazily pair the data to a report. The protocol requires your model to have an `id` field.
+Conforming your `Authenticatable` model to `BugsnagReportableUser` allows you to easily pair the data to a report. The protocol requires your model to have an `id` field that is `CustomStringConvertible`.
 
 ```swift
 extension YourUser: BugsnagReportableUser {}
@@ -107,3 +112,13 @@ enum BreadcrumbType {
     case error
     case manual
 }
+```
+
+## 🏆 Credits
+
+This package is developed and maintained by the Vapor team at [Nodes](https://www.nodesagency.com).
+The package owner for this project is [Siemen](https://github.com/siemensikkema).
+
+## 📄 License
+
+This package is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).

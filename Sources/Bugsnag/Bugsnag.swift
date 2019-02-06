@@ -1,46 +1,8 @@
 import Authentication
-import Vapor
-
-public struct BugsnagConfig {
-    let apiKey: String
-    let releaseStage: String
-    let shouldReport: Bool
-    let debug: Bool
-
-    public init(
-        apiKey: String,
-        releaseStage: String,
-        shouldReport: Bool = true,
-        debug: Bool = false
-    ) {
-        self.apiKey = apiKey
-        self.releaseStage = releaseStage
-        self.shouldReport = shouldReport
-        self.debug = debug
-    }
-}
-
-public final class BugsnagProvider: Provider {
-    private let config: BugsnagConfig
-    
-    public init(config: BugsnagConfig) {
-        self.config = config
-    }
-
-    public func register(_ services: inout Services) throws {
-        services.register(BugsnagReporter(config: config))
-        services.register { container in
-            return BreadcrumbContainer()
-        }
-    }
-
-    public func didBoot(_ container: Container) throws -> Future<Void> {
-        return .done(on: container)
-    }
-}
 
 public protocol BugsnagReportableUser: Authenticatable {
-    var id: Int? { get }
+    associatedtype ID: CustomStringConvertible
+    var id: ID? { get }
 }
 
 struct BugsnagPayload: Encodable {
@@ -75,7 +37,7 @@ struct BugsnagEvent: Encodable {
         payloadVersion: String,
         severity: Severity,
         stacktrace: BugsnagStacktrace,
-        userId: Int?
+        userId: CustomStringConvertible?
     ) {
         self.app = app
         self.breadcrumbs = breadcrumbs
@@ -89,7 +51,7 @@ struct BugsnagEvent: Encodable {
         self.payloadVersion = payloadVersion
         self.request = BugsnagRequest(httpRequest: httpRequest)
         self.severity = severity.value
-        self.user = userId.map { BugsnagUser(id: "\($0)") }
+        self.user = userId.map { BugsnagUser(id: $0.description) }
     }
 }
 

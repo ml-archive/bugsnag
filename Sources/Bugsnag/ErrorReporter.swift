@@ -5,7 +5,7 @@ public protocol ErrorReporter {
     func report(
         _ error: Error,
         severity: Severity,
-        userId: Int?,
+        userId: CustomStringConvertible?,
         metadata: [String: CustomDebugStringConvertible],
         file: String,
         function: String,
@@ -20,7 +20,7 @@ extension ErrorReporter {
     func report(
         _ error: Error,
         severity: Severity = .error,
-        userId: Int? = nil,
+        userId: CustomStringConvertible? = nil,
         metadata: [String: CustomDebugStringConvertible] = [:],
         on req: Request,
         file: String = #file,
@@ -39,6 +39,33 @@ extension ErrorReporter {
             column: column,
             on: req
         )
+    }
+
+    @discardableResult
+    func report<U: BugsnagReportableUser>(
+        _ error: Error,
+        severity: Severity = .error,
+        userType: U.Type,
+        metadata: [String: CustomDebugStringConvertible] = [:],
+        on req: Request,
+        file: String = #file,
+        function: String = #function,
+        line: Int = #line,
+        column: Int = #column
+    ) -> Future<Void> {
+        return Future.flatMap(on: req) {
+            self.report(
+                error,
+                severity: severity,
+                userId: try req.authenticated(U.self)?.id,
+                metadata: metadata,
+                file: file,
+                function: function,
+                line: line,
+                column: column,
+                on: req
+            )
+        }
     }
 }
 

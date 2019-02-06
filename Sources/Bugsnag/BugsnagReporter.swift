@@ -45,7 +45,7 @@ extension BugsnagReporter: ErrorReporter {
         _ req: Request,
         error: Error,
         severity: Severity,
-        userId: Int?,
+        userId: CustomStringConvertible?,
         metadata: [String: CustomDebugStringConvertible],
         stacktrace: BugsnagStacktrace
     ) throws -> Data {
@@ -78,7 +78,7 @@ extension BugsnagReporter: ErrorReporter {
     public func report(
         _ error: Error,
         severity: Severity,
-        userId: Int?,
+        userId: CustomStringConvertible?,
         metadata: [String: CustomDebugStringConvertible],
         file: String = #file,
         function: String = #function,
