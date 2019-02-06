@@ -28,7 +28,7 @@ private class TestErrorReporter: ErrorReporter {
         error: Error,
         severity: Severity,
         userId: CustomStringConvertible?,
-        metadata: [String : CustomDebugStringConvertible],
+        metadata: [String: CustomDebugStringConvertible],
         file: String,
         function: String,
         line: Int,
@@ -39,7 +39,7 @@ private class TestErrorReporter: ErrorReporter {
         _ error: Error,
         severity: Severity,
         userId: CustomStringConvertible?,
-        metadata: [String : CustomDebugStringConvertible],
+        metadata: [String: CustomDebugStringConvertible],
         file: String,
         function: String,
         line: Int,
@@ -121,7 +121,7 @@ final class BugsnagTests: XCTestCase {
         let request = Request(using: application)
         request.breadcrumb(name: "a", type: .log)
 
-        reporter.report(NotFound(), severity: .info, userId: 1, metadata: ["a" : "b"], on: request)
+        reporter.report(NotFound(), severity: .info, userId: 1, metadata: ["a": "b"], on: request)
 
         guard let params = capturedSendReportParameters else {
             XCTFail()
