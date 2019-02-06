@@ -62,12 +62,16 @@ private class TestErrorReporter: ErrorReporter {
 }
 
 private class TestResponder: Responder {
-    var mockError: Error?
+    var mockErrorToThrow: Error?
+    var mockErrorToReturnInFuture: Error?
     func respond(to req: Request) throws -> Future<Response> {
-        if let error = mockError {
+        if let error = mockErrorToThrow {
             throw error
+        } else if let error = mockErrorToReturnInFuture {
+            return req.future(error: error)
+        } else {
+            return req.future(Response(using: req))
         }
-        return req.future(Response(using: req))
     }
 }
 
@@ -80,12 +84,22 @@ final class BugsnagTests: XCTestCase {
         let responder = TestResponder()
         _ = try middleware.respond(to: request, chainingTo: responder).wait()
 
+        // expect no error reported when response is successful
         XCTAssertNil(errorReporter.capturedReportParameters)
 
-        responder.mockError = NotFound()
+        responder.mockErrorToThrow = NotFound()
 
         _ = try? middleware.respond(to: request, chainingTo: responder).wait()
 
+        // expect an error to be  reported when responder throws
+        XCTAssertNotNil(errorReporter.capturedReportParameters)
+
+        errorReporter.capturedReportParameters = nil
+        responder.mockErrorToReturnInFuture = NotFound()
+
+        _ = try? middleware.respond(to: request, chainingTo: responder).wait()
+
+        // expect an error to be reported when responder returns an errored future
         XCTAssertNotNil(errorReporter.capturedReportParameters)
     }
 
