@@ -1,9 +1,8 @@
 import XCTest
-@testable import BugsnagTests
 
-XCTMain([
-     testCase(MiddlewareTests.allTests),
-     testCase(PayloadTransformerTests.allTests),
-     testCase(ReporterTests.allTests),
-     testCase(ConfigurationTests.allTests)
-])
+import BugsnagTests
+
+var tests = [XCTestCaseEntry]()
+tests += BugsnagTests.__allTests()
+
+XCTMain(tests)
