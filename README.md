@@ -35,7 +35,7 @@ public func configure(
         shouldReport: environment.name != "local"
         debug: false
     ))
-    services.register(bugsnagProvider)
+    try services.register(bugsnagProvider)
 
     ...
 
