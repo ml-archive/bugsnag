@@ -10,8 +10,9 @@ extension BugsnagMiddleware: Middleware {
         return Future.flatMap(on: req) {
                 try next.respond(to: req)
             }.catchFlatMap { error in
-                self.reporter.report(error, on: req)
-                throw error
+                self.reporter
+                    .report(error, on: req)
+                    .map { throw error }
             }
     }
 }

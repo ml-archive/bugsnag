@@ -72,14 +72,6 @@ reporter.report(
 )
 ```
 
-Reporting an error returns a discardable future. Just map/flatMap the result if you would like to do more work after the report has been sent.
-
-```swift
-return reporter.error(yourError, on: req).flatMap {
-    ...
-}
-```
-
 #### Users
 Conforming your `Authenticatable` model to `BugsnagReportableUser` allows you to easily pair the data to a report. The protocol requires your model to have an `id` field that is `CustomStringConvertible`.
 
