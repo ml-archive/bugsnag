@@ -1,7 +1,6 @@
 import Vapor
 
 public protocol ErrorReporter {
-    @discardableResult
     func report(
         _ error: Error,
         severity: Severity,
@@ -16,7 +15,6 @@ public protocol ErrorReporter {
 }
 
 extension ErrorReporter {
-    @discardableResult
     func report(
         _ error: Error,
         severity: Severity = .error,
@@ -41,7 +39,6 @@ extension ErrorReporter {
         )
     }
 
-    @discardableResult
     func report<U: BugsnagReportableUser>(
         _ error: Error,
         severity: Severity = .error,
@@ -68,4 +65,3 @@ extension ErrorReporter {
         }
     }
 }
-

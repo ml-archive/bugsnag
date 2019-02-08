@@ -8,6 +8,7 @@ public final class BugsnagProvider: Provider {
     }
 
     public func register(_ services: inout Services) throws {
+        services.register(BugsnagMiddleware.self)
         services.register(BugsnagReporter(config: config), as: ErrorReporter.self)
         services.register { container in
             return BreadcrumbContainer()
