@@ -33,12 +33,12 @@ struct BugsnagEvent: Encodable {
         breadcrumbs: [BugsnagBreadcrumb],
         error: Error,
         httpRequest: HTTPRequest? = nil,
+        keyFilters: [String],
         metadata: [String: CustomDebugStringConvertible],
         payloadVersion: String,
         severity: Severity,
         stacktrace: BugsnagStacktrace,
-        userId: CustomStringConvertible?,
-        keyFilters: [String]
+        userId: CustomStringConvertible?
     ) {
         self.app = app
         self.breadcrumbs = breadcrumbs
@@ -98,9 +98,7 @@ struct BugsnagRequest: Encodable {
     static private func filter(_ body: HTTPBody, using filters: [String]) -> String? {
         guard
             let data = body.data,
-            let unwrap = try? JSONSerialization.jsonObject(
-                with: data, options: []
-            ) as? [String: Any],
+            let unwrap = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
             let jsonObject = unwrap
         else {
             return body.data.flatMap { String(data: $0, encoding: .utf8) }
