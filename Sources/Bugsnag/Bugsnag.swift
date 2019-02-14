@@ -23,7 +23,7 @@ struct BugsnagEvent: Encodable {
     let exceptions: [BugsnagException]
     let metaData: BugsnagMetaData
     let payloadVersion: String
-    let request: BugsnagRequest
+    let request: BugsnagRequest?
     let severity: String
     let unhandled = true
     let user: BugsnagUser?
@@ -32,7 +32,8 @@ struct BugsnagEvent: Encodable {
         app: BugsnagApp,
         breadcrumbs: [BugsnagBreadcrumb],
         error: Error,
-        httpRequest: HTTPRequest,
+        httpRequest: HTTPRequest? = nil,
+        keyFilters: [String],
         metadata: [String: CustomDebugStringConvertible],
         payloadVersion: String,
         severity: Severity,
@@ -49,7 +50,7 @@ struct BugsnagEvent: Encodable {
             ].merging(metadata.mapValues { $0.debugDescription }) { a, b in b }
         )
         self.payloadVersion = payloadVersion
-        self.request = BugsnagRequest(httpRequest: httpRequest)
+        self.request = httpRequest.map { BugsnagRequest(httpRequest: $0, keyFilters: keyFilters) }
         self.severity = severity.value
         self.user = userId.map { BugsnagUser(id: $0.description) }
     }
@@ -85,13 +86,27 @@ struct BugsnagRequest: Encodable {
     let referer: String
     let url: String
 
-    init(httpRequest: HTTPRequest) {
-        self.body = httpRequest.body.data.flatMap { String(data: $0, encoding: .utf8) }
+    init(httpRequest: HTTPRequest, keyFilters: [String]) {
+        self.body = BugsnagRequest.filter(httpRequest.body, using: keyFilters)
         self.clientIp = httpRequest.remotePeer.hostname
         self.headers = Dictionary(httpRequest.headers.map { $0 }) { first, second in second }
         self.httpMethod = httpRequest.method.string
         self.referer = httpRequest.remotePeer.description
         self.url = httpRequest.urlString
+    }
+
+    static private func filter(_ body: HTTPBody, using filters: [String]) -> String? {
+        guard
+            let data = body.data,
+            let unwrap = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let jsonObject = unwrap
+        else {
+            return body.data.flatMap { String(data: $0, encoding: .utf8) }
+        }
+
+        let filtered = jsonObject.filter { !filters.contains($0.key) }
+        let json = try? JSONSerialization.data(withJSONObject: filtered, options: [.prettyPrinted])
+        return json.flatMap { String(data: $0, encoding: .utf8) }
     }
 }
 

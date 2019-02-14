@@ -13,17 +13,17 @@ public struct BugsnagReporter: Service {
         version: "3"
     )
     private let payloadVersion = "4"
-    private let sendReport: (String, HTTPHeaders, Data, Request) -> Future<HTTPResponse>
+    private let sendReport: (String, HTTPHeaders, Data, Container) -> Future<HTTPResponse>
 
     public init(
         config: BugsnagConfig,
-        sendReport: ((String, HTTPHeaders, Data, Request) -> Future<HTTPResponse>)? = nil
+        sendReport: ((String, HTTPHeaders, Data, Container) -> Future<HTTPResponse>)? = nil
     ) {
         self.config = config
 
-        self.sendReport = sendReport ?? { (hostName, headers, body, req) in
+        self.sendReport = sendReport ?? { (hostName, headers, body, container) in
             HTTPClient
-                .connect(hostname: hostName, on: req)
+                .connect(hostname: hostName, on: container)
                 .flatMap(to: HTTPResponse.self) { client in
                     client.send(.init(method: .POST, headers: headers, body: body))
                 }
@@ -42,14 +42,16 @@ public struct BugsnagReporter: Service {
 
 extension BugsnagReporter: ErrorReporter {
     private func buildBody(
-        _ req: Request,
+        _ container: Container,
         error: Error,
         severity: Severity,
         userId: CustomStringConvertible?,
         metadata: [String: CustomDebugStringConvertible],
         stacktrace: BugsnagStacktrace
     ) throws -> Data {
-        let breadcrumbs: [BugsnagBreadcrumb] = (try? req.privateContainer
+        let req = container as? Request
+        let breadcrumbsContainer = req?.privateContainer ?? container
+        let breadcrumbs: [BugsnagBreadcrumb] = (try? breadcrumbsContainer
             .make(BreadcrumbContainer.self))?
             .breadcrumbs ?? []
 
@@ -57,7 +59,8 @@ extension BugsnagReporter: ErrorReporter {
             app: app,
             breadcrumbs: breadcrumbs,
             error: error,
-            httpRequest: req.http,
+            httpRequest: req?.http,
+            keyFilters: config.keyFilters,
             metadata: metadata,
             payloadVersion: payloadVersion,
             severity: severity,
@@ -77,22 +80,22 @@ extension BugsnagReporter: ErrorReporter {
     @discardableResult
     public func report(
         _ error: Error,
-        severity: Severity,
-        userId: CustomStringConvertible?,
-        metadata: [String: CustomDebugStringConvertible],
+        severity: Severity = .error,
+        userId: CustomStringConvertible? = nil,
+        metadata: [String: CustomDebugStringConvertible] = [:],
         file: String = #file,
         function: String = #function,
         line: Int = #line,
         column: Int = #column,
-        on req: Request
+        on container: Container
     ) -> Future<Void> {
         guard config.shouldReport else {
-            return req.future()
+            return container.future()
         }
 
-        return Future.flatMap(on: req) {
+        return Future.flatMap(on: container) {
             let body = try self.buildBody(
-                req,
+                container,
                 error: error,
                 severity: severity,
                 userId: userId,
@@ -106,7 +109,7 @@ extension BugsnagReporter: ErrorReporter {
             )
 
             return self
-                .sendReport(self.hostName, self.headers, body, req)
+                .sendReport(self.hostName, self.headers, body, container)
                 .do { response in
                     if self.config.debug {
                         print("Bugsnag response:")
