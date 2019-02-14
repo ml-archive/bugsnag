@@ -43,14 +43,15 @@ public struct BugsnagReporter: Service {
 extension BugsnagReporter: ErrorReporter {
     private func buildBody(
         _ container: Container,
-        req: Request?,
         error: Error,
         severity: Severity,
         userId: CustomStringConvertible?,
         metadata: [String: CustomDebugStringConvertible],
         stacktrace: BugsnagStacktrace
     ) throws -> Data {
-        let breadcrumbs: [BugsnagBreadcrumb] = (try? container
+        let req = container as? Request
+        let breadcrumbsContainer = req?.privateContainer ?? container
+        let breadcrumbs: [BugsnagBreadcrumb] = (try? breadcrumbsContainer
             .make(BreadcrumbContainer.self))?
             .breadcrumbs ?? []
 
@@ -95,7 +96,6 @@ extension BugsnagReporter: ErrorReporter {
         return Future.flatMap(on: container) {
             let body = try self.buildBody(
                 container,
-                req: container as? Request,
                 error: error,
                 severity: severity,
                 userId: userId,
