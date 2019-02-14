@@ -33,7 +33,7 @@ private class TestErrorReporter: ErrorReporter {
         function: String,
         line: Int,
         column: Int,
-        req: Request
+        container: Container
     )?
     func report(
         _ error: Error,
@@ -44,7 +44,7 @@ private class TestErrorReporter: ErrorReporter {
         function: String,
         line: Int,
         column: Int,
-        on req: Request
+        on container: Container
     ) -> Future<Void> {
         capturedReportParameters = (
             error,
@@ -55,9 +55,9 @@ private class TestErrorReporter: ErrorReporter {
             function,
             line,
             column,
-            req
+            container
         )
-        return req.future()
+        return container.future()
     }
 }
 
@@ -108,14 +108,14 @@ final class BugsnagTests: XCTestCase {
             host: String,
             headers: HTTPHeaders,
             body: Data,
-            request: Request
+            container: Container
         )?
 
         let reporter = BugsnagReporter(
             config: .init(apiKey: "apiKey", releaseStage: "test"),
-            sendReport: { host, headers, data, request in
-                capturedSendReportParameters = (host, headers, data, request)
-                return request.future(HTTPResponse(status: .ok))
+            sendReport: { host, headers, data, container in
+                capturedSendReportParameters = (host, headers, data, container)
+                return container.future(HTTPResponse(status: .ok))
         })
         let application = try Application.test()
         let request = Request(using: application)
