@@ -10,7 +10,7 @@ public protocol ErrorReporter {
         function: String,
         line: Int,
         column: Int,
-        on req: Request
+        on container: Container
     ) -> Future<Void>
 }
 
@@ -20,7 +20,7 @@ extension ErrorReporter {
         severity: Severity = .error,
         userId: CustomStringConvertible? = nil,
         metadata: [String: CustomDebugStringConvertible] = [:],
-        on req: Request,
+        on container: Container,
         file: String = #file,
         function: String = #function,
         line: Int = #line,
@@ -35,7 +35,7 @@ extension ErrorReporter {
             function: function,
             line: line,
             column: column,
-            on: req
+            on: container
         )
     }
 
