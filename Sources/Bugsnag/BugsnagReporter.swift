@@ -59,12 +59,12 @@ extension BugsnagReporter: ErrorReporter {
             breadcrumbs: breadcrumbs,
             error: error,
             httpRequest: req?.http,
+            keyFilters: config.keyFilters,
             metadata: metadata,
             payloadVersion: payloadVersion,
             severity: severity,
             stacktrace: stacktrace,
-            userId: userId,
-            keyFilters: config.keyFilters
+            userId: userId
         )
 
         let payload = BugsnagPayload(
