@@ -5,7 +5,7 @@ public struct BugsnagReporter: Service {
     private let config: BugsnagConfig
     private let headers: HTTPHeaders
 
-    private let hostName = "notify.bugsnag.com"
+    private let hostName = "https://notify.bugsnag.com"
     private let jsonEncoder = JSONEncoder()
     private let notifier = BugsnagNotifier(
         name: "nodes-vapor/bugsnag",
@@ -13,20 +13,20 @@ public struct BugsnagReporter: Service {
         version: "3"
     )
     private let payloadVersion = "4"
-    private let sendReport: (String, HTTPHeaders, Data, Container) -> Future<HTTPResponse>
+    private let sendReport: (String, HTTPHeaders, Data, Container) throws -> Future<Response>
 
     public init(
         config: BugsnagConfig,
-        sendReport: ((String, HTTPHeaders, Data, Container) -> Future<HTTPResponse>)? = nil
+        sendReport: ((String, HTTPHeaders, Data, Container) throws -> Future<Response>)? = nil
     ) {
         self.config = config
 
         self.sendReport = sendReport ?? { (hostName, headers, body, container) in
-            HTTPClient
-                .connect(hostname: hostName, on: container)
-                .flatMap(to: HTTPResponse.self) { client in
-                    client.send(.init(method: .POST, headers: headers, body: body))
-                }
+            try container
+                .client()
+                .post(hostName, headers: headers, beforeSend: { req in
+                    req.http.body = .init(data: body)
+                })
         }
 
         app = BugsnagApp(
@@ -108,12 +108,12 @@ extension BugsnagReporter: ErrorReporter {
                 )
             )
 
-            return self
+            return try self
                 .sendReport(self.hostName, self.headers, body, container)
                 .do { response in
                     if self.config.debug {
-                        print("Bugsnag response:")
-                        print(response.status.code, response.status.reasonPhrase)
+                        let status = response.http.status
+                        print("Bugsnag response:\n", status.code, status.reasonPhrase)
                     }
                 }
                 .transform(to: ())
