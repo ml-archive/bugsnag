@@ -77,7 +77,6 @@ extension BugsnagReporter: ErrorReporter {
         return try jsonEncoder.encode(payload)
     }
 
-    @discardableResult
     public func report(
         _ error: Error,
         severity: Severity = .error,
