@@ -15,7 +15,7 @@ public protocol ErrorReporter {
 }
 
 extension ErrorReporter {
-    func report(
+    public func report(
         _ error: Error,
         severity: Severity = .error,
         userId: CustomStringConvertible? = nil,
@@ -39,7 +39,7 @@ extension ErrorReporter {
         )
     }
 
-    func report<U: BugsnagReportableUser>(
+    public func report<U: BugsnagReportableUser>(
         _ error: Error,
         severity: Severity = .error,
         userType: U.Type,

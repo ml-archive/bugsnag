@@ -115,20 +115,21 @@ final class BugsnagTests: XCTestCase {
             config: .init(apiKey: "apiKey", releaseStage: "test"),
             sendReport: { host, headers, data, container in
                 capturedSendReportParameters = (host, headers, data, container)
-                return container.future(HTTPResponse(status: .ok))
+                return container.future(Response(http: HTTPResponse(status: .ok), using: container))
         })
         let application = try Application.test()
         let request = Request(using: application)
         request.breadcrumb(name: "a", type: .log)
 
-        reporter.report(NotFound(), severity: .info, userId: 1, metadata: ["a": "b"], on: request)
+        _ = reporter
+            .report(NotFound(), severity: .info, userId: 1, metadata: ["a": "b"], on: request)
 
         guard let params = capturedSendReportParameters else {
             XCTFail()
             return
         }
 
-        XCTAssertEqual(params.host, "notify.bugsnag.com")
+        XCTAssertEqual(params.host, "https://notify.bugsnag.com")
         XCTAssertEqual(params.headers["Content-Type"].first, "application/json")
         XCTAssertEqual(params.headers["Bugsnag-Api-Key"].first, "apiKey")
         XCTAssertEqual(params.headers["Bugsnag-Payload-Version"].first, "4")
@@ -145,9 +146,9 @@ final class BugsnagTests: XCTestCase {
     func testReportingCanBeDisabled() throws {
         let reporter = BugsnagReporter(
             config: .init(apiKey: "apiKey", releaseStage: "test", shouldReport: false),
-            sendReport: { host, headers, data, request in
+            sendReport: { host, headers, data, container in
                 XCTFail("No error should be reported")
-                return request.future(HTTPResponse(status: .ok))
+                return container.future(Response(http: HTTPResponse(status: .ok), using: container))
         })
 
         let application = try Application.test()
