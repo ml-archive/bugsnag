@@ -45,8 +45,7 @@ struct BugsnagEvent: Encodable {
         self.exceptions = [BugsnagException(error: error, stacktrace: stacktrace)]
         self.metaData = BugsnagMetaData(
             meta: [
-                "Error localized description": error.localizedDescription,
-                "Request debug description": httpRequest.debugDescription
+                "Error localized description": error.localizedDescription
             ].merging(metadata.mapValues { $0.debugDescription }) { a, b in b }
         )
         self.payloadVersion = payloadVersion
