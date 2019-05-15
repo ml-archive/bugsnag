@@ -43,10 +43,23 @@ struct BugsnagEvent: Encodable {
         self.app = app
         self.breadcrumbs = breadcrumbs
         self.exceptions = [BugsnagException(error: error, stacktrace: stacktrace)]
-        self.metaData = BugsnagMetaData(
-            meta: [
-                "Error localized description": error.localizedDescription
-            ].merging(metadata.mapValues { $0.debugDescription }) { a, b in b }
+
+        let nsError = error as NSError
+        let errorCode: Int? = nsError.code == 0 ? nil : nsError.code
+        let userInfo = nsError.userInfo.compactMapValues { $0 as? String }
+
+        self.metaData = BugsnagMetaData(meta: [
+            "Error code": errorCode?.description,
+            "Error domain": nsError.domain,
+            "Error localized description": error.localizedDescription,
+            "Error localized failure reason": nsError.localizedFailureReason,
+            "Error localized recovery options": nsError.localizedRecoveryOptions?
+                .joined(separator: ","),
+            "Error localized recovery suggestion": nsError.localizedRecoverySuggestion
+            ]
+            .compactMapValues { $0 }
+            .merging(userInfo)  { a, b in b }
+            .merging(metadata.mapValues { $0.debugDescription }) { a, b in b }
         )
         self.payloadVersion = payloadVersion
         self.request = httpRequest.map { BugsnagRequest(httpRequest: $0, keyFilters: keyFilters) }
