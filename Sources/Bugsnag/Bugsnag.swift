@@ -68,6 +68,18 @@ struct BugsnagEvent: Encodable {
     }
 }
 
+#if swift(>=5.0)
+#else
+    extension Dictionary {
+        func compactMapValues<T>(_ transform: (Value) throws -> T?) rethrows -> [Key : T] {
+            return try .init(uniqueKeysWithValues: compactMap {
+                guard let value = try transform($0.value) else { return nil }
+                return ($0.key, value)
+            })
+        }
+    }
+#endif
+
 struct BugsnagException: Encodable {
     let errorClass: String
     let message: String
