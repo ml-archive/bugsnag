@@ -46,7 +46,7 @@ struct BugsnagEvent: Encodable {
 
         let nsError = error as NSError
         let errorCode: Int? = nsError.code == 0 ? nil : nsError.code
-        let userInfo = nsError.userInfo.compactMapValues { $0 as? String }
+        let userInfo = nsError.userInfo.mapValues { String(describing: $0) }
 
         self.metaData = BugsnagMetaData(meta: [
             "Error code": errorCode?.description,
