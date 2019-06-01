@@ -96,7 +96,7 @@ struct BugsnagException: Encodable {
 }
 
 struct BugsnagBreadcrumb: Encodable {
-    let metaData: BugsnagMetaData
+    let metaData: [String: String]
     let name: String
     let timestamp: String
     let type: String

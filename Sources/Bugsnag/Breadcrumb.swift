@@ -42,9 +42,8 @@ extension Request {
 
             let date = formatter.string(from: Date())
 
-            let metadata = BugsnagMetaData(meta: meta)
             let breadcrumb = BugsnagBreadcrumb(
-                metaData: metadata,
+                metaData: meta,
                 name: name,
                 timestamp: date,
                 type: type.rawValue
