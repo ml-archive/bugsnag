@@ -52,7 +52,7 @@ public func configure(
 ```
 
 ### Reporting
-Bugsnag offers three different types of reports: info, warning and error. To make a report just instantiate a `ErrorReporter` and use the respective functions.
+Bugsnag offers three different types of reports: info, warning and error. To make a report just instantiate an `ErrorReporter` and use the respective functions.
 
 ##### Examples
 ```swift
@@ -71,6 +71,15 @@ reporter.report(
     on: req
 )
 ```
+
+By conforming to the `ReportableError` protocol you can have full control over how (and if) the BugsnagMiddleware reports your errors. It has the following properties:
+
+| Name | Type | Function | Default |
+|---|---|---|---|
+| `shouldReport` | `Bool` | Opt out of error reporting by returning `false` | `true` |
+| `severity` | `Severity` | Indicate error severity (`.info`\|`.warning`\|`.error`) | `.error` |
+| `userId` | `CustomStringConvertible?` | An optional user id associated with the error | `nil` |
+| `metadata` | `[String: CustomDebugStringConvertible]` | Additional metadata to include in the report | `[:]` |
 
 #### Users
 Conforming your `Authenticatable` model to `BugsnagReportableUser` allows you to easily pair the data to a report. The protocol requires your model to have an `id` field that is `CustomStringConvertible`.
