@@ -30,7 +30,8 @@ public struct BugsnagReporter: Service {
         }
 
         app = BugsnagApp(
-            releaseStage: config.releaseStage
+            releaseStage: config.releaseStage,
+            version: config.version
         )
         headers = .init([
             ("Content-Type", "application/json"),

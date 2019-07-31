@@ -151,6 +151,7 @@ struct BugsnagUser: Encodable {
 
 struct BugsnagApp: Encodable {
     let releaseStage: String
+    let version: String?
 }
 
 struct BugsnagMetaData: Encodable {
