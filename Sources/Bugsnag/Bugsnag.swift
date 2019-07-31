@@ -87,11 +87,10 @@ struct BugsnagException: Encodable {
     let type: String
 
     init(error: Error, stacktrace: BugsnagStacktrace) {
-        let abort = error as? AbortError
         self.errorClass = error.localizedDescription
-        self.message = abort?.reason ?? "Something went wrong"
+        self.message = (error as? Debuggable)?.reason ?? "Something went wrong"
         self.stacktrace = [stacktrace]
-        self.type = (abort?.status ?? .internalServerError).reasonPhrase
+        self.type = ((error as? AbortError)?.status ?? .internalServerError).reasonPhrase
     }
 }
 

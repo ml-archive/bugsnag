@@ -1,108 +1,8 @@
-import Vapor
+import Bugsnag
 import XCTest
-@testable import Bugsnag
-
-extension Application {
-    public static func test() throws -> Application {
-        var services = Services()
-        try services.register(BugsnagProvider(config: BugsnagConfig(
-            apiKey: "e9792272fae71a3b869a1152008f7f0f",
-            releaseStage: "development"
-        )))
-
-        var middlewaresConfig = MiddlewareConfig()
-        middlewaresConfig.use(BugsnagMiddleware.self)
-        services.register(middlewaresConfig)
-
-        let sharedThreadPool = BlockingIOThreadPool(numberOfThreads: 2)
-        sharedThreadPool.start()
-        services.register(sharedThreadPool)
-
-        return try Application(config: Config(), environment: .testing, services: services)
-    }
-}
-
-private class TestErrorReporter: ErrorReporter {
-
-    var capturedReportParameters: (
-        error: Error,
-        severity: Severity,
-        userId: CustomStringConvertible?,
-        metadata: [String: CustomDebugStringConvertible],
-        file: String,
-        function: String,
-        line: Int,
-        column: Int,
-        container: Container
-    )?
-    func report(
-        _ error: Error,
-        severity: Severity,
-        userId: CustomStringConvertible?,
-        metadata: [String: CustomDebugStringConvertible],
-        file: String,
-        function: String,
-        line: Int,
-        column: Int,
-        on container: Container
-    ) -> Future<Void> {
-        capturedReportParameters = (
-            error,
-            severity,
-            userId,
-            metadata,
-            file,
-            function,
-            line,
-            column,
-            container
-        )
-        return container.future()
-    }
-}
-
-private class TestResponder: Responder {
-    var mockErrorToThrow: Error?
-    var mockErrorToReturnInFuture: Error?
-    func respond(to req: Request) throws -> Future<Response> {
-        if let error = mockErrorToThrow {
-            throw error
-        } else if let error = mockErrorToReturnInFuture {
-            return req.future(error: error)
-        } else {
-            return req.future(Response(using: req))
-        }
-    }
-}
+import Vapor
 
 final class BugsnagTests: XCTestCase {
-    func testMiddleware() throws {
-        let application = try Application.test()
-        let request = Request(using: application)
-        let errorReporter = TestErrorReporter()
-        let middleware = BugsnagMiddleware(reporter: errorReporter)
-        let responder = TestResponder()
-        _ = try middleware.respond(to: request, chainingTo: responder).wait()
-
-        // expect no error reported when response is successful
-        XCTAssertNil(errorReporter.capturedReportParameters)
-
-        responder.mockErrorToThrow = NotFound()
-
-        _ = try? middleware.respond(to: request, chainingTo: responder).wait()
-
-        // expect an error to be  reported when responder throws
-        XCTAssertNotNil(errorReporter.capturedReportParameters)
-
-        errorReporter.capturedReportParameters = nil
-        responder.mockErrorToReturnInFuture = NotFound()
-
-        _ = try? middleware.respond(to: request, chainingTo: responder).wait()
-
-        // expect an error to be reported when responder returns an errored future
-        XCTAssertNotNil(errorReporter.capturedReportParameters)
-    }
-
     func testSendReport() throws {
         var capturedSendReportParameters: (
             host: String,
@@ -116,7 +16,7 @@ final class BugsnagTests: XCTestCase {
             sendReport: { host, headers, data, container in
                 capturedSendReportParameters = (host, headers, data, container)
                 return container.future(Response(http: HTTPResponse(status: .ok), using: container))
-        })
+            })
         let application = try Application.test()
         let request = Request(using: application)
         request.breadcrumb(name: "a", type: .log)
