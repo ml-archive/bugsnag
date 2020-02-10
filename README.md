@@ -16,7 +16,7 @@ Reporting errors to [Bugsnag](https://www.bugsnag.com/).
 Update your `Package.swift` file.
 
 ```swift
-.package(url: "https://github.com/nodes-vapor/bugsnag.git", .upToNextMinor(from: "3.0.0"))
+.package(url: "https://github.com/nodes-vapor/bugsnag.git", from: "3.0.0")
 ```
 
 Update `Sources/App/configure.swift`
@@ -118,7 +118,6 @@ enum BreadcrumbType {
 ## 🏆 Credits
 
 This package is developed and maintained by the Vapor team at [Nodes](https://www.nodesagency.com).
-The package owner for this project is [Siemen](https://github.com/siemensikkema).
 
 ## 📄 License
 
