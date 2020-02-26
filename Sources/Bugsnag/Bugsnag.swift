@@ -112,10 +112,11 @@ struct BugsnagRequest: Encodable {
     init(httpRequest: HTTPRequest, keyFilters: [String]) {
         self.body = BugsnagRequest.filter(httpRequest.body, using: keyFilters)
         self.clientIp = httpRequest.remotePeer.hostname
-        self.headers = Dictionary(httpRequest.headers.map { $0 }) { first, second in second }
+        let filteredHeaders = BugsnagRequest.filter(httpRequest.headers, using: keyFilters)
+        self.headers = Dictionary(filteredHeaders.map { $0 }) { first, second in second }
         self.httpMethod = httpRequest.method.string
         self.referer = httpRequest.remotePeer.description
-        self.url = httpRequest.urlString
+        self.url = BugsnagRequest.filter(httpRequest.urlString, using: keyFilters)
     }
 
     static private func filter(_ body: HTTPBody, using filters: [String]) -> String? {
@@ -130,6 +131,23 @@ struct BugsnagRequest: Encodable {
         let filtered = jsonObject.filter { !filters.contains($0.key) }
         let json = try? JSONSerialization.data(withJSONObject: filtered, options: [.prettyPrinted])
         return json.flatMap { String(data: $0, encoding: .utf8) }
+    }
+
+    static private func filter(_ headers: HTTPHeaders, using filters: [String]) -> HTTPHeaders {
+        var mutableHeaders = headers
+        filters.forEach { mutableHeaders.remove(name: $0) }
+        return mutableHeaders
+    }
+
+    /**
+     @discussion Currently returns the original (unfiltered) url if anything goes wrong.
+     */
+    static private func filter(_ urlString: String, using filters: [String]) -> String {
+        guard var urlComponents = URLComponents(string: urlString) else {
+            return urlString
+        }
+        urlComponents.queryItems?.removeAll(where: { filters.contains($0.name) })
+        return urlComponents.string ?? urlString
     }
 }
 
