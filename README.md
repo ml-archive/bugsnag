@@ -115,6 +115,20 @@ enum BreadcrumbType {
 }
 ```
 
+#### Filter out fields from reports
+Usually you will receive information such as headers, query params or post body fields in the reports from Bugsnag. To ensure that you do not track sensitive information, you can configure Bugsnag with a list of fields that should be filtered out:
+
+```swift
+BugsnagConfig(
+    apiKey: "apiKey",
+    releaseStage: "test",
+    keyFilters: ["password", "email", "authorization", "lastname"]
+)
+```
+In this case Bugsnag Reports won't contain header fields, query params or post body json fields with the keys/names **password**, **email**, **authorization**, **lastname**.
+
+⚠️ Note: in JSON bodies, this only works for the first level of fields and not for nested children.
+
 ## 🏆 Credits
 
 This package is developed and maintained by the Vapor team at [Nodes](https://www.nodesagency.com).
