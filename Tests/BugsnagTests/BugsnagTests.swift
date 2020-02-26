@@ -191,7 +191,7 @@ struct TestBody: Codable {
     var email: String?
     var hash: String?
 
-    static var `default`: Self {
+    static var `default`: TestBody {
         return .init(password: "TopSecret", email: "foo@bar.com", hash: "myAwesomeHash")
     }
 
