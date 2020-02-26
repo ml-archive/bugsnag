@@ -33,7 +33,7 @@ struct BugsnagEvent: Encodable {
         breadcrumbs: [BugsnagBreadcrumb],
         error: Error,
         httpRequest: HTTPRequest? = nil,
-        keyFilters: [String],
+        keyFilters: Set<String>,
         metadata: [String: CustomDebugStringConvertible],
         payloadVersion: String,
         severity: Severity,
@@ -109,7 +109,7 @@ struct BugsnagRequest: Encodable {
     let referer: String
     let url: String
 
-    init(httpRequest: HTTPRequest, keyFilters: [String]) {
+    init(httpRequest: HTTPRequest, keyFilters: Set<String>) {
         self.body = BugsnagRequest.filter(httpRequest.body, using: keyFilters)
         self.clientIp = httpRequest.remotePeer.hostname
         let filteredHeaders = BugsnagRequest.filter(httpRequest.headers, using: keyFilters)
@@ -119,7 +119,7 @@ struct BugsnagRequest: Encodable {
         self.url = BugsnagRequest.filter(httpRequest.urlString, using: keyFilters)
     }
 
-    static private func filter(_ body: HTTPBody, using filters: [String]) -> String? {
+    static private func filter(_ body: HTTPBody, using filters: Set<String>) -> String? {
         guard
             let data = body.data,
             let unwrap = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -133,7 +133,7 @@ struct BugsnagRequest: Encodable {
         return json.flatMap { String(data: $0, encoding: .utf8) }
     }
 
-    static private func filter(_ headers: HTTPHeaders, using filters: [String]) -> HTTPHeaders {
+    static private func filter(_ headers: HTTPHeaders, using filters: Set<String>) -> HTTPHeaders {
         var mutableHeaders = headers
         filters.forEach { mutableHeaders.remove(name: $0) }
         return mutableHeaders
@@ -142,7 +142,7 @@ struct BugsnagRequest: Encodable {
     /**
      @discussion Currently returns the original (unfiltered) url if anything goes wrong.
      */
-    static private func filter(_ urlString: String, using filters: [String]) -> String {
+    static private func filter(_ urlString: String, using filters: Set<String>) -> String {
         guard var urlComponents = URLComponents(string: urlString) else {
             return urlString
         }

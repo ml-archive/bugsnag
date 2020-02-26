@@ -6,6 +6,9 @@ extension BugsnagTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__BugsnagTests = [
+        ("testKeyFiltersWorkInHeaderFields", testKeyFiltersWorkInHeaderFields),
+        ("testKeyFiltersWorkInRequestBody", testKeyFiltersWorkInRequestBody),
+        ("testKeyFiltersWorkInURLQueryParams", testKeyFiltersWorkInURLQueryParams),
         ("testReportingCanBeDisabled", testReportingCanBeDisabled),
         ("testSendReport", testSendReport),
     ]
