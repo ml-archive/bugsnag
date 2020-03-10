@@ -1,25 +1,25 @@
-public struct BugsnagConfig {
-    let apiKey: String
-    let releaseStage: String
+import Vapor
+
+public struct BugsnagConfiguration {
+    public var apiKey: String
+    public var releaseStage: String
     /// A version identifier, (eg. a git hash)
-    let version: String?
-    let keyFilters: Set<String>
-    let shouldReport: Bool
-    let debug: Bool
+    public var version: String?
+    #warning("TODO: reimplement")
+//    let keyFilters: Set<String>
+    public var shouldReport: Bool
 
     public init(
         apiKey: String,
         releaseStage: String,
         version: String? = nil,
         keyFilters: [String] = [],
-        shouldReport: Bool = true,
-        debug: Bool = false
+        shouldReport: Bool = true
     ) {
         self.apiKey = apiKey
         self.releaseStage = releaseStage
         self.version = version
-        self.keyFilters = Set(keyFilters)
+//        self.keyFilters = Set(keyFilters)
         self.shouldReport = shouldReport
-        self.debug = debug
     }
 }

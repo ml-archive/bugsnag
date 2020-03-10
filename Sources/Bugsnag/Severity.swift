@@ -1,7 +1,7 @@
-public struct Severity {
-    let value: String
+public struct BugsnagSeverity {
+    public static let info = Self(value: "info")
+    public static let warning = Self(value: "warning")
+    public static let error = Self(value: "error")
 
-    public static let info = Severity(value: "info")
-    public static let warning = Severity(value: "warning")
-    public static let error = Severity(value: "error")
+    let value: String
 }
