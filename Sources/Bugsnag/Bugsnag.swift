@@ -1,193 +1,75 @@
-import Authentication
+import Vapor
 
-public protocol BugsnagReportableUser: Authenticatable {
-    associatedtype ID: CustomStringConvertible
-    var id: ID? { get }
-}
-
-struct BugsnagPayload: Encodable {
+public struct BugsnagPayload: Encodable {
     let apiKey: String
-    let events: [BugsnagEvent]
-    let notifier: BugsnagNotifier
-}
+    let events: [Event]
 
-struct BugsnagNotifier: Encodable {
-    let name: String
-    let url: String
-    let version: String
-}
+    struct Event: Encodable {
+        let app: Application
 
-struct BugsnagEvent: Encodable {
-    let app: BugsnagApp
-    let breadcrumbs: [BugsnagBreadcrumb]
-    let exceptions: [BugsnagException]
-    let metaData: BugsnagMetaData
-    let payloadVersion: String
-    let request: BugsnagRequest?
-    let severity: String
-    let unhandled = true
-    let user: BugsnagUser?
-
-    init(
-        app: BugsnagApp,
-        breadcrumbs: [BugsnagBreadcrumb],
-        error: Error,
-        httpRequest: HTTPRequest? = nil,
-        keyFilters: Set<String>,
-        metadata: [String: CustomDebugStringConvertible],
-        payloadVersion: String,
-        severity: Severity,
-        stacktrace: BugsnagStacktrace,
-        userId: CustomStringConvertible?
-    ) {
-        self.app = app
-        self.breadcrumbs = breadcrumbs
-        self.exceptions = [BugsnagException(error: error, stacktrace: stacktrace)]
-
-        let nsError = error as NSError
-        let errorCode: Int? = nsError.code == 0 ? nil : nsError.code
-        let userInfo = nsError.userInfo.mapValues { String(describing: $0) }
-
-        self.metaData = BugsnagMetaData(meta: [
-            "Error code": errorCode?.description,
-            "Error domain": nsError.domain,
-            "Error localized description": error.localizedDescription,
-            "Error localized failure reason": nsError.localizedFailureReason,
-            "Error localized recovery options": nsError.localizedRecoveryOptions?
-                .joined(separator: ","),
-            "Error localized recovery suggestion": nsError.localizedRecoverySuggestion
-            ]
-            .compactMapValues { $0 }
-            .merging(userInfo)  { a, b in b }
-            .merging(metadata.mapValues { $0.debugDescription }) { a, b in b }
-        )
-        self.payloadVersion = payloadVersion
-        self.request = httpRequest.map { BugsnagRequest(httpRequest: $0, keyFilters: keyFilters) }
-        self.severity = severity.value
-        self.user = userId.map { BugsnagUser(id: $0.description) }
-    }
-}
-
-#if swift(>=5.0)
-#else
-    extension Dictionary {
-        func compactMapValues<T>(_ transform: (Value) throws -> T?) rethrows -> [Key : T] {
-            return try .init(uniqueKeysWithValues: compactMap {
-                guard let value = try transform($0.value) else { return nil }
-                return ($0.key, value)
-            })
-        }
-    }
-#endif
-
-struct BugsnagException: Encodable {
-    let errorClass: String
-    let message: String
-    let stacktrace: [BugsnagStacktrace]
-    let type: String
-
-    init(error: Error, stacktrace: BugsnagStacktrace) {
-        self.errorClass = error.localizedDescription
-        self.message = (error as? Debuggable)?.reason ?? "Something went wrong"
-        self.stacktrace = [stacktrace]
-        self.type = ((error as? AbortError)?.status ?? .internalServerError).reasonPhrase
-    }
-}
-
-struct BugsnagBreadcrumb: Encodable {
-    let metaData: [String: String]
-    let name: String
-    let timestamp: String
-    let type: String
-}
-
-struct BugsnagRequest: Encodable {
-    let body: String?
-    let clientIp: String?
-    let headers: [String: String]
-    let httpMethod: String
-    let referer: String
-    let url: String
-
-    init(httpRequest: HTTPRequest, keyFilters: Set<String>) {
-        self.body = BugsnagRequest.filter(httpRequest.body, using: keyFilters)
-        self.clientIp = httpRequest.remotePeer.hostname
-        let filteredHeaders = BugsnagRequest.filter(httpRequest.headers, using: keyFilters)
-        self.headers = Dictionary(filteredHeaders.map { $0 }) { first, second in second }
-        self.httpMethod = httpRequest.method.string
-        self.referer = httpRequest.remotePeer.description
-        self.url = BugsnagRequest.filter(httpRequest.urlString, using: keyFilters)
-    }
-
-    static private func filter(_ body: HTTPBody, using filters: Set<String>) -> String? {
-        guard
-            let data = body.data,
-            let unwrap = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let jsonObject = unwrap
-        else {
-            return body.data.flatMap { String(data: $0, encoding: .utf8) }
+        struct Application: Encodable {
+            let releaseStage: String
+            let version: String?
         }
 
-        let filtered = jsonObject.filter { !filters.contains($0.key) }
-        let json = try? JSONSerialization.data(withJSONObject: filtered, options: [.prettyPrinted])
-        return json.flatMap { String(data: $0, encoding: .utf8) }
-    }
+        let breadcrumbs: [Breadcrumb]
 
-    static private func filter(_ headers: HTTPHeaders, using filters: Set<String>) -> HTTPHeaders {
-        var mutableHeaders = headers
-        filters.forEach { mutableHeaders.remove(name: $0) }
-        return mutableHeaders
-    }
-
-    /**
-     @discussion Currently returns the original (unfiltered) url if anything goes wrong.
-     */
-    static private func filter(_ urlString: String, using filters: Set<String>) -> String {
-        guard var urlComponents = URLComponents(string: urlString) else {
-            return urlString
+        struct Breadcrumb: Encodable {
+            let metaData: [String: String]
+            let name: String
+            let timestamp: String
+            let type: String
         }
-        urlComponents.queryItems?.removeAll(where: { filters.contains($0.name) })
-        return urlComponents.string ?? urlString
+
+        let exceptions: [Exception]
+
+        struct Exception: Encodable {
+            let errorClass: String
+            let message: String
+            let stacktrace: [Stacktrace]
+
+            struct Stacktrace: Encodable {
+                let file: String
+                let method: String
+                let lineNumber: Int
+                let columnNumber: Int
+
+                let code: [String] = []
+                let inProject = true
+            }
+
+            let type: String
+        }
+
+        let metaData: [String: String]
+
+        let payloadVersion: String
+        let request: Request?
+
+        struct Request: Encodable {
+            let body: String?
+            let clientIp: String?
+            let headers: [String: String]
+            let httpMethod: String
+            let referer: String
+            let url: String
+        }
+
+
+        let severity: String
+        let unhandled = true
+        let user: User?
+
+        struct User: Encodable {
+            let id: String
+        }
     }
-}
 
-struct BugsnagThread: Encodable {
-    let id: String
-    let name: String
-    let stacktrace: [BugsnagStacktrace]
-    let type: String
-}
+    let notifier: Notifier
 
-struct BugsnagSeverityReason: Encodable {
-    let attributes: [String]
-    let type: String
-}
-
-struct BugsnagUser: Encodable {
-    let id: String
-}
-
-struct BugsnagApp: Encodable {
-    let releaseStage: String
-    let version: String?
-}
-
-struct BugsnagMetaData: Encodable {
-    let meta: [String: String]
-}
-
-struct BugsnagStacktrace: Encodable {
-    let file: String
-    let method: String
-    let lineNumber: Int
-    let columnNumber: Int
-    
-    let code: [String] = []
-    let inProject = true
-}
-
-struct BugsnagSession: Encodable {
-    let events: [Int]
-    let id: String
-    let startedAt: String
+    struct Notifier: Encodable {
+        let name: String
+        let url: String
+        let version: String
+    }
 }
