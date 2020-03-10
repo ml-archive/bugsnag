@@ -1,23 +1,24 @@
-// swift-tools-version:4.2
+// swift-tools-version:5.2
 import PackageDescription
 
 let package = Package(
     name: "Bugsnag",
+    platforms: [
+       .macOS(.v10_15)
+    ],
     products: [
-        .library(
-            name: "Bugsnag",
-            targets: ["Bugsnag"]),
+        .library(name: "Bugsnag", targets: ["Bugsnag"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/vapor/auth.git", from: "2.0.0"),
-        .package(url: "https://github.com/vapor/vapor.git", from: "3.0.0"),
+        .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0-rc"),
     ],
     targets: [
-        .target(
-            name: "Bugsnag",
-            dependencies: ["Vapor", "Authentication"]),
-        .testTarget(
-            name: "BugsnagTests",
-            dependencies: ["Bugsnag", "Vapor"]),
+        .target(name: "Bugsnag", dependencies: [
+            .product(name: "Vapor", package: "vapor"),
+        ]),
+        .testTarget(name: "BugsnagTests", dependencies: [
+            .target(name: "Bugsnag"),
+            .product(name: "XCTVapor", package: "vapor"),
+        ]),
     ]
 )
