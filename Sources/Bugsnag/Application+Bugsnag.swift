@@ -41,6 +41,10 @@ extension Application.Bugsnag {
 }
 
 extension Application.Bugsnag: BugsnagReporter {
+    public var logger: Logger {
+        self.application.logger
+    }
+
     public var currentRequest: Request? {
         nil
     }

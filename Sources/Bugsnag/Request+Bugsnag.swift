@@ -66,6 +66,10 @@ extension Request.Bugsnag: BugsnagReporter {
         self.request.client
     }
 
+    public var logger: Logger {
+        self.request.logger
+    }
+
     public var eventLoop: EventLoop {
         self.request.eventLoop
     }

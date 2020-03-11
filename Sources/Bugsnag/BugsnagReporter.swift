@@ -2,6 +2,7 @@ import Vapor
 
 public protocol BugsnagReporter {
     var client: Client { get }
+    var logger: Logger { get }
     var eventLoop: EventLoop { get }
     var configuration: BugsnagConfiguration? { get }
     var currentRequest: Request? { get }
@@ -11,43 +12,42 @@ public protocol BugsnagReporter {
 extension BugsnagReporter {
     public func report(
         _ error: Error
-    ) -> EventLoopFuture<Void> {
+    ) {
         guard let configuration = self.configuration else {
             fatalError("Bugsnag not configured, use app.bugsnag")
         }
         guard configuration.shouldReport else {
-            return self.eventLoop.makeSucceededFuture(())
+            return
         }
         if let bugsnag = error as? BugsnagError, !bugsnag.shouldReport {
-            return self.eventLoop.makeSucceededFuture(())
+            return
         }
 
-        do {
-            let payload = try self.buildPayload(
-                configuration: configuration,
-                error: error
-            )
+        let payload = self.buildPayload(
+            configuration: configuration,
+            error: error
+        )
 
-            let headers: HTTPHeaders = [
-                "Content-Type": "application/json",
-                "Bugsnag-Api-Key": configuration.apiKey,
-                "Bugsnag-Payload-Version": "4"
-            ]
+        let headers: HTTPHeaders = [
+            "Bugsnag-Api-Key": configuration.apiKey,
+            "Bugsnag-Payload-Version": "4"
+        ]
 
-            return self.client.post("https://notify.bugsnag.com", headers: headers, beforeSend: { req in
-                try req.content.encode(payload, as: .json)
-            }).map { _ in
-                // Ignore response.
+        self.client.post("https://notify.bugsnag.com", headers: headers, beforeSend: { req in
+            try req.content.encode(payload, as: .json)
+        }).whenComplete { result in
+            switch result {
+            case .failure(let error):
+                self.logger.report(error: error)
+            case .success: break
             }
-        } catch {
-            return self.eventLoop.makeFailedFuture(error)
         }
     }
 
     private func buildPayload(
         configuration: BugsnagConfiguration,
         error: Error
-    ) throws -> BugsnagPayload? {
+    ) -> BugsnagPayload {
         let breadcrumbs: [BugsnagPayload.Event.Breadcrumb]
         let eventRequest: BugsnagPayload.Event.Request?
         if let request = self.currentRequest {

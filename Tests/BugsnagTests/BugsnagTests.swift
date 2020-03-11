@@ -2,7 +2,7 @@ import Bugsnag
 import XCTVapor
 
 final class BugsnagTests: XCTestCase {
-    func testSendReport() throws {
+    func testMiddleware() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 
@@ -20,6 +20,30 @@ final class BugsnagTests: XCTestCase {
         try app.test(.GET, "error") { res in
             XCTAssertEqual(res.status, .internalServerError)
         }
+    }
+
+    func testBreadcrumbs() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.bugsnag.configuration = .init(
+            apiKey: "36284374e946742a736737d7bc11344f",
+            releaseStage: "debug"
+        )
+
+        app.middleware.use(BugsnagMiddleware())
+
+        app.get("error") { req -> String in
+            req.bugsnag.breadcrumb(name: "foo", type: .state)
+            throw Abort(.internalServerError, reason: "Oops")
+        }
+
+        try app.test(.GET, "error") { res in
+            XCTAssertEqual(res.status, .internalServerError)
+        }
+        
+        // Wait for bugsnag to send.
+        sleep(1)
     }
 }
 

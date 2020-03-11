@@ -6,9 +6,9 @@ public struct BugsnagMiddleware {
 
 extension BugsnagMiddleware: Middleware {
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        next.respond(to: request).flatMapError { error in
+        next.respond(to: request).flatMapErrorThrowing { error in
             request.bugsnag.report(error)
-                .flatMapThrowing { throw error }
+            throw error
         }
     }
 }
