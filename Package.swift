@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "Bugsnag",
+    name: "bugsnag",
     platforms: [
        .macOS(.v10_15)
     ],
