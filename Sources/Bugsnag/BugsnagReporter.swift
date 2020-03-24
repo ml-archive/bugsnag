@@ -16,17 +16,13 @@ extension BugsnagReporter {
         guard let configuration = self.configuration else {
             fatalError("Bugsnag not configured, use app.bugsnag")
         }
-        guard configuration.shouldReport else {
-            return
-        }
-        if let bugsnag = error as? BugsnagError, !bugsnag.shouldReport {
-            return
-        }
 
-        let payload = self.buildPayload(
+        guard let payload = self.buildPayload(
             configuration: configuration,
             error: error
-        )
+        ) else {
+            return
+        }
 
         let headers: HTTPHeaders = [
             "Bugsnag-Api-Key": configuration.apiKey,
@@ -47,7 +43,14 @@ extension BugsnagReporter {
     private func buildPayload(
         configuration: BugsnagConfiguration,
         error: Error
-    ) -> BugsnagPayload {
+    ) -> BugsnagPayload? {
+        guard configuration.shouldReport else {
+            return nil
+        }
+        if let bugsnag = error as? BugsnagError, !bugsnag.shouldReport {
+            return nil
+        }
+        
         let breadcrumbs: [BugsnagPayload.Event.Breadcrumb]
         let eventRequest: BugsnagPayload.Event.Request?
         if let request = self.currentRequest {
@@ -70,7 +73,7 @@ extension BugsnagReporter {
         let stacktrace: [BugsnagPayload.Event.Exception.Stacktrace]
         if let abort = error as? AbortError, let source = abort.source {
             stacktrace = [.init(
-                file: source.file,
+                file: source.readableFile,
                 method: source.function,
                 lineNumber: source.line,
                 columnNumber: 0
@@ -127,5 +130,17 @@ extension BugsnagReporter {
                 version: "3"
             )
         )
+    }
+}
+
+extension ErrorSource {
+    var readableFile: String {
+        if self.file.contains("/Sources/") {
+            return self.file.components(separatedBy: "/Sources/").last ?? self.file
+        } else if self.file.contains("/Tests/") {
+            return self.file.components(separatedBy: "/Tests/").last ?? self.file
+        } else {
+            return self.file
+        }
     }
 }

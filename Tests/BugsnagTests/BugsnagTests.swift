@@ -20,6 +20,8 @@ final class BugsnagTests: XCTestCase {
         try app.test(.GET, "error") { res in
             XCTAssertEqual(res.status, .internalServerError)
         }
+        // Wait for bugsnag to send.
+        sleep(1)
     }
 
     func testBreadcrumbs() throws {
