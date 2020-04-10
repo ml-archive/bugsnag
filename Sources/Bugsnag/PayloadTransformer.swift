@@ -1,5 +1,4 @@
 import Vapor
-import HTTP
 
 public protocol PayloadTransformerType {
     var environment: Environment { get }
@@ -43,21 +42,21 @@ internal struct PayloadTransformer: PayloadTransformerType {
                                                          method: funcName ?? "")
         
         let exception = BugsnagPayload.Event.Exception(errorClass: message, message: message, stacktrace: [stacktrace])
-        let metadata = BugsnagPayload.Event.Metadata(url: request?.http.urlString ?? "")
+        let metadata = BugsnagPayload.Event.Metadata(url: request?.url.string ?? "")
         let app = BugsnagPayload.Event.App(releaseStage: environment.name, type: "Vapor", version: version)
         
         var headersDict = [String: String]()
         
         if let req = request {
-            for header in req.http.headers {
+            for header in req.headers {
                 headersDict[header.name] = header.value
             }
         }
         
-        let requestContent = BugsnagPayload.Event.Request(clientIp: request?.http.remotePeer.hostname,
+        let requestContent = BugsnagPayload.Event.Request(clientIp: request?.remoteAddress?.hostname,
                                                           headers: headersDict,
-                                                          httpMethod: request?.http.method.string,
-                                                          url: request?.http.url.path)
+                                                          httpMethod: request?.method.string,
+                                                          url: request?.url.path)
         
         let event = BugsnagPayload.Event(payloadVersion: 2,
                                          exceptions: [exception],
