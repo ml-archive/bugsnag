@@ -18,12 +18,17 @@ public protocol PayloadTransformerType {
         ) throws -> BugsnagPayload
 }
 
-internal struct PayloadTransformer: PayloadTransformerType {
+public struct PayloadTransformer: PayloadTransformerType {
     
-    let environment: Environment
-    let apiKey: String
+    public let environment: Environment
+    public let apiKey: String
     
-    internal func payloadFor(
+    public init(environment: Environment, apiKey: String) {
+        self.environment = environment
+        self.apiKey = apiKey
+    }
+    
+    public func payloadFor(
         message: String,
         request: Request?,
         severity: Severity,
