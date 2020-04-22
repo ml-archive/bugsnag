@@ -1,5 +1,4 @@
 import Vapor
-import HTTP
 import Foundation
 
 public final class ConnectionManager {
@@ -11,9 +10,9 @@ public final class ConnectionManager {
         self.client = client
     }
     
-    public func submitPayload<C: Content>(_ content: C) throws -> Future<Response> {
-        return client.post(url, beforeSend: { req in
+    public func submitPayload<C: Content>(_ content: C) throws -> EventLoopFuture<ClientResponse> {
+        return client.post(URI(string: url), headers: [:]) { req in
             try req.content.encode(content, as: .json)
-        })
+        }
     }
 }

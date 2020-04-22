@@ -1,5 +1,4 @@
 import Vapor
-import HTTP
 
 public protocol ReporterType {
     func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) throws
@@ -25,7 +24,7 @@ public enum Severity: String {
     case error, warning, info
 }
 
-public final class Bugsnag: ReporterType, Service {
+public final class Bugsnag: ReporterType {
     public func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) throws {
         report(error: error, request: request, severity: .error, userId: userId, userName: userName, userEmail: userEmail, lineNumber: lineNumber, funcName: funcName, fileName: fileName, version: version, completion: nil)
     }
@@ -36,7 +35,7 @@ public final class Bugsnag: ReporterType, Service {
     let connectionManager: ConnectionManager
     let payloadTransformer: PayloadTransformerType
     
-    init(
+    public init(
         environment: Environment,
         notifyReleaseStages: [Environment]? = [],
         connectionManager: ConnectionManager,
@@ -131,7 +130,7 @@ public final class Bugsnag: ReporterType, Service {
         )
 
         if let payload = payload {
-            _ = try? self.connectionManager.submitPayload(payload).map(to: Void.self) { _ in
+            _ = try? self.connectionManager.submitPayload(payload).map { _ -> Void in
                 if let complete = complete { complete() }
                 return ()
             }

@@ -11,3 +11,5 @@ bower_components/
 .swift-version
 CMakeLists.txt
 Package.pins
+
+.swiftpm
