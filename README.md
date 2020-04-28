@@ -24,7 +24,7 @@ Update `Sources/App/configure.swift`
 ```swift
 public func configure(
     _ config: inout Config,
-    _ env: inout Environment,
+    _ environment: inout Environment,
     _ services: inout Services
 ) throws {
     ...
