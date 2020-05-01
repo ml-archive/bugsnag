@@ -39,16 +39,16 @@ public final class BugsnagPayload: Content {
         let app: App
         let severity: String
         let user: User
-        let metadata: Metadata
+        let metaData: Metadata
         let request: Request
         
-        init(payloadVersion: Int, exceptions: [Exception], app: App, severity: String, user: User, metadata: Metadata, request: Request) {
+        init(payloadVersion: Int, exceptions: [Exception], app: App, severity: String, user: User, metaData: Metadata, request: Request) {
             self.payloadVersion = payloadVersion
             self.exceptions = exceptions
             self.app = app
             self.severity = severity
             self.user = user
-            self.metadata = metadata
+            self.metaData = metaData
             self.request = request
         }
         
@@ -118,10 +118,15 @@ public final class BugsnagPayload: Content {
         
         public final class Metadata: Content {
             let url: String
-            var request: RequestObject?
+            var requestBody: RequestObject?
 
             struct RequestObject: Content {
                 let body: String
+            }
+
+            enum CodingKeys: String, CodingKey {
+                case url
+                case requestBody = "Request Body"
             }
 
             init(url: String) {

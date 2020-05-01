@@ -48,7 +48,7 @@ public struct PayloadTransformer: PayloadTransformerType {
 
         let metadata = BugsnagPayload.Event.Metadata(url: request?.url.string ?? "")
         if let requestBodyData = request?.body.data, let requestString = String(data: Data(requestBodyData.readableBytesView), encoding: .utf8) {
-            metadata.request = .init(body: requestString)
+            metadata.requestBody = .init(body: requestString.replacingOccurrences(of: "\"", with: "'"))
         }
 
         let exception = BugsnagPayload.Event.Exception(errorClass: message, message: message, stacktrace: [stacktrace])
@@ -59,7 +59,7 @@ public struct PayloadTransformer: PayloadTransformerType {
         if let req = request {
             for header in req.headers {
                 // Don't send the authorization header
-                guard header.name.lowercased() != "Authorization" else { continue }
+                guard header.name.lowercased() != "authorization" else { continue }
                 headersDict[header.name] = header.value
             }
         }
@@ -74,7 +74,7 @@ public struct PayloadTransformer: PayloadTransformerType {
                                          app: app,
                                          severity: severity.rawValue,
                                          user: BugsnagPayload.Event.User(id: userId, name: userName, email: userEmail),
-                                         metadata: metadata,
+                                         metaData: metadata,
                                          request: requestContent)
         
         let notifier = BugsnagPayload.Notifier(name: "Bugsnag Vapor", version: "2.0.0", url: "https://github.com/gotranseo/bugsnag")
