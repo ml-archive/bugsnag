@@ -45,15 +45,21 @@ public struct PayloadTransformer: PayloadTransformerType {
                                                          lineNumber: lineNumber ?? 0,
                                                          columnNumber: 0,
                                                          method: funcName ?? "")
-        
-        let exception = BugsnagPayload.Event.Exception(errorClass: message, message: message, stacktrace: [stacktrace])
+
         let metadata = BugsnagPayload.Event.Metadata(url: request?.url.string ?? "")
+        if let requestBodyData = request?.body.data, let requestString = String(data: Data(requestBodyData.readableBytesView), encoding: .utf8) {
+            metadata.request = .init(body: requestString)
+        }
+
+        let exception = BugsnagPayload.Event.Exception(errorClass: message, message: message, stacktrace: [stacktrace])
         let app = BugsnagPayload.Event.App(releaseStage: environment.name, type: "Vapor", version: version)
         
         var headersDict = [String: String]()
         
         if let req = request {
             for header in req.headers {
+                // Don't send the authorization header
+                guard header.name.lowercased() != "Authorization" else { continue }
                 headersDict[header.name] = header.value
             }
         }

@@ -10,6 +10,7 @@ import Vapor
 
 public final class BugsnagPayload: Content {
     let apiKey: String
+    let payloadVersion: String
     let notifier: Notifier
     let events: [Event]
     
@@ -17,6 +18,7 @@ public final class BugsnagPayload: Content {
         self.apiKey = apiKey
         self.notifier = notifier
         self.events = events
+        self.payloadVersion = "5"
     }
     
     public final class Notifier: Content {
@@ -116,7 +118,12 @@ public final class BugsnagPayload: Content {
         
         public final class Metadata: Content {
             let url: String
-            
+            var request: RequestObject?
+
+            struct RequestObject: Content {
+                let body: String
+            }
+
             init(url: String) {
                 self.url = url
             }
