@@ -14,7 +14,8 @@ public protocol PayloadTransformerType {
         userId: String?,
         userName: String?,
         userEmail: String?,
-        version: String?
+        version: String?,
+        skipContent: Bool
         ) throws -> BugsnagPayload
 }
 
@@ -38,8 +39,9 @@ public struct PayloadTransformer: PayloadTransformerType {
         userId: String?,
         userName: String?,
         userEmail: String?,
-        version: String?
-        ) throws -> BugsnagPayload {
+        version: String?,
+        skipContent: Bool
+    ) throws -> BugsnagPayload {
         
         let stacktrace = BugsnagPayload.Event.Stacktrace(file: fileName ?? "",
                                                          lineNumber: lineNumber ?? 0,
@@ -47,7 +49,7 @@ public struct PayloadTransformer: PayloadTransformerType {
                                                          method: funcName ?? "")
 
         let metadata = BugsnagPayload.Event.Metadata(url: request?.url.string ?? "")
-        if let requestBodyData = request?.body.data, let requestString = String(data: Data(requestBodyData.readableBytesView), encoding: .utf8) {
+        if let requestBodyData = request?.body.data, let requestString = String(data: Data(requestBodyData.readableBytesView), encoding: .utf8), !skipContent {
             metadata.requestBody = .init(body: requestString.replacingOccurrences(of: "\"", with: "'"))
         }
 

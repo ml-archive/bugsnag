@@ -1,9 +1,9 @@
 import Vapor
 
 public protocol ReporterType {
-    func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) throws
+    func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, skipContent: Bool, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) throws
     
-    func report(error: Error, request: Request, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) throws
+    func report(error: Error, request: Request, skipContent: Bool, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) throws
     
     func report(
         error: Error,
@@ -16,6 +16,7 @@ public protocol ReporterType {
         funcName: String?,
         fileName: String?,
         version: String?,
+        skipContent: Bool,
         completion: (() -> ())?
     ) throws
 }
@@ -25,8 +26,8 @@ public enum Severity: String {
 }
 
 public final class Bugsnag: ReporterType {
-    public func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) throws {
-        report(error: error, request: request, severity: .error, userId: userId, userName: userName, userEmail: userEmail, lineNumber: lineNumber, funcName: funcName, fileName: fileName, version: version, completion: nil)
+    public func report(error: Error, request: Request, userId: String?, userName: String?, userEmail: String?, skipContent: Bool, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) throws {
+        report(error: error, request: request, severity: .error, userId: userId, userName: userName, userEmail: userEmail, lineNumber: lineNumber, funcName: funcName, fileName: fileName, version: version, skipContent: skipContent, completion: nil)
     }
     
     
@@ -47,8 +48,8 @@ public final class Bugsnag: ReporterType {
         self.payloadTransformer = transformer
     }
 
-    public func report(error: Error, request: Request, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) {
-        report(error: error, request: request, severity: .error, userId: nil, userName: nil, userEmail: nil, lineNumber: lineNumber, funcName: funcName, fileName: fileName, version: version, completion: nil)
+    public func report(error: Error, request: Request, skipContent: Bool, lineNumber: Int?, funcName: String?, fileName: String?, version: String?) {
+        report(error: error, request: request, severity: .error, userId: nil, userName: nil, userEmail: nil, lineNumber: lineNumber, funcName: funcName, fileName: fileName, version: version, skipContent: skipContent, completion: nil)
     }
     
     public func report(
@@ -62,6 +63,7 @@ public final class Bugsnag: ReporterType {
         funcName: String?,
         fileName: String?,
         version: String?,
+        skipContent: Bool,
         completion complete: (() -> ())?
         ) {
         guard let error = error as? AbortError else {
@@ -76,6 +78,7 @@ public final class Bugsnag: ReporterType {
                 userName: userName,
                 userEmail: userEmail,
                 version: version,
+                skipContent: skipContent,
                 completion: complete
             )
             
@@ -97,6 +100,7 @@ public final class Bugsnag: ReporterType {
             userName: userName,
             userEmail: userEmail,
             version: version,
+            skipContent: skipContent,
             completion: complete
         )
     }
@@ -114,6 +118,7 @@ public final class Bugsnag: ReporterType {
         userName: String?,
         userEmail: String?,
         version: String?,
+        skipContent: Bool,
         completion complete: (() -> ())? = nil
         ) {
         let payload = try? payloadTransformer.payloadFor(
@@ -126,7 +131,8 @@ public final class Bugsnag: ReporterType {
             userId: userId,
             userName: userName,
             userEmail: userEmail,
-            version: version
+            version: version,
+            skipContent: skipContent
         )
 
         if let payload = payload {
