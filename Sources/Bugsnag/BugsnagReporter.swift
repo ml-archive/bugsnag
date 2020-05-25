@@ -57,9 +57,9 @@ extension BugsnagReporter {
             breadcrumbs = request.bugsnag.breadcrumbs
             eventRequest = .init(
                 body: request.body.data.map {
-                    String.init(decoding: $0.readableBytesView, as: UTF8.self )
+                    String(decoding: $0.readableBytesView, as: UTF8.self )
                 },
-                clientIp: request.headers.forwarded?.for ?? request.remoteAddress?.hostname,
+                clientIp: request.headers.forwarded.first(where: { $0.for != nil })?.for ?? request.remoteAddress?.hostname,
                 headers: .init(uniqueKeysWithValues: request.headers.map { $0 }),
                 httpMethod: request.method.string,
                 referer: "n/a",
@@ -71,11 +71,11 @@ extension BugsnagReporter {
         }
 
         let stacktrace: [BugsnagPayload.Event.Exception.Stacktrace]
-        if let abort = error as? AbortError, let source = abort.source {
+        if let abort = error as? DebuggableError, let source = abort.source {
             stacktrace = [.init(
                 file: source.readableFile,
                 method: source.function,
-                lineNumber: source.line,
+                lineNumber: Int(source.line),
                 columnNumber: 0
             )]
         } else {
