@@ -83,7 +83,6 @@ extension Request.Bugsnag: BugsnagReporter {
     }
 }
 
-
 public enum BreadcrumbType: String {
     case error
     case log
