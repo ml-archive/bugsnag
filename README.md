@@ -1,7 +1,6 @@
 # Bugsnag 🐛
-[![Swift Version](https://img.shields.io/badge/Swift-4-brightgreen.svg)](http://swift.org)
-[![Vapor Version](https://img.shields.io/badge/Vapor-3-F6CBCA.svg)](http://vapor.codes)
-[![Circle CI](https://circleci.com/gh/nodes-vapor/bugsnag/tree/master.svg?style=shield)](https://circleci.com/gh/nodes-vapor/bugsnag)
+[![Swift Version](https://img.shields.io/badge/Swift-5.2-brightgreen.svg)](http://swift.org)
+[![Vapor Version](https://img.shields.io/badge/Vapor-4-F6CBCA.svg)](http://vapor.codes)
 [![codebeat badge](https://codebeat.co/badges/e93cc2d5-7365-4916-bc92-3f6bb39b18f4)](https://codebeat.co/projects/github-com-nodes-vapor-bugsnag-master)
 [![codecov](https://codecov.io/gh/nodes-vapor/bugsnag/branch/master/graph/badge.svg)](https://codecov.io/gh/nodes-vapor/bugsnag)
 [![Readme Score](http://readme-score-api.herokuapp.com/score.svg?url=https://github.com/nodes-vapor/bugsnag)](http://clayallsopp.github.io/readme-score?url=https://github.com/nodes-vapor/bugsnag)
@@ -16,7 +15,7 @@ Reporting errors to [Bugsnag](https://www.bugsnag.com/).
 Update your `Package.swift` file.
 
 ```swift
-.package(url: "https://github.com/nodes-vapor/bugsnag.git", from: "3.0.0")
+.package(url: "https://github.com/nodes-vapor/bugsnag.git", from: "4.0.0")
 ```
 
 Update `Sources/App/configure.swift`
