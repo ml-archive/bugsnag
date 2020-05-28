@@ -10,9 +10,10 @@ public protocol BugsnagReporter {
 }
 
 extension BugsnagReporter {
+    @discardableResult
     public func report(
         _ error: Error
-    ) {
+    ) -> EventLoopFuture<Void> {
         guard let configuration = self.configuration else {
             fatalError("Bugsnag not configured, use app.bugsnag")
         }
@@ -21,7 +22,7 @@ extension BugsnagReporter {
             configuration: configuration,
             error: error
         ) else {
-            return
+            return eventLoop.future(())
         }
 
         let headers: HTTPHeaders = [
@@ -29,15 +30,12 @@ extension BugsnagReporter {
             "Bugsnag-Payload-Version": "4"
         ]
 
-        self.client.post("https://notify.bugsnag.com", headers: headers, beforeSend: { req in
+        return self.client.post("https://notify.bugsnag.com", headers: headers, beforeSend: { req in
             try req.content.encode(payload, as: .json)
-        }).whenComplete { result in
-            switch result {
-            case .failure(let error):
-                self.logger.report(error: error)
-            case .success: break
-            }
-        }
+        }).flatMapError { error -> EventLoopFuture<ClientResponse> in
+            self.logger.report(error: error)
+            return self.eventLoop.future(error: error)
+        }.transform(to: ())
     }
 
     private func buildPayload(
