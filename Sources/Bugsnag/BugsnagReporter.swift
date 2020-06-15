@@ -1,3 +1,4 @@
+import class Foundation.JSONSerialization
 import Vapor
 
 public protocol BugsnagReporter {
@@ -53,10 +54,32 @@ extension BugsnagReporter {
         let eventRequest: BugsnagPayload.Event.Request?
         if let request = self.currentRequest {
             breadcrumbs = request.bugsnag.breadcrumbs
+            let eventRequestBody: String?
+            if let body = request.body.data {
+                if !configuration.blockedKeys.isEmpty {
+                    let contentType = request.headers.contentType ?? .plainText
+                    if let clean = self.cleaned(
+                        body: body,
+                        as: contentType,
+                        blockedKeys: configuration.blockedKeys
+                    ) {
+                        eventRequestBody = clean
+                    } else {
+                        request.logger.warning("[Bugsnag] Could not clean request body of type \(contentType).")
+                        request.logger.debug("[Bugsnag] Request bodies that cannot be cleaned will be hidden.")
+                        eventRequestBody = "<hidden>"
+                    }
+                } else {
+                    eventRequestBody = String(
+                        decoding: body.readableBytesView,
+                        as: UTF8.self
+                    )
+                }
+            } else {
+                eventRequestBody = nil
+            }
             eventRequest = .init(
-                body: request.body.data.map {
-                    String(decoding: $0.readableBytesView, as: UTF8.self )
-                },
+                body: eventRequestBody,
                 clientIp: request.headers.forwarded.first(where: { $0.for != nil })?.for ?? request.remoteAddress?.hostname,
                 headers: .init(uniqueKeysWithValues: request.headers.map { $0 }),
                 httpMethod: request.method.string,
@@ -68,18 +91,32 @@ extension BugsnagReporter {
             eventRequest = nil
         }
 
-        let stacktrace: [BugsnagPayload.Event.Exception.Stacktrace]
-        if let abort = error as? DebuggableError, let source = abort.source {
-            stacktrace = [.init(
+        let exceptionStackTrace: [BugsnagPayload.Event.Exception.StackTrace]
+        if
+            let debuggable = error as? DebuggableError,
+            let stackTrace = debuggable.stackTrace
+        {
+            exceptionStackTrace = stackTrace.frames.map { frame in
+                .init(
+                    file: frame.description,
+                    method: frame.description,
+                    lineNumber: 0,
+                    columnNumber: 0
+                )
+            }
+        } else if
+            let debuggable = error as? DebuggableError,
+            let source = debuggable.source
+        {
+            exceptionStackTrace = [.init(
                 file: source.readableFile,
                 method: source.function,
                 lineNumber: Int(source.line),
                 columnNumber: 0
             )]
         } else {
-            stacktrace = []
+            exceptionStackTrace = []
         }
-
         let metadata: [String: String]
         let severity: BugsnagSeverity
 
@@ -98,6 +135,19 @@ extension BugsnagReporter {
             }
         }
 
+        let message: String
+        let type: String
+        if let debuggable = error as? DebuggableError {
+            message = debuggable.reason
+            type = debuggable.fullIdentifier
+        } else if let abort = error as? AbortError {
+            message = abort.reason
+            type = "AbortError.\(abort.status)"
+        } else {
+            message = "\(error)"
+            type = "Swift.Error"
+        }
+
         return BugsnagPayload(
             apiKey: configuration.apiKey,
             events: [
@@ -110,9 +160,9 @@ extension BugsnagReporter {
                     exceptions: [
                         .init(
                             errorClass: "error",
-                            message: "\(error)",
-                            stacktrace: stacktrace,
-                            type: "server"
+                            message: message,
+                            stacktrace: exceptionStackTrace,
+                            type: type
                         )
                     ],
                     metaData: metadata,
@@ -128,6 +178,40 @@ extension BugsnagReporter {
                 version: "3"
             )
         )
+    }
+
+    private func cleaned(
+        body: ByteBuffer,
+        as contentType: HTTPMediaType,
+        blockedKeys: Set<String>
+    ) -> String? {
+        switch contentType {
+        case .json, .jsonAPI:
+            if var json = try? JSONSerialization.jsonObject(
+                with: Data(body.readableBytesView)
+            ) as? [String: Any] {
+                self.strip(keys: blockedKeys, from: &json)
+                let data = try! JSONSerialization.data(withJSONObject: json)
+                return String(decoding: data, as: UTF8.self)
+            } else {
+                fallthrough
+            }
+        default:
+            return nil
+        }
+    }
+
+    private func strip(keys: Set<String>, from data: inout [String: Any]) {
+        for key in data.keys {
+            if keys.contains(key) {
+                data[key] = "<hidden>"
+            } else {
+                if var nested = data[key] as? [String: Any] {
+                    self.strip(keys: keys, from: &nested)
+                    data[key] = nested
+                }
+            }
+        }
     }
 }
 

@@ -24,18 +24,10 @@ extension Request.Bugsnag {
             meta[key] = value.debugDescription
         }
 
-        // FIXME: DateFormatter is slooooooowwwwww on Linux
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSXXXXX"
-
-        let date = formatter.string(from: Date())
-
         let breadcrumb = BugsnagPayload.Event.Breadcrumb(
             metaData: meta,
             name: name,
-            timestamp: date,
+            timestamp: ISO8601Timestamp.shared.current(),
             type: type.rawValue
         )
 

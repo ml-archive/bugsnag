@@ -3,7 +3,7 @@ import Vapor
 public struct BugsnagUsers {
     var storage: [(Request) -> (CustomStringConvertible?)]
 
-    public mutating func use<User>(_ user: User.Type)
+    public mutating func add<User>(_ user: User.Type)
         where User: BugsnagUser & Authenticatable
     {
         self.storage.append({ request in

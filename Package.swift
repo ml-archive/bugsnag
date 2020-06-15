@@ -10,7 +10,7 @@ let package = Package(
         .library(name: "Bugsnag", targets: ["Bugsnag"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0"),
+        .package(url: "https://github.com/vapor/vapor.git", from: "4.10.0"),
     ],
     targets: [
         .target(name: "Bugsnag", dependencies: [

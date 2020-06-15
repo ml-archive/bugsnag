@@ -1,75 +1,75 @@
 import Vapor
 
-public struct BugsnagPayload: Encodable {
-    let apiKey: String
-    let events: [Event]
+public struct BugsnagPayload: Codable {
+    public let apiKey: String
+    public let events: [Event]
 
-    struct Event: Encodable {
-        let app: Application
+    public struct Event: Codable {
+        public let app: Application
 
-        struct Application: Encodable {
-            let releaseStage: String
-            let version: String?
+        public struct Application: Codable {
+            public let releaseStage: String
+            public let version: String?
         }
 
-        let breadcrumbs: [Breadcrumb]
+        public let breadcrumbs: [Breadcrumb]
 
-        struct Breadcrumb: Encodable {
-            let metaData: [String: String]
-            let name: String
-            let timestamp: String
-            let type: String
+        public struct Breadcrumb: Codable {
+            public let metaData: [String: String]
+            public let name: String
+            public let timestamp: String
+            public let type: String
         }
 
-        let exceptions: [Exception]
+        public let exceptions: [Exception]
 
-        struct Exception: Encodable {
-            let errorClass: String
-            let message: String
-            let stacktrace: [Stacktrace]
+        public struct Exception: Codable {
+            public let errorClass: String
+            public let message: String
+            public let stacktrace: [StackTrace]
 
-            struct Stacktrace: Encodable {
-                let file: String
-                let method: String
-                let lineNumber: Int
-                let columnNumber: Int
+            public struct StackTrace: Codable {
+                public let file: String
+                public let method: String
+                public let lineNumber: Int
+                public let columnNumber: Int
 
-                let code: [String] = []
-                let inProject = true
+                public let code: [String] = []
+                public let inProject = true
             }
 
-            let type: String
+            public let type: String
         }
 
-        let metaData: [String: String]
+        public let metaData: [String: String]
 
-        let payloadVersion: String
-        let request: Request?
+        public let payloadVersion: String
+        public let request: Request?
 
-        struct Request: Encodable {
-            let body: String?
-            let clientIp: String?
-            let headers: [String: String]
-            let httpMethod: String
-            let referer: String
-            let url: String
+        public struct Request: Codable {
+            public let body: String?
+            public let clientIp: String?
+            public let headers: [String: String]
+            public let httpMethod: String
+            public let referer: String
+            public let url: String
         }
 
 
-        let severity: String
-        let unhandled = true
-        let user: User?
+        public let severity: String
+        public let unhandled = true
+        public let user: User?
 
-        struct User: Encodable {
-            let id: String
+        public struct User: Codable {
+            public let id: String
         }
     }
 
-    let notifier: Notifier
+    public let notifier: Notifier
 
-    struct Notifier: Encodable {
-        let name: String
-        let url: String
-        let version: String
+    public struct Notifier: Codable {
+        public let name: String
+        public let url: String
+        public let version: String
     }
 }
