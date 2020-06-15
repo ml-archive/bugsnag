@@ -14,7 +14,7 @@ extension Request.Bugsnag {
     @discardableResult
     public func breadcrumb(
         name: String,
-        type: BreadcrumbType,
+        type: BugsnagBreadcrumbType,
         metadata: [String: CustomDebugStringConvertible] = [:]
     ) -> Request.Bugsnag {
         var meta: [String: String] = [:]
@@ -75,7 +75,7 @@ extension Request.Bugsnag: BugsnagReporter {
     }
 }
 
-public enum BreadcrumbType: String {
+public enum BugsnagBreadcrumbType: String {
     case error
     case log
     case manual

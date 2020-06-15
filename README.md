@@ -26,8 +26,8 @@ public func configure(_ app: Application) throws {
     // Configure Bugsnag.
     app.bugsnag.configuration = .init(
         apiKey: "<YOUR BUGSNAG API KEY>",
-        releaseStage: environment.name,
-        shouldReport: environment.name != "local"
+        releaseStage: app.environment.name,
+        shouldReport: app.environment.name != "local"
     )
 
     // Add Bugsnag middleware.
@@ -82,7 +82,7 @@ Bugsnag will automatically check Vapor's authentication API for the configured u
 Breadcrumbs enable you to attach custom events to your reports. Leave a breadcrumb using the convenience function on `Request`.
 
 ```swift
-req.breadcrumb(
+req.bugsnag.breadcrumb(
     name: "Something happened!",
     type: .manual,
     metadata: ["foo": "bar"]
@@ -92,7 +92,7 @@ req.breadcrumb(
 The breadcrumb types are provided by Bugsnag:
 
 ```swift
-enum BreadcrumbType {
+enum BugsnagBreadcrumbType {
     case error
     case log
     case manual
