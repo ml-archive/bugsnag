@@ -1,4 +1,4 @@
-import Bugsnag
+@testable import Bugsnag
 import XCTVapor
 
 final class BugsnagTests: XCTestCase {
@@ -24,17 +24,6 @@ final class BugsnagTests: XCTestCase {
         XCTAssertEqual(app.clients.test.requests[0].headers.first(name: "Bugsnag-Api-Key"), "foo")
         let payload = try app.clients.test.requests[0].content.decode(BugsnagPayload.self)
         XCTAssertEqual(payload.events[0].exceptions[0].message, "Oops")
-    }
-
-    func testLive() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.bugsnag.configuration = .init(
-            apiKey: "36284374e946742a736737d7bc11344f",
-            releaseStage: "debug"
-        )
-        try app.bugsnag.report(Abort(.internalServerError, reason: "Oops")).wait()
     }
 
     func testBreadcrumbs() throws {
@@ -68,7 +57,7 @@ final class BugsnagTests: XCTestCase {
         app.bugsnag.configuration = .init(
             apiKey: "foo",
             releaseStage: "debug",
-            blockedKeys: ["email", "password"]
+            keyFilters: ["email", "password"]
         )
         app.clients.use(.test)
 

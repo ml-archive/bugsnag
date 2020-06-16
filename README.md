@@ -104,7 +104,7 @@ enum BugsnagBreadcrumbType {
 }
 ```
 
-### Blocked Keys
+### Key Filters
 
 Usually you will receive information such as headers, query params or post body fields in the reports from Bugsnag. To ensure that you do not track sensitive information, you can configure Bugsnag with a list of fields that should be filtered out:
 
@@ -112,12 +112,12 @@ Usually you will receive information such as headers, query params or post body 
 app.bugsnag.configuration = .init(
     apiKey: "foo",
     releaseStage: "debug",
-    blockedKeys: ["email", "password"]
+    keyFilters: ["email", "password"]
 )
 ```
-In this case Bugsnag Reports won't contain header fields, query params or post body json fields with the keys/names **email** and **password**.
+In this case Bugsnag Reports will hide header fields, query params or post body json fields with the keys/names **email** and **password**.
 
-⚠️ Note: If blocked keys are defined and Bugsnag does not know how to parse the request body, the entire body will be hidden.
+⚠️ Note: If key filters are defined and Bugsnag does not know how to parse the request body, the entire body will be hidden.
 
 ## 🏆 Credits
 

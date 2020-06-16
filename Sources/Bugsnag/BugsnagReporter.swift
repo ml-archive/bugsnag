@@ -16,7 +16,7 @@ extension BugsnagReporter {
         _ error: Error
     ) -> EventLoopFuture<Void> {
         guard let configuration = self.configuration else {
-            fatalError("Bugsnag not configured, use app.bugsnag")
+            fatalError("Bugsnag not configured, set `app.bugsnag.configuration`.")
         }
 
         guard let payload = self.buildPayload(
@@ -56,12 +56,12 @@ extension BugsnagReporter {
             breadcrumbs = request.bugsnag.breadcrumbs
             let eventRequestBody: String?
             if let body = request.body.data {
-                if !configuration.blockedKeys.isEmpty {
+                if !configuration.keyFilters.isEmpty {
                     let contentType = request.headers.contentType ?? .plainText
                     if let clean = self.cleaned(
                         body: body,
                         as: contentType,
-                        blockedKeys: configuration.blockedKeys
+                        keyFilters: configuration.keyFilters
                     ) {
                         eventRequestBody = clean
                     } else {
@@ -183,14 +183,14 @@ extension BugsnagReporter {
     private func cleaned(
         body: ByteBuffer,
         as contentType: HTTPMediaType,
-        blockedKeys: Set<String>
+        keyFilters: Set<String>
     ) -> String? {
         switch contentType {
         case .json, .jsonAPI:
             if var json = try? JSONSerialization.jsonObject(
                 with: Data(body.readableBytesView)
             ) as? [String: Any] {
-                self.strip(keys: blockedKeys, from: &json)
+                self.strip(keys: keyFilters, from: &json)
                 let data = try! JSONSerialization.data(withJSONObject: json)
                 return String(decoding: data, as: UTF8.self)
             } else {
