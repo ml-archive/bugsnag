@@ -1,122 +1,228 @@
+import class Foundation.JSONSerialization
 import Vapor
 
-public struct BugsnagReporter: Service {
-    private let app: BugsnagApp
-    private let config: BugsnagConfig
-    private let headers: HTTPHeaders
+public protocol BugsnagReporter {
+    var client: Client { get }
+    var logger: Logger { get }
+    var eventLoop: EventLoop { get }
+    var configuration: BugsnagConfiguration? { get }
+    var currentRequest: Request? { get }
+    var users: BugsnagUsers { get }
+}
 
-    private let hostName = "https://notify.bugsnag.com"
-    private let jsonEncoder = JSONEncoder()
-    private let notifier = BugsnagNotifier(
-        name: "nodes-vapor/bugsnag",
-        url: "https://github.com/nodes-vapor/bugsnag.git",
-        version: "3"
-    )
-    private let payloadVersion = "4"
-    private let sendReport: (String, HTTPHeaders, Data, Container) throws -> Future<Response>
-
-    public init(
-        config: BugsnagConfig,
-        sendReport: ((String, HTTPHeaders, Data, Container) throws -> Future<Response>)? = nil
-    ) {
-        self.config = config
-
-        self.sendReport = sendReport ?? { (hostName, headers, body, container) in
-            try container
-                .client()
-                .post(hostName, headers: headers, beforeSend: { req in
-                    req.http.body = .init(data: body)
-                })
+extension BugsnagReporter {
+    @discardableResult
+    public func report(
+        _ error: Error
+    ) -> EventLoopFuture<Void> {
+        guard let configuration = self.configuration else {
+            fatalError("Bugsnag not configured, set `app.bugsnag.configuration`.")
         }
 
-        app = BugsnagApp(
-            releaseStage: config.releaseStage,
-            version: config.version
+        guard let payload = self.buildPayload(
+            configuration: configuration,
+            error: error
+        ) else {
+            return eventLoop.future(())
+        }
+
+        let headers: HTTPHeaders = [
+            "Bugsnag-Api-Key": configuration.apiKey,
+            "Bugsnag-Payload-Version": "4"
+        ]
+
+        return self.client.post("https://notify.bugsnag.com", headers: headers, beforeSend: { req in
+            try req.content.encode(payload, as: .json)
+        }).flatMapError { error -> EventLoopFuture<ClientResponse> in
+            self.logger.report(error: error)
+            return self.eventLoop.future(error: error)
+        }.transform(to: ())
+    }
+
+    private func buildPayload(
+        configuration: BugsnagConfiguration,
+        error: Error
+    ) -> BugsnagPayload? {
+        guard configuration.shouldReport else {
+            return nil
+        }
+        if let bugsnag = error as? BugsnagError, !bugsnag.shouldReport {
+            return nil
+        }
+        
+        let breadcrumbs: [BugsnagPayload.Event.Breadcrumb]
+        let eventRequest: BugsnagPayload.Event.Request?
+        if let request = self.currentRequest {
+            breadcrumbs = request.bugsnag.breadcrumbs
+            let eventRequestBody: String?
+            if let body = request.body.data {
+                if !configuration.keyFilters.isEmpty {
+                    let contentType = request.headers.contentType ?? .plainText
+                    if let clean = self.cleaned(
+                        body: body,
+                        as: contentType,
+                        keyFilters: configuration.keyFilters
+                    ) {
+                        eventRequestBody = clean
+                    } else {
+                        request.logger.warning("[Bugsnag] Could not clean request body of type \(contentType).")
+                        request.logger.debug("[Bugsnag] Request bodies that cannot be cleaned will be hidden.")
+                        eventRequestBody = "<hidden>"
+                    }
+                } else {
+                    eventRequestBody = String(
+                        decoding: body.readableBytesView,
+                        as: UTF8.self
+                    )
+                }
+            } else {
+                eventRequestBody = nil
+            }
+            eventRequest = .init(
+                body: eventRequestBody,
+                clientIp: request.headers.forwarded.first(where: { $0.for != nil })?.for ?? request.remoteAddress?.hostname,
+                headers: .init(uniqueKeysWithValues: request.headers.map { $0 }),
+                httpMethod: request.method.string,
+                referer: "n/a",
+                url: request.url.string
+            )
+        } else {
+            breadcrumbs = []
+            eventRequest = nil
+        }
+
+        let exceptionStackTrace: [BugsnagPayload.Event.Exception.StackTrace]
+        if
+            let debuggable = error as? DebuggableError,
+            let stackTrace = debuggable.stackTrace
+        {
+            exceptionStackTrace = stackTrace.frames.map { frame in
+                .init(
+                    file: frame.description,
+                    method: frame.description,
+                    lineNumber: 0,
+                    columnNumber: 0
+                )
+            }
+        } else if
+            let debuggable = error as? DebuggableError,
+            let source = debuggable.source
+        {
+            exceptionStackTrace = [.init(
+                file: source.readableFile,
+                method: source.function,
+                lineNumber: Int(source.line),
+                columnNumber: 0
+            )]
+        } else {
+            exceptionStackTrace = []
+        }
+        let metadata: [String: String]
+        let severity: BugsnagSeverity
+
+        if let bugsnag = error as? BugsnagError {
+            metadata = bugsnag.metadata.mapValues { $0.description }
+            severity = bugsnag.severity
+        } else {
+            metadata = [:]
+            severity = .error
+        }
+
+        var userID: String?
+        if let request = self.currentRequest {
+            for closure in self.users.storage {
+                userID = closure(request)?.description
+            }
+        }
+
+        let message: String
+        let type: String
+        if let debuggable = error as? DebuggableError {
+            message = debuggable.reason
+            type = debuggable.fullIdentifier
+        } else if let abort = error as? AbortError {
+            message = abort.reason
+            type = "AbortError.\(abort.status)"
+        } else {
+            message = "\(error)"
+            type = "Swift.Error"
+        }
+
+        return BugsnagPayload(
+            apiKey: configuration.apiKey,
+            events: [
+                BugsnagPayload.Event(
+                    app: .init(
+                        releaseStage: configuration.releaseStage,
+                        version: configuration.version
+                    ),
+                    breadcrumbs: breadcrumbs,
+                    exceptions: [
+                        .init(
+                            errorClass: "error",
+                            message: message,
+                            stacktrace: exceptionStackTrace,
+                            type: type
+                        )
+                    ],
+                    metaData: metadata,
+                    payloadVersion: "4",
+                    request: eventRequest,
+                    severity: severity.value,
+                    user: userID.map { .init(id: $0) }
+                )
+            ],
+            notifier: .init(
+                name: "nodes-vapor/bugsnag",
+                url: "https://github.com/nodes-vapor/bugsnag.git",
+                version: "3"
+            )
         )
-        headers = .init([
-            ("Content-Type", "application/json"),
-            ("Bugsnag-Api-Key", config.apiKey),
-            ("Bugsnag-Payload-Version", payloadVersion)
-        ])
+    }
+
+    private func cleaned(
+        body: ByteBuffer,
+        as contentType: HTTPMediaType,
+        keyFilters: Set<String>
+    ) -> String? {
+        switch contentType {
+        case .json, .jsonAPI:
+            if var json = try? JSONSerialization.jsonObject(
+                with: Data(body.readableBytesView)
+            ) as? [String: Any] {
+                self.strip(keys: keyFilters, from: &json)
+                let data = try! JSONSerialization.data(withJSONObject: json)
+                return String(decoding: data, as: UTF8.self)
+            } else {
+                fallthrough
+            }
+        default:
+            return nil
+        }
+    }
+
+    private func strip(keys: Set<String>, from data: inout [String: Any]) {
+        for key in data.keys {
+            if keys.contains(key) {
+                data[key] = "<hidden>"
+            } else {
+                if var nested = data[key] as? [String: Any] {
+                    self.strip(keys: keys, from: &nested)
+                    data[key] = nested
+                }
+            }
+        }
     }
 }
 
-extension BugsnagReporter: ErrorReporter {
-    private func buildBody(
-        _ container: Container,
-        error: Error,
-        severity: Severity,
-        userId: CustomStringConvertible?,
-        metadata: [String: CustomDebugStringConvertible],
-        stacktrace: BugsnagStacktrace
-    ) throws -> Data {
-        let req = container as? Request
-        let breadcrumbsContainer = req?.privateContainer ?? container
-        let breadcrumbs: [BugsnagBreadcrumb] = (try? breadcrumbsContainer
-            .make(BreadcrumbContainer.self))?
-            .breadcrumbs ?? []
-
-        let event = BugsnagEvent(
-            app: app,
-            breadcrumbs: breadcrumbs,
-            error: error,
-            httpRequest: req?.http,
-            keyFilters: config.keyFilters,
-            metadata: metadata,
-            payloadVersion: payloadVersion,
-            severity: severity,
-            stacktrace: stacktrace,
-            userId: userId
-        )
-
-        let payload = BugsnagPayload(
-            apiKey: config.apiKey,
-            events: [event],
-            notifier: notifier
-        )
-
-        return try jsonEncoder.encode(payload)
-    }
-
-    public func report(
-        _ error: Error,
-        severity: Severity = .error,
-        userId: CustomStringConvertible? = nil,
-        metadata: [String: CustomDebugStringConvertible] = [:],
-        file: String = #file,
-        function: String = #function,
-        line: Int = #line,
-        column: Int = #column,
-        on container: Container
-    ) -> Future<Void> {
-        guard config.shouldReport else {
-            return container.future()
-        }
-
-        return Future.flatMap(on: container) {
-            let body = try self.buildBody(
-                container,
-                error: error,
-                severity: severity,
-                userId: userId,
-                metadata: metadata,
-                stacktrace: BugsnagStacktrace(
-                    file: file,
-                    method: function,
-                    lineNumber: line,
-                    columnNumber: column
-                )
-            )
-
-            return try self
-                .sendReport(self.hostName, self.headers, body, container)
-                .do { response in
-                    if self.config.debug {
-                        let status = response.http.status
-                        print("Bugsnag response:\n", status.code, status.reasonPhrase)
-                    }
-                }
-                .transform(to: ())
+extension ErrorSource {
+    var readableFile: String {
+        if self.file.contains("/Sources/") {
+            return self.file.components(separatedBy: "/Sources/").last ?? self.file
+        } else if self.file.contains("/Tests/") {
+            return self.file.components(separatedBy: "/Tests/").last ?? self.file
+        } else {
+            return self.file
         }
     }
 }
