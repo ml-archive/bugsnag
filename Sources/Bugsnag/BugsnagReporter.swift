@@ -1,16 +1,40 @@
 import class Foundation.JSONSerialization
 import Vapor
 
+/// Capable of reporting Bugsnag errors.
+///
+/// See `req.bugsnag` and `app.bugsnag`.
 public protocol BugsnagReporter {
+    /// HTTP client used to contact Bugsnag.
     var client: Client { get }
+
+    /// Logger to use for reporting information or errors.
     var logger: Logger { get }
+
+    /// EventLoop to use for future returns.
     var eventLoop: EventLoop { get }
+
+    /// Bugsnag configuration options for reporting.
     var configuration: BugsnagConfiguration? { get }
+
+    /// Used to include additional information about the current
+    /// request in the report. 
     var currentRequest: Request? { get }
+
+    /// Configures which users will be reported by Bugsnag.
     var users: BugsnagUsers { get }
 }
 
 extension BugsnagReporter {
+    /// Reports an error to Bugsnag.
+    ///
+    ///     req.bugsnag.report(someError)
+    ///
+    /// Conformance to `DebuggableError` and `BugsnagError` will be checked 
+    /// for additional error context. 
+    ///
+    /// - parameters:
+    ///     - error: The error to report. 
     @discardableResult
     public func report(
         _ error: Error
