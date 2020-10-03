@@ -102,10 +102,22 @@ extension BugsnagReporter {
             } else {
                 eventRequestBody = nil
             }
+            
+            var headerDict: [String : Any] = request.headers.reduce([:], { result, value in
+                var copy = result
+                copy[value.0] = value.1
+                return copy
+            })
+            strip(keys: configuration.keyFilters, from: &headerDict)
+
+            let filteredHeaders: [(String, String)] = headerDict.map {
+                k, v in (k, v as! String)
+            }
+            
             eventRequest = .init(
                 body: eventRequestBody,
                 clientIp: request.headers.forwarded.first(where: { $0.for != nil })?.for ?? request.remoteAddress?.hostname,
-                headers: .init(uniqueKeysWithValues: request.headers.map { $0 }),
+                headers: .init(uniqueKeysWithValues: filteredHeaders),
                 httpMethod: request.method.string,
                 referer: "n/a",
                 url: request.url.string
