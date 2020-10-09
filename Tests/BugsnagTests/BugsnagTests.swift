@@ -57,7 +57,7 @@ final class BugsnagTests: XCTestCase {
         app.bugsnag.configuration = .init(
             apiKey: "foo",
             releaseStage: "debug",
-            keyFilters: ["email", "password"]
+            keyFilters: ["email", "password", "Authorization"]
         )
         app.clients.use(.test)
 
@@ -90,7 +90,9 @@ final class BugsnagTests: XCTestCase {
                 application: app,
                 method: .POST,
                 url: "/test",
-                on: app.eventLoopGroup.next()
+                headers: [
+                    "Authorization": "Bearer SupErSecretT0ken!"
+                ], on: app.eventLoopGroup.next()
             )
             try request.content.encode(vapor)
             try request.bugsnag.report(Abort(.internalServerError, reason: "Oops")).wait()
@@ -103,6 +105,7 @@ final class BugsnagTests: XCTestCase {
                 User.self,
                 from: Data(payload.events[0].request!.body!.utf8)
             )
+            let headers = payload.events[0].request!.headers
             XCTAssertEqual(user.name, "Vapor")
             XCTAssertEqual(user.email, "<hidden>")
             XCTAssertEqual(user.password, "<hidden>")
@@ -110,6 +113,7 @@ final class BugsnagTests: XCTestCase {
             XCTAssertEqual(user.user?.email, "<hidden>")
             XCTAssertEqual(user.user?.password, "<hidden>")
             XCTAssertNil(user.user?.user)
+            XCTAssertEqual(headers["Authorization"], "<hidden>")
         }
     }
 
