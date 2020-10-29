@@ -4,7 +4,7 @@ import Vapor
 ///
 ///     app.middleware.use(BugsnagMiddleware())
 ///
-/// This should be placed _before_ `ErrorMiddleware`. 
+/// This should be placed _after_ `ErrorMiddleware`. 
 public struct BugsnagMiddleware {
     public init() { }
 }
