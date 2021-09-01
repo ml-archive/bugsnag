@@ -1,6 +1,8 @@
 name: Documentation
 
-on: [release]
+on:
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -11,12 +13,12 @@ jobs:
       - name: Generate Documentation
         uses: SwiftDocOrg/swift-doc@master
         with:
-          inputs: "Sources/Bugsnag"
           module-name: Bugsnag
+          inputs: "Sources"
           output: "Documentation"
       - name: Upload Documentation to Wiki
-        uses: SwiftDocOrg/github-wiki-publish-action@master@v1
+        uses: SwiftDocOrg/github-wiki-publish-action@v1
         with:
           path: "Documentation"
         env:
-          GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.WIKI_ACCESS_TOKEN }}.2
+          GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.WIKI_ACCESS_TOKEN }}
