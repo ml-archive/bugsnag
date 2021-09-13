@@ -37,7 +37,10 @@ public func configure(_ app: Application) throws {
 
 ### Reporting
 
-`BugsnagMiddleware` will automatically report errors thrown by your route handlers. You can report errors manually from `Application` or `Request`.
+`BugsnagMiddleware` will automatically report errors thrown by your route handlers. If you do not want to report certain error types see [Controlling Your Error Reports](#controlling-your-error-reports).
+
+#### Manual Reporting
+You can report errors manually from `Application` or `Request`.
 
 ```swift
 // Reporting from Application.
@@ -50,7 +53,11 @@ app.get("test") { req in
 }
 ```
 
-By conforming to the `BugsnagError` protocol you can have full control over how your errors are reported. It has the following properties:
+### Controlling Your Error Reports
+
+By conforming to the `BugsnagError` protocol you can have full control over how your errors are reported. 
+
+It has the following properties:
 
 | Name | Type | Function | Default |
 |---|---|---|---|
@@ -89,7 +96,7 @@ req.bugsnag.breadcrumb(
 )
 ```
 
-The breadcrumb types are provided by Bugsnag:
+Bugsnag provides the following breadcrumb types:
 
 ```swift
 enum BugsnagBreadcrumbType {
@@ -121,7 +128,7 @@ In this case Bugsnag Reports will hide header fields, query params or post body 
 
 ## 🏆 Credits
 
-This package is developed and maintained by the Vapor team at [Nodes](https://www.nodesagency.com).
+This package is developed and maintained by the Vapor team at [Monstarlab](https://monstar-lab.com/global/).
 
 ## 📄 License
 
