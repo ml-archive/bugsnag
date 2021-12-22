@@ -10,7 +10,7 @@ public final class ConnectionManager {
         self.client = client
     }
     
-    public func submitPayload<C: Content>(_ content: C) throws -> EventLoopFuture<ClientResponse> {
+    public func submitPayload<C: Content>(_ content: C) -> EventLoopFuture<ClientResponse> {
         return client.post(URI(string: url), headers: [:]) { req in
             try req.content.encode(content, as: .json)
         }

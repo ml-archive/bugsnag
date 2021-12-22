@@ -136,7 +136,7 @@ public final class Bugsnag: ReporterType {
         )
 
         if let payload = payload {
-            _ = try? self.connectionManager.submitPayload(payload).map { _ in
+            self.connectionManager.submitPayload(payload).whenComplete { _ in
                 complete?()
             }
         }
