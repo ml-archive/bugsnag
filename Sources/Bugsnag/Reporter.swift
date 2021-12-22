@@ -65,7 +65,7 @@ public final class Bugsnag: ReporterType {
         version: String?,
         skipContent: Bool,
         completion complete: (() -> ())?
-        ) {
+    ) {
         guard let error = error as? AbortError else {
             report(
                 message: "Internal Server Error",
@@ -86,7 +86,7 @@ public final class Bugsnag: ReporterType {
         }
 
         guard shouldNotifyForReleaseStage() else {
-            return
+            return complete?() ?? ()
         }
 
         report(
@@ -120,7 +120,7 @@ public final class Bugsnag: ReporterType {
         version: String?,
         skipContent: Bool,
         completion complete: (() -> ())? = nil
-        ) {
+    ) {
         let payload = try? payloadTransformer.payloadFor(
             message: message,
             request: request,
@@ -136,9 +136,8 @@ public final class Bugsnag: ReporterType {
         )
 
         if let payload = payload {
-            _ = try? self.connectionManager.submitPayload(payload).map { _ -> Void in
-                if let complete = complete { complete() }
-                return ()
+            _ = try? self.connectionManager.submitPayload(payload).map { _ in
+                complete?()
             }
         }
     }
