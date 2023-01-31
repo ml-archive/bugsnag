@@ -3,16 +3,16 @@ on:
   pull_request:
   push:
     branches:
-    - master
+      - master
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: swift:5.2-bionic
+    container: swift:5.5-focal
     steps:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Run tests with Thread Sanitizer
-        run: swift test --enable-test-discovery --sanitize=thread
+        run: swift test --sanitize=thread
   macOS:
     runs-on: macos-latest
     steps:
@@ -23,4 +23,4 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Run tests with Thread Sanitizer
-        run: swift test --enable-test-discovery --sanitize=thread
+        run: swift test --sanitize=thread
