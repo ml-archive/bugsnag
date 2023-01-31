@@ -18,13 +18,16 @@ import Vapor
 ///
 /// Only one user can be included in a Bugsnag report.
 public struct BugsnagUsers {
-    var storage: [(Request) -> (CustomStringConvertible?)]
+    var storage: [(Request) -> (type: String, id: CustomStringConvertible)?]
 
     public mutating func add<User>(_ user: User.Type)
         where User: BugsnagUser & Authenticatable
     {
         self.storage.append({ request in
-            request.auth.get(User.self)?.bugsnagID
+            if let userID = request.auth.get(User.self)?.bugsnagID {
+                return (String(describing: user), userID)
+            }
+            return nil
         })
     }
 }

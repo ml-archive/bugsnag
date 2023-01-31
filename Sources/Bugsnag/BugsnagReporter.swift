@@ -1,5 +1,6 @@
 import class Foundation.JSONSerialization
 import Vapor
+import JSON
 
 /// Capable of reporting Bugsnag errors.
 ///
@@ -37,7 +38,11 @@ extension BugsnagReporter {
     ///     - error: The error to report. 
     @discardableResult
     public func report(
-        _ error: Error
+        _ error: Error,
+        metadata: [String: String] = [:],
+        file: String = #fileID,
+        function: String = #function,
+        line: UInt = #line
     ) -> EventLoopFuture<Void> {
         guard let configuration = self.configuration else {
             fatalError("Bugsnag not configured, set `app.bugsnag.configuration`.")
@@ -45,14 +50,18 @@ extension BugsnagReporter {
 
         guard let payload = self.buildPayload(
             configuration: configuration,
-            error: error
+            error: error,
+            metadata: metadata,
+            file: file,
+            function: function,
+            line: line
         ) else {
             return eventLoop.future(())
         }
 
         let headers: HTTPHeaders = [
             "Bugsnag-Api-Key": configuration.apiKey,
-            "Bugsnag-Payload-Version": "4"
+            "Bugsnag-Payload-Version": "5"
         ]
 
         return self.client.post("https://notify.bugsnag.com", headers: headers, beforeSend: { req in
@@ -65,7 +74,11 @@ extension BugsnagReporter {
 
     private func buildPayload(
         configuration: BugsnagConfiguration,
-        error: Error
+        error: Error,
+        metadata: [String: String],
+        file: String,
+        function: String,
+        line: UInt
     ) -> BugsnagPayload? {
         guard configuration.shouldReport else {
             return nil
@@ -150,23 +163,34 @@ extension BugsnagReporter {
                 columnNumber: 0
             )]
         } else {
-            exceptionStackTrace = []
+            exceptionStackTrace = [
+                .init(file: file, method: function, lineNumber: Int(line), columnNumber: 0)
+            ]
         }
-        let metadata: [String: String]
+        var _metadata: [String: JSON] = metadata.mapValues { .string($0) }
         let severity: BugsnagSeverity
 
         if let bugsnag = error as? BugsnagError {
-            metadata = bugsnag.metadata.mapValues { $0.description }
+            for (key, value) in bugsnag.metadata {
+                _metadata[key] = .string(value.description)
+            }
             severity = bugsnag.severity
         } else {
-            metadata = [:]
             severity = .error
         }
 
         var userID: String?
         if let request = self.currentRequest {
+            // This is kind of a hack, but Vapor does not expose the request ID otherwise
+            if let requestID = request.logger[metadataKey: "request-id"] {
+                _metadata["request"] = .object(["request-id": .string("\(requestID)")])
+            }
+            
             for closure in self.users.storage {
-                userID = closure(request)?.description
+                if let (type, id) = closure(request) {
+                    _metadata["user"] = .object(["type": .string(type)])
+                    userID = id.description
+                }
             }
         }
 
@@ -194,14 +218,13 @@ extension BugsnagReporter {
                     breadcrumbs: breadcrumbs,
                     exceptions: [
                         .init(
-                            errorClass: "error",
+                            errorClass: type,
                             message: message,
-                            stacktrace: exceptionStackTrace,
-                            type: type
+                            stacktrace: exceptionStackTrace
                         )
                     ],
-                    metaData: metadata,
-                    payloadVersion: "4",
+                    metaData: _metadata.json,
+                    payloadVersion: "5",
                     request: eventRequest,
                     severity: severity.value,
                     user: userID.map { .init(id: $0) }
@@ -210,7 +233,7 @@ extension BugsnagReporter {
             notifier: .init(
                 name: "nodes-vapor/bugsnag",
                 url: "https://github.com/nodes-vapor/bugsnag.git",
-                version: "3"
+                version: "4"
             )
         )
     }

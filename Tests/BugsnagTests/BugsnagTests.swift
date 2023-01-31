@@ -139,6 +139,7 @@ final class BugsnagTests: XCTestCase {
 
         let payload = try app.clients.test.requests[0].content.decode(BugsnagPayload.self)
         XCTAssertEqual(payload.events[0].user?.id, "123")
+        XCTAssertEqual(payload.events[0].metaData.object?["user"]?.object?["type"]?.string, "TestUser")
     }
 
     func testBugsnagError() throws {
@@ -162,6 +163,29 @@ final class BugsnagTests: XCTestCase {
 
         let payload = try app.clients.test.requests[0].content.decode(BugsnagPayload.self)
         XCTAssertEqual(payload.events[0].metaData["foo"], "bar")
+    }
+    
+    func testRequestIDMetadata() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.bugsnag.configuration = .init(
+            apiKey: "foo",
+            releaseStage: "debug"
+        )
+        app.clients.use(.test)
+        app.get("error") { req -> HTTPStatus in
+            req.logger[metadataKey: "request-id"] = .string("123")
+            req.bugsnag.report(Abort(.internalServerError, reason: "Oops"))
+            return .ok
+        }
+
+        try app.test(.GET, "error") { res in
+            XCTAssertEqual(res.status, .ok)
+        }
+
+        let payload = try app.clients.test.requests[0].content.decode(BugsnagPayload.self)
+        XCTAssertEqual(payload.events[0].metaData.object?["request"]?.object?["request-id"]?.string, "123")
     }
 }
 

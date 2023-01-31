@@ -1,4 +1,5 @@
 import Vapor
+import JSON
 
 struct BugsnagPayload: Codable {
     let apiKey: String
@@ -34,14 +35,12 @@ struct BugsnagPayload: Codable {
                 let lineNumber: Int
                 let columnNumber: Int
 
-                let code: [String] = []
-                let inProject = true
+                var code: [String] = []
+                var inProject = true
             }
-
-            let type: String
         }
 
-        let metaData: [String: String]
+        let metaData: JSON
 
         let payloadVersion: String
         let request: Request?
@@ -55,9 +54,8 @@ struct BugsnagPayload: Codable {
             let url: String
         }
 
-
         let severity: String
-        let unhandled = true
+        var unhandled = true
         let user: User?
 
         struct User: Codable {
